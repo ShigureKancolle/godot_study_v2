@@ -1,12 +1,12 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://4muocm5k0sjx"]
 
-[ext_resource type="Script" path="res://Script/UI/login/login_scene.gd" id="1_login"]
-[ext_resource type="Texture2D" uid="uid://dhyj7gac1tpxk" path="res://prefab/CommonTexture/panel_beige.png" id="2_bg"]
+[ext_resource type="Script" uid="uid://ce71mhrgmgd3f" path="res://Scirpt/ui/Login/login_scene.gd" id="1_r4nuo"]
+[ext_resource type="Texture2D" uid="uid://dhyj7gac1tpxk" path="res://Prefab/CommonTexture/panel_beige.png" id="2_bg"]
 
-[node name="LoginScene" type="Node2D"]
-script = ExtResource("1_login")
+[node name="LoginScene" type="Node2D" unique_id=1915772147]
+script = ExtResource("1_r4nuo")
 
-[node name="Bg" type="NinePatchRect" parent="."]
+[node name="Bg" type="NinePatchRect" parent="." unique_id=767614583]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -20,7 +20,7 @@ patch_margin_top = 36
 patch_margin_right = 14
 patch_margin_bottom = 37
 
-[node name="Title" type="Label" parent="Bg"]
+[node name="Title" type="Label" parent="Bg" unique_id=1313937803]
 layout_mode = 0
 offset_left = 376.0
 offset_top = 240.0
@@ -31,7 +31,16 @@ theme_override_font_sizes/font_size = 30
 text = "选择你的名字"
 horizontal_alignment = 1
 
-[node name="AccLabel" type="Label" parent="Bg"]
+[node name="AccLabel2" type="Label" parent="Bg" unique_id=1548001248]
+layout_mode = 0
+offset_left = 379.0
+offset_top = 291.0
+offset_right = 439.0
+offset_bottom = 314.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "账号:"
+
+[node name="AccLabel" type="Label" parent="Bg" unique_id=279871290]
 layout_mode = 0
 offset_left = 380.0
 offset_top = 330.0
@@ -40,7 +49,7 @@ offset_bottom = 350.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "玩家名:"
 
-[node name="NameInput" type="LineEdit" parent="Bg"]
+[node name="NameInput" type="LineEdit" parent="Bg" unique_id=2084601639]
 layout_mode = 0
 offset_left = 442.0
 offset_top = 328.0
@@ -48,14 +57,22 @@ offset_right = 620.0
 offset_bottom = 352.0
 placeholder_text = "输入你的名字"
 
-[node name="RecentSelect" type="OptionButton" parent="Bg"]
+[node name="AccountInput" type="LineEdit" parent="Bg" unique_id=803240134]
+layout_mode = 0
+offset_left = 441.0
+offset_top = 286.0
+offset_right = 619.0
+offset_bottom = 317.0
+placeholder_text = "输入你的名字"
+
+[node name="RecentSelect" type="OptionButton" parent="Bg" unique_id=296063347]
 layout_mode = 0
 offset_left = 628.0
 offset_top = 328.0
 offset_right = 760.0
 offset_bottom = 352.0
 
-[node name="LoginButton" type="Button" parent="Bg"]
+[node name="LoginButton" type="Button" parent="Bg" unique_id=512871176]
 layout_mode = 0
 offset_left = 768.0
 offset_top = 328.0
@@ -63,7 +80,7 @@ offset_right = 824.0
 offset_bottom = 352.0
 text = "登录"
 
-[node name="LoginState" type="Label" parent="Bg"]
+[node name="LoginState" type="Label" parent="Bg" unique_id=806183208]
 layout_mode = 0
 offset_left = 380.0
 offset_top = 362.0
@@ -71,4 +88,3 @@ offset_right = 800.0
 offset_bottom = 385.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 horizontal_alignment = 1
-text = ""

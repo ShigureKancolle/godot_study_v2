@@ -189,32 +189,32 @@ client/Script/
 
 ### 数据模型
 
-- [ ] 定义 `EntityId`
-- [ ] 定义 `Entity`
-- [ ] 定义 `TransformComponent`
-- [ ] 定义 `MovementComponent`
-- [ ] 定义 `CombatComponent`
-- [ ] 定义 `PlayerComponent`
-- [ ] 定义最小 `EntityType`
-- [ ] 明确哪些字段属于持久状态
-- [ ] 明确哪些数据只是瞬时 Event
+- [1] 定义 `EntityId`
+- [1] 定义 `Entity`
+- [1] 定义 `TransformComponent`
+- [1] 定义 `MovementComponent`
+- [1] 定义 `CombatComponent`
+- [1] 定义 `PlayerComponent`
+- [1] 定义最小 `EntityType`
+- [1] 明确哪些字段属于持久状态
+- [1] 明确哪些数据只是瞬时 Event
 
 ### GameWorld
 
-- [ ] 实现创建实体
-- [ ] 实现查询实体
-- [ ] 实现删除实体
-- [ ] 实现按组件或类型查询
-- [ ] 禁止向外暴露可随意修改的内部字典
-- [ ] 禁止在 World 中加入网络连接
-- [ ] 禁止在 World 中加入 protobuf 对象
+- [1] 实现创建实体
+- [1] 实现查询实体
+- [1] 实现删除实体
+- [1] 实现按组件或类型查询
+- [1] 禁止向外暴露可随意修改的内部字典
+- [1] 禁止在 World 中加入网络连接
+- [1] 禁止在 World 中加入 protobuf 对象
 
 ### Command
 
-- [ ] 定义 `JoinCommand`
-- [ ] 定义 `MoveIntentCommand`
-- [ ] 定义 `AttackCommand`
-- [ ] 所有 Command 包含调用者身份
+- [1] 定义 `JoinCommand`
+- [1] 定义 `MoveIntentCommand`
+- [1] 定义 `AttackCommand`
+- [1] 所有 Command 包含调用者身份
 - [ ] Command 校验失败返回明确原因
 
 验收标准：
@@ -227,34 +227,34 @@ client/Script/
 
 ### 服务端
 
-- [ ] 实现 `MovementSystem`
-- [ ] 归一化移动方向
-- [ ] 速度只能从服务端配置读取
-- [ ] 玩家不能提交坐标
-- [ ] 非法实体不能移动
-- [ ] 死亡或锁定实体不能移动
+- [1] 实现 `MovementSystem`
+- [1] 归一化移动方向
+- [1] 速度只能从服务端配置读取
+- [1] 玩家不能提交坐标
+- [1] 非法实体不能移动
+- [1] 死亡或锁定实体不能移动
 - [ ] 移动结果写入 `GameWorld`
 
 ### 协议
 
 不要复用一条双向消息。
 
-- [ ] 定义 `LoginRequest`
-- [ ] 定义 `LoginAccepted`
-- [ ] 定义 `EnterGameRequest`
-- [ ] 定义 `WorldSnapshot`
-- [ ] 定义 `MoveIntent`
-- [ ] 定义 `MovementFrame`
-- [ ] 定义 `EntitySpawned`
-- [ ] 定义 `EntityRemoved`
-- [ ] 定义 `EntityRelocated`
-- [ ] 每条消息登记唯一方向
-- [ ] 加入 `server_tick`
-- [ ] 预留 `run_id`
+- [1] 定义 `LoginRequest`
+- [1] 定义 `LoginAccepted`
+- [1] 定义 `EnterGameRequest`
+- [1] 定义 `WorldSnapshot`
+- [1] 定义 `MoveIntent`
+- [1] 定义 `MovementFrame`
+- [1] 定义 `EntitySpawned`
+- [1] 定义 `EntityRemoved`
+- [1] 定义 `EntityRelocated`
+- [1] 每条消息登记唯一方向
+- [1] 加入 `server_tick`
+- [1] 预留 `run_id`
 
 ### 客户端
 
-- [ ] 实现 WebSocket 连接
+- [1] 实现 WebSocket 连接
 - [ ] 实现 protobuf 编解码
 - [ ] 实现 `GameStore`
 - [ ] 实现 `WorldSnapshotReducer`

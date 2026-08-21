@@ -11,8 +11,17 @@ config_version=5
 [application]
 
 config/name="godot_demo_v2"
+run/main_scene="res://Prefab/Login/LoginScene.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+GameBootstrap="*uid://br7rn27hiow84"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godobuf/plugin.cfg")
 
 [physics]
 

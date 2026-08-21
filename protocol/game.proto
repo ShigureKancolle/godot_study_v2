@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+// The only editable protobuf contract in this repository.
+// Run tools/sync_proto.ps1 after changing this file. Never edit generated code.
+package game;
+
+message EntityInfo {
+  string entity_id = 1;
+  string player_name = 2;
+  uint64 entity_type = 3;
+  float x = 4;
+  float y = 5;
+  float facing = 6;
+  string anim_state = 7;
+  bool moving = 8;
+  string ai_state = 9;
+}
+
+// Client -> server
+message LoginRequest {
+  string account = 1;
+}
+
+// Server -> client
+message LoginAccepted {
+  string account = 1;
+  string player_name = 2;
+}
+
+// Client -> server
+message EnterGameRequest {
+  string account = 1;
+  string room_id = 2;
+}
+
+// Server -> client
+message WorldSnapshot {
+  string room_id = 1;
+  repeated EntityInfo entities = 2;
+  int64 timestamp = 3;
+}
+
+// Client -> server. The server must derive the controlled entity from the
+// authenticated connection; entity_id is retained temporarily for migration.
+message MoveIntent {
+  string entity_id = 1;
+  float dir_x = 2;
+  float dir_y = 3;
+  bool moving = 4;
+}
+
+// Server -> client
+message MovementEntry {
+  string entity_id = 1;
+  float x = 2;
+  float y = 3;
+  float speed = 4;
+  bool moving = 5;
+}
+
+// Server -> client
+message MovementFrame {
+  uint64 server_tick = 1;
+  repeated MovementEntry entries = 2;
+}
+
+// Server -> client
+message EntityRemoved {
+  string entity_id = 1;
+}
+
+// Server -> client
+message EntityRelocated {
+  string entity_id = 1;
+  float facing = 2;
+}
+
+// Server -> client
+message EntitySpawned {
+  string entity_id = 1;
+  EntityInfo entity_info = 2;
+}
+
+// Only messages sent from client to server are allowed in this envelope.
+message ClientMessage {
+  oneof payload {
+    LoginRequest login_request = 1;
+    EnterGameRequest enter_game_request = 2;
+    MoveIntent move_intent = 3;
+  }
+}
+
+// Only messages sent from server to client are allowed in this envelope.
+message ServerMessage {
+  string run_id = 1;
+  uint64 server_tick = 2;
+
+  oneof payload {
+    LoginAccepted login_accepted = 3;
+    WorldSnapshot world_snapshot = 4;
+    MovementFrame movement_frame = 5;
+    EntitySpawned entity_spawned = 6;
+    EntityRemoved entity_removed = 7;
+    EntityRelocated entity_relocated = 8;
+  }
+}

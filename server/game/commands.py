@@ -20,12 +20,12 @@ class MoveCommand(Command):
 @dataclass
 class JoinCommand(Command):
     ''' 客户端加入游戏请求 '''
-    pass
+    account: str = ""
 
 @dataclass 
 class AttackCommand(Command):
     ''' 客户端攻击请求 '''
-    pass
+    attack_id: int = 0
 
 
 

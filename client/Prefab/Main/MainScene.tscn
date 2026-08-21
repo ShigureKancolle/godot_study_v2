@@ -1,9 +1,8 @@
 [gd_scene format=3 uid="uid://cwy1e51tvvf1f"]
 
-[ext_resource type="Script" uid="uid://ctk6emuhvxh7u" path="res://Script/UI/main/MainUI.gd" id="1_dx5ph"]
-[ext_resource type="Texture2D" uid="uid://dhyj7gac1tpxk" path="res://prefab/CommonTexture/panel_beige.png" id="1_q3ggj"]
-[ext_resource type="Texture2D" uid="uid://cndyvxjx1kd5d" path="res://prefab/CommonTexture/buttonRound_brown.png" id="3_0obw0"]
-[ext_resource type="Texture2D" uid="uid://dm777hbs8wiw3" path="res://prefab/CommonTexture/buttonRound_blue.png" id="4_game"]
+[ext_resource type="Texture2D" uid="uid://dhyj7gac1tpxk" path="res://Prefab/CommonTexture/panel_beige.png" id="1_q3ggj"]
+[ext_resource type="Texture2D" uid="uid://cndyvxjx1kd5d" path="res://Prefab/CommonTexture/buttonRound_brown.png" id="3_0obw0"]
+[ext_resource type="Texture2D" uid="uid://dm777hbs8wiw3" path="res://Prefab/CommonTexture/buttonRound_blue.png" id="4_game"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_jl56r"]
 
@@ -16,7 +15,6 @@
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_k0nax"]
 
 [node name="MainScene" type="Node2D" unique_id=1188991482]
-script = ExtResource("1_dx5ph")
 
 [node name="Bg" type="NinePatchRect" parent="." unique_id=1186261832]
 anchors_preset = 15
@@ -128,5 +126,3 @@ theme_override_styles/disabled = SubResource("StyleBoxEmpty_aor65")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_k0nax")
 text = "地块"
 icon_alignment = 1
-
-

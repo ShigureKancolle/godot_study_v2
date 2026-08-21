@@ -8,47 +8,40 @@ import game.model.components as comps
 import game.command_router as command_router
 import game.systems.comp_system as comp_system
 import game.tick_pipeline as tick_pipeline
+import transport.websocket_server as websocket_server
 
 async def main():
     print("main() function is running...")
-    server = None
+    socket = websocket_server.WebSocketServer()
+    try:
+        await socket.start()
+    except Exception as e:
+        print(e)
+        socket.close()
 
 def test_server():
     print("test_server() function is running...")
-    pipeline = register_command_handlers()
     gw = world.GameWorld()
-    gw.set_tick_pipeline(pipeline)
-    player = entity.Entity(entity_info=entity.EntityInfo(entity_id="1", entity_type=entity.EntityType.PLAYER))
-    player.add_component(comps.TransformComponent(x=0.0, y=0.0))
-    player.add_component(comps.MovementComponent(speed=100.0))
-    player.add_component(comps.FacingComponent(facing=0.0))
-    gw.add_entity(player)
+    player = gw.create_player("1")
 
     for i in range(10):
         print(i)
         if i % 3 == 0:
             print("move")
-            gw.enqueue_command(command.MoveCommand("1", 1.0, 1.0, True))
+            gw.enqueue_command(command.MoveCommand(player.entity_id, 1.0, 1.0, True))
         elif i % 3 == 1:
             print("empty")
             # gw.enqueue_command(command.MoveCommand("1", 0.0, 0.0, False))
         else:
             print("stop")
-            gw.enqueue_command(command.MoveCommand("1", 0.0, 0.0, False))
+            gw.enqueue_command(command.MoveCommand(player.entity_id, 0.0, 0.0, False))
 
 
         events = gw.step(0.1)
-        print(gw.get_entity("1"))
+        print(gw.get_entity(player.entity_id))
         print(events)
 
-def register_command_handlers():
-    router = command_router.CommandRouter()
-    pipeline = tick_pipeline.TickPipeline()
-    pipeline.set_command_router(router)
-    movement_comp_system = comp_system.MovementCompSystem()
-    router.register(command.MoveCommand, movement_comp_system.apply_command)
-    pipeline.add_system(movement_comp_system)
-    return pipeline
+
    
 if __name__ == '__main__':
     print("server start")
