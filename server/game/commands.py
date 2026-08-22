@@ -7,25 +7,35 @@
 from dataclasses import dataclass, field
 
 @dataclass
-class Command:
+class WorldCommand:
     entity_id: str = ""
 
 @dataclass
-class MoveCommand(Command):
+class MoveCommand(WorldCommand):
     ''' 客户端移动请求 '''
     dir_x: float = 0.0
     dir_y: float = 0.0
     moving: bool = False
 
 @dataclass
-class JoinCommand(Command):
+class JoinCommand(WorldCommand):
     ''' 客户端加入游戏请求 '''
     account: str = ""
 
 @dataclass 
-class AttackCommand(Command):
+class AttackCommand(WorldCommand):
     ''' 客户端攻击请求 '''
     attack_id: int = 0
+
+@dataclass
+class SessionCommand:
+    connection_id: int = 1
+    account: str = ""
+
+@dataclass
+class LoginCommand(SessionCommand):
+    # 这不是game请求 没有entity_id
+    ''' 客户端登录请求 '''
 
 
 

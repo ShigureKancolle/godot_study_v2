@@ -132,4 +132,14 @@ class AttackCompSystem(CompSystem):
 
     def update(self, world: game_world.GameWorld, dt: float) -> list[event.Event]:
         return []
+
+
+class LoginCompSystem(CompSystem):
+    def apply_command(self, world: game_world.GameWorld, command: command.LoginCommand) -> list[event.Event]:
+        print(f"login command: {command.account}")
+        return []
+    
+    def update(self, world: game_world.GameWorld, dt: float) -> list[event.Event]:
+        return []
+    
                        

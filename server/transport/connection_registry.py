@@ -1,31 +1,58 @@
 # coding=utf-8
 '''
-注册协议事件
+注册连接 上下文
 '''
 import typing
+from typing import Any
 from typing import Callable
-
-web_scoket_hanler: dict[str, Callable] = {}
-
-def onproto(protoname: str):
-    def decorator(func: Callable):
-        full_name = resolve_name(protoname)
-        web_scoket_hanler[full_name] = func
-        print(f"注册处理器: {protoname} -> {func.__name__} (全名: {full_name})")
-        return func
-
-    return decorator
-
-def resolve_name(protoname: str) -> str:
-    """
-    解析消息名：支持全名和短名
-
-    - 全名（含 '.'）直接查注册表
-    - 短名查 _short_to_full：唯一则返回全名，多个则报错要求用全名
+import dataclasses
+from proto.generated import game_pb2
+from singleton import Singleton
+import websockets
     
-    """
+    
+connection_id: int = 0
+def get_new_connection_id():
+    global connection_id
+    connection_id += 1
+    return connection_id
 
-    # TODO 暂不支持
-    return protoname
+
+@dataclasses.dataclass
+class ConnectionContext:
+    connection_id: int
+    websocket: websockets.WebSocketProtocol
+    account_id: str = ""
+    player_name: str = ""
+    player_entity_id: str = ""
+
+@Singleton
+class ConnectionRegistry:
+    connection_by_id: dict[int, ConnectionContext] = {}
+
+    def add(self, websocket: websockets.WebSocketProtocol) -> ConnectionContext:
+        # 分配connection_id  记录socket
+        context = ConnectionContext(get_new_connection_id(), websocket)
+        self.connection_by_id[context.connection_id] = context
+        return context
+
+    def remove(self, connection_id: int):
+        context = self.connection_by_id.pop(connection_id, None)
+        if context:
+            del context
+
+    def bind_account(self, connection_id: int, account_id: str, player_name: str):
+        context = self.connection_by_id.get(connection_id, None)
+        if context:
+            context.account_id = account_id
+            context.player_name = player_name
+
+    def get_context(self, connection_id: int):
+        return self.connection_by_id.get(connection_id, None)
+
+    def all_connections(self) -> list[ConnectionContext]:
+        return list(self.connection_by_id.values())
+
+          
 
     

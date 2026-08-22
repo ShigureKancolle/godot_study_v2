@@ -19,6 +19,7 @@ message EntityInfo {
 // Client -> server
 message LoginRequest {
   string account = 1;
+  string player_name = 2;
 }
 
 // Server -> client

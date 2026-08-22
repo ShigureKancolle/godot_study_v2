@@ -29,7 +29,7 @@ SERVER_MESSAGE_TYPES = {
 }
 
 def validate_client_message(client_message):
-    kind = client_message.WhichOneof("message_type")
+    kind = client_message.WhichOneof("payload")
 
     if kind is None:
         print("非法客户端消息")

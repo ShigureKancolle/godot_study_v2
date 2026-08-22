@@ -52,11 +52,11 @@ class GameWorld:
 
 
     # region command
-    def dispatch_command(self, command: command.Command):
-        if self._command_router is None:
-            raise ValueError("command router is not set")
+    # def dispatch_command(self, command: command.Command):
+    #     if self._command_router is None:
+    #         raise ValueError("command router is not set")
         
-        return self._command_router.dispatch(self, command)
+    #     return self._command_router.dispatch(self, command)
 
     def enqueue_command(self, command: command.Command):
         self._pending_commands.append(command)
@@ -82,6 +82,11 @@ class GameWorld:
         attack_comp_system = comp_system.AttackCompSystem()
         self._command_router.register(command.AttackCommand, attack_comp_system.apply_command)
         self._tick_pipeline.add_system(attack_comp_system)
+
+        # login
+        login_comp_system = comp_system.LoginCompSystem()
+        self._command_router.register(command.LoginCommand, login_comp_system.apply_command)
+        self._tick_pipeline.add_system(login_comp_system)
 
     # endregion command
 

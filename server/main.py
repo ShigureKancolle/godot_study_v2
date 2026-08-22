@@ -9,9 +9,14 @@ import game.command_router as command_router
 import game.systems.comp_system as comp_system
 import game.tick_pipeline as tick_pipeline
 import transport.websocket_server as websocket_server
+from app.bootstrap import build_client_router
+
+# 注册handler
+import protocol.handlers
 
 async def main():
     print("main() function is running...")
+    build_client_router()
     socket = websocket_server.WebSocketServer()
     try:
         await socket.start()
@@ -20,26 +25,10 @@ async def main():
         socket.close()
 
 def test_server():
+    import proto.generated.game_pb2 as game_pb2
+    import protocol.router as router
+    import transport.connection_registry as connection_registry
     print("test_server() function is running...")
-    gw = world.GameWorld()
-    player = gw.create_player("1")
-
-    for i in range(10):
-        print(i)
-        if i % 3 == 0:
-            print("move")
-            gw.enqueue_command(command.MoveCommand(player.entity_id, 1.0, 1.0, True))
-        elif i % 3 == 1:
-            print("empty")
-            # gw.enqueue_command(command.MoveCommand("1", 0.0, 0.0, False))
-        else:
-            print("stop")
-            gw.enqueue_command(command.MoveCommand(player.entity_id, 0.0, 0.0, False))
-
-
-        events = gw.step(0.1)
-        print(gw.get_entity(player.entity_id))
-        print(events)
 
 
    

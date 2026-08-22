@@ -883,6 +883,11 @@ class LoginRequest:
 		service.field = __account
 		data[__account.tag] = service
 		
+		__player_name = PBField.new("player_name", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __player_name
+		data[__player_name.tag] = service
+		
 	var data = {}
 	
 	var __account: PBField
@@ -897,6 +902,19 @@ class LoginRequest:
 		__account.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
 	func set_account(value : String) -> void:
 		__account.value = value
+	
+	var __player_name: PBField
+	func has_player_name() -> bool:
+		if __player_name.value != null:
+			return true
+		return false
+	func get_player_name() -> String:
+		return __player_name.value
+	func clear_player_name() -> void:
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__player_name.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_player_name(value : String) -> void:
+		__player_name.value = value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
