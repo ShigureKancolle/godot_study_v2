@@ -46,5 +46,8 @@ func send_login(acc: String, name: String) -> Error:
 
 	return wsp.send(envelope.to_bytes())
 
-func send():
-	pass
+func send(proto_name: String, param: Dictionary):
+	var payload = ProtocolCodec.Get().encode_client(proto_name, param)
+	if not payload:
+		return ERR_PARAMETER_RANGE_ERROR
+	return wsp.send(payload)

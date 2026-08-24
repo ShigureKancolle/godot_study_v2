@@ -8,6 +8,7 @@ import game.model.components as comps
 import game.command_router as command_router
 import game.systems.comp_system as comp_system
 import game.tick_pipeline as tick_pipeline
+from transport.game_protocol_adapter import GameProtocolAdapter
 import transport.websocket_server as websocket_server
 from app.bootstrap import build_client_router
 
@@ -23,6 +24,11 @@ async def main():
     except Exception as e:
         print(e)
         socket.close()
+
+def create_room():
+    game_world = world.get_room()
+    protocol_adapter = GameProtocolAdapter()
+
 
 def test_server():
     import proto.generated.game_pb2 as game_pb2

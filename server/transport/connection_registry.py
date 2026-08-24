@@ -21,16 +21,17 @@ def get_new_connection_id():
 @dataclasses.dataclass
 class ConnectionContext:
     connection_id: int
-    websocket: websockets.WebSocketProtocol
+    websocket: websockets.WebSocketCommonProtocol
     account_id: str = ""
     player_name: str = ""
     player_entity_id: str = ""
+    room_id: str = ""
 
 @Singleton
 class ConnectionRegistry:
     connection_by_id: dict[int, ConnectionContext] = {}
 
-    def add(self, websocket: websockets.WebSocketProtocol) -> ConnectionContext:
+    def add(self, websocket: websockets.WebSocketCommonProtocol) -> ConnectionContext:
         # 分配connection_id  记录socket
         context = ConnectionContext(get_new_connection_id(), websocket)
         self.connection_by_id[context.connection_id] = context
@@ -50,9 +51,14 @@ class ConnectionRegistry:
     def get_context(self, connection_id: int):
         return self.connection_by_id.get(connection_id, None)
 
+    def get_context_by_account_id(self, account_id: str):
+        for context in self.connection_by_id.values():
+            if context.account_id == account_id:
+                return context
+        return None
+
     def all_connections(self) -> list[ConnectionContext]:
         return list(self.connection_by_id.values())
 
-          
-
-    
+    def get_room_connections(self, room_id: str) -> list[ConnectionContext]:
+        return [context for context in self.connection_by_id.values() if context.room_id == room_id]

@@ -14,7 +14,7 @@ class TickPipeline:
     def tick(self, dt: float):
         pass
 
-    def dispatch(self, world: game_world.GameWorld, command: command.Command) -> Generator[event.Event, None, None]:
+    def dispatch(self, world: game_world.GameWorld, command: command.WorldCommand) -> Generator[event.Event, None, None]:
         return self._router.dispatch(world, command)
 
     def update(self, world: game_world.GameWorld, dt: float) -> Generator[event.Event, None, None]:

@@ -15,7 +15,7 @@ class CommandRouter:
     def register(self, command_type: type, handler: callable):
         self._handlers[command_type] = handler
 
-    def dispatch(self, world: world.GameWorld, command: command.Command):
+    def dispatch(self, world: world.GameWorld, command: command.WorldCommand):
         command_type = type(command)
         handler = self._handlers.get(command_type)
         if handler is None:

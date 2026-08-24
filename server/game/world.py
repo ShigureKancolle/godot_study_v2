@@ -12,8 +12,32 @@ if typing.TYPE_CHECKING:
     import game.command_router as command_router
     import game.tick_pipeline as tick_pipeline
 
+
+# region 单房间 先这样 到时候再加roommgr
+game_room: "GameWorld" = None
+
+def get_room():
+    global game_room
+    if game_room is None:
+        create_room()
+    return game_room
+
+def create_room():
+    global game_room
+    game_room = GameWorld()
+
+# endregion
+
+room_id = 0
+
+def get_room_id():
+    global room_id
+    room_id += 1
+    return f"room_{room_id:04d}"
+
 class GameWorld:
     def __init__(self):
+        self.room_id: str = get_room_id()
         self._entites: dict[str, entity.Entity] = {}
         self._pending_commands: list[command.Command] = []
         self._tick: int = 0
@@ -44,21 +68,7 @@ class GameWorld:
             events=events
         )
 
-    # def update(self, dt: float):
-    #     events = self.step(dt)
-    #     return events
-
-    # endregion loop
-
-
-    # region command
-    # def dispatch_command(self, command: command.Command):
-    #     if self._command_router is None:
-    #         raise ValueError("command router is not set")
-        
-    #     return self._command_router.dispatch(self, command)
-
-    def enqueue_command(self, command: command.Command):
+    def enqueue_command(self, command: command.WorldCommand):
         self._pending_commands.append(command)
 
     def register_command_handlers(self):

@@ -18,7 +18,7 @@ class OutBoundMessage:
 class OutBoundQueue:
     queue: asyncio.Queue[OutBoundMessage] = asyncio.Queue()
 
-    def send_to(self, connection_id: int, proto_name: str, body: Message):
+    def send_to(self, connection_id: int, proto_name: str, body: Message, *args, run_id: str = "", server_tick: int = 0):
         '''
             body 是具体的协议  LoginAccepted, MovementFrame....
         '''
@@ -29,11 +29,21 @@ class OutBoundQueue:
         # 传给指定连接
         self.queue.put_nowait(OutBoundMessage(payload=payload, recipient_ids=[connection_id]))
 
-    def broadcast(self, proto_name: str, body: Message):
+    def broadcast(self, proto_name: str, body: Message, exclude_ids: list[str] = [], room_id: str = ""):
         payload = ProtocolCodec.get().encode_server(proto_name, body)
 
+        def check_context(context: connection_registry.ConnectionContext):
+            if room_id and context.room_id != room_id:
+                return False
+
+            if context.connection_id in exclude_ids:
+                return False
+
+            return True
+
+        ids = [context.connection_id for context in connection_registry.ConnectionRegistry.get().all_connections() if check_context(context)]
         # 广播给所有人
-        self.queue.put_nowait(OutBoundMessage(payload=payload, recipient_ids=connection_registry.ConnectionRegistry.get().all_connections()))
+        self.queue.put_nowait(OutBoundMessage(payload=payload, recipient_ids=ids))
 
     async def next_packet(self):
         # 获取下一个包

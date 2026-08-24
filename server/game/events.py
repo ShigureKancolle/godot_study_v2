@@ -1,6 +1,19 @@
 # coding=utf-8
 
 from dataclasses import dataclass, field
+
+@dataclass(frozen=True)
+class EntitySnapshot:
+    entity_id: str = ""
+    player_name: str = ""
+    entity_type: int = 0
+    x: float = 0.0
+    y: float = 0.0
+    facing: float = 0.0
+    anim_state: str = ""
+    moving: bool = False
+    ai_state: str = ""
+
 class Event:
     pass
 
@@ -18,11 +31,9 @@ class EntityMovedEvent(Event):
 
 @dataclass(frozen=True)
 class EntityJoinedEvent(Event):
-    entity_id: str = ""
     account: str = ""
-    x: float = 0.0
-    y: float = 0.0
-
+    entity_info: EntitySnapshot = field(default_factory=EntitySnapshot)
+    
 @dataclass(frozen=True)
 class EntityFacingEvent(Event):
     entity_id: str = ""
@@ -32,3 +43,9 @@ class EntityFacingEvent(Event):
 class EntityAttackEvent(Event):
     entity_id: str = ""
     attack_id: int = 0
+
+@dataclass(frozen=True)
+class WorldSnapshot:
+    room_id: str = ""
+    server_tick: int = 0
+    entities: dict[str, EntitySnapshot] = field(default_factory=dict)

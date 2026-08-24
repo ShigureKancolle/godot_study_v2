@@ -55,6 +55,7 @@ offset_left = 442.0
 offset_top = 328.0
 offset_right = 620.0
 offset_bottom = 352.0
+text = "时雨"
 placeholder_text = "输入你的名字"
 
 [node name="AccountInput" type="LineEdit" parent="Bg" unique_id=803240134]
@@ -63,6 +64,7 @@ offset_left = 441.0
 offset_top = 286.0
 offset_right = 619.0
 offset_bottom = 317.0
+text = "shiyu"
 placeholder_text = "输入你的名字"
 
 [node name="RecentSelect" type="OptionButton" parent="Bg" unique_id=296063347]

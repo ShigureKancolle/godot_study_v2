@@ -254,8 +254,9 @@ client/Script/
 
 ### 客户端
 
+点击按钮->EnterGameRequest->WorldSnapshot->创建游戏场景，同步游戏世界
 - [1] 实现 WebSocket 连接
-- [ ] 实现 protobuf 编解码
+- [1] 实现 protobuf 编解码
 - [ ] 实现 `GameStore`
 - [ ] 实现 `WorldSnapshotReducer`
 - [ ] 实现 `MovementFrameReducer`

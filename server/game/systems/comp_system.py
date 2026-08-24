@@ -1,11 +1,16 @@
 # coding=utf-8
 
 import game.model.components as comps
-import game.commands as command
-import game.world as game_world
-import game.events as event
 import game.tools.collision as collision
 import game.model.config_loader as config_loader
+import game.events as event
+import typing
+if typing.TYPE_CHECKING:
+    import game.commands as command
+    import game.world as game_world
+    
+    
+    
 
 class CompSystem:
     def __init__(self, *args, **kwargs):
@@ -15,16 +20,16 @@ class CompSystem:
     def init(self, *args, **kwargs):
         pass
 
-    def apply_command(world: game_world.GameWorld, command: command.Command) -> list[event.Event]:
+    def apply_command(world: "game_world.GameWorld", command: "command.Command") -> list[event.Event]:
         pass
 
-    def update(world: game_world.GameWorld, dt: float) -> list[event.Event]:
+    def update(world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         pass
 
 
 class MovementCompSystem(CompSystem):
 
-    def apply_command(self, world: game_world.GameWorld, command: command.MoveCommand) -> list[event.Event]:
+    def apply_command(self, world: "game_world.GameWorld", command: "command.MoveCommand") -> list[event.Event]:
         entity = world.get_entity(command.entity_id)
         move_comp = entity.get_component(comps.MovementComponent) if entity is not None else None
         if move_comp is None or move_comp.is_locked:
@@ -46,7 +51,7 @@ class MovementCompSystem(CompSystem):
 
         return []
 
-    def update(self, world: game_world.GameWorld, dt: float) -> list[event.Event]:
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         events: list[event.Event] = []
         for entity in world.entities_with([comps.MovementComponent, comps.TransformComponent]):
             move_comp = entity.get_component(comps.MovementComponent)
@@ -83,7 +88,7 @@ class MovementCompSystem(CompSystem):
             
 
 class JoinCompSystem(CompSystem):
-    def apply_command(self, world: game_world.GameWorld, command: command.JoinCommand) -> list[event.Event]:
+    def apply_command(self, world: "game_world.GameWorld", command: "command.JoinCommand") -> list[event.Event]:
         entity = world.create_player(command.account)
 
         if entity is None:
@@ -102,14 +107,14 @@ class JoinCompSystem(CompSystem):
 
         return events
 
-    def update(self, world: game_world.GameWorld, dt: float) -> list[event.Event]:
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         return []
 
 class AttackCompSystem(CompSystem):
     def init(self, *args, **kwargs):
         pass
 
-    def apply_command(self, world: game_world.GameWorld, command: command.AttackCommand) -> list[event.Event]:
+    def apply_command(self, world: "game_world.GameWorld", command: "command.AttackCommand") -> list[event.Event]:
         attacker = world.get_entity(command.entity_id)
         if attacker is None:
             return []
@@ -130,16 +135,16 @@ class AttackCompSystem(CompSystem):
         # 可能需要维护一个攻击队列，用于处理攻击的顺序
         return []
 
-    def update(self, world: game_world.GameWorld, dt: float) -> list[event.Event]:
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         return []
 
 
 class LoginCompSystem(CompSystem):
-    def apply_command(self, world: game_world.GameWorld, command: command.LoginCommand) -> list[event.Event]:
+    def apply_command(self, world: "game_world.GameWorld", command: "command.LoginCommand") -> list[event.Event]:
         print(f"login command: {command.account}")
         return []
     
-    def update(self, world: game_world.GameWorld, dt: float) -> list[event.Event]:
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         return []
     
                        

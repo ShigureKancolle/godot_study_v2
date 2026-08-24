@@ -39,17 +39,34 @@ func decode_server(payload: PackedByteArray) -> Dictionary:
 	return {}
 
 
-func encode_client(proto_name: String, proto_params: Dictionary) -> PackedByteArray:
-	var entry: Dictionary = get_msg_register(proto_name)
-	var gm_class = entry["gm_class"]
-	var field_name: String = entry["field_name"]
+func encode_client(proto_name: String, proto_params: Dictionary):
+	var msg := game_pb.ClientMessage.new()
+	var create_func_name = "new_" + proto_name
 
-	var game_msg = gm_class.new()
-	var sub_msg = game_msg.call("new_" + field_name)
-	_fill_message(sub_msg, proto_params)
+	if not msg.has_method(create_func_name):
+		print_debug("未知的协议  " + proto_name)
+		return null
 
-	var data: PackedByteArray = game_msg.to_bytes()
+	var proto_ins = msg.call(create_func_name)
+
+
+	_fill_message(proto_ins, proto_params)
+	var data: PackedByteArray = msg.to_bytes()
 	return data
+
+
+
+
+	# var entry: Dictionary = get_msg_register(proto_name)
+	# var gm_class = entry["gm_class"]
+	# var field_name: String = entry["field_name"]
+
+	# var game_msg = gm_class.new()
+	# var sub_msg = game_msg.call("new_" + field_name)
+	# _fill_message(sub_msg, proto_params)
+
+	# var data: PackedByteArray = game_msg.to_bytes()
+	# return data
 
 func get_msg_register(proto_name: String):
 	return _registry[proto_name]

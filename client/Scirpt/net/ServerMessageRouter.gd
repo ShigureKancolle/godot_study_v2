@@ -13,14 +13,22 @@ static func Get() -> MessageRouter:
 	return _instance
 
 # 先写死在这 之后解耦
-var _handlers := {
-	GameProto.ServerMessage.PayloadCase.LOGIN_ACCEPTED: _on_login_accepted,
-}
+var _handlers: Dictionary[StringName, Callable] = {}
+#:= {
+	#&"login_accepted": _on_login_accepted,
+#}
 
-func _on_login_accepted(msg: GameProto.ServerMessage):
-	var login_accepted = msg.get_login_accepted()
-	print("登录成功, account: ", login_accepted.get_account(), "  name: ",login_accepted.get_player_name())
 
+func register(proto_name: StringName, callable: Callable):
+	if not GameProto.ServerMessage.new().has_method("get_" + String(proto_name)):
+		push_error("不存在的proto消息 " + proto_name)
+		return
+		
+	if proto_name in _handlers:
+		push_error("已经注册过的消息")
+		return
+		
+	_handlers[proto_name] = callable
 
 func route(raw: PackedByteArray) -> void:
 	var message := GameProto.ServerMessage.new()
@@ -28,11 +36,26 @@ func route(raw: PackedByteArray) -> void:
 	if result != GameProto.PB_ERR.NO_ERRORS:
 		push_error("解析消息失败")
 		return
-
-	var handler = _handlers.get(message.get_payload_case())
-	if not handler.is_valid():
+		
+	var payload_name := _get_payload_name(message)	
+		
+	var handler = _handlers.get(payload_name)
+	if not handler or not handler.is_valid():
 		push_error("未注册的处理函数")
 		return
-
+		
 	handler.call(message)
+	
+func _get_payload_name(msg: GameProto.ServerMessage) -> String:
+	var payload_tag := msg.get_payload_case()
+	if payload_tag == GameProto.ServerMessage.PayloadCase.PAYLOAD_NOT_SET:
+		return &""
+		
+	var service = msg.data.get(payload_tag)
+	if service == null:
+		return &""
+		
+	return StringName(service.field.name)
+	
+	
 	

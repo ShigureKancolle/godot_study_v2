@@ -30,7 +30,7 @@ class WebSocketServer:
 
         
 
-    async def handle(self, websocket: websockets.WebSocketProtocol):
+    async def handle(self, websocket: websockets.WebSocketCommonProtocol):
         print("客户端已连接")
         context: ConnectionContext = self.registry.add(websocket)
         try:
