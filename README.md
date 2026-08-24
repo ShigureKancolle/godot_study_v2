@@ -15,3 +15,5 @@
 
 也可以把 Godot 路径配置为环境变量 `GODOT_BIN`。提交前执行
 `.\tools\check_proto_sync.ps1`，它会重新生成并检查生成物是否被漏提交或手改。
+
+test
