@@ -23,6 +23,7 @@ func setup(state: EntityState):
 		self.player_visual = PALYER_VISUAL_SCENE.instantiate()
 		self.add_child(self.player_visual)
 		self.player_visual.setup(state)
+		self.player_visual.play_anim()
 
 		if self.entity_id == GameBootstrap.game_store.self_entity_id:
 			self.local_player_controller = LOCAL_PLAYER_CONTROLLER_SCRIPT.new()
@@ -38,12 +39,19 @@ func apply_moved(state: EntityState):
 	self.entity_state = state
 	self.target_position = state.server_position
 
-	if player_visual:
-		player_visual.apply_moved(state)
-
 func _process(delta: float):
 	var alpha := 1.0 - exp(
 		-POSITION_LERP_SPEED * delta
 	)
 
 	self.position = self.position.lerp(target_position, alpha)
+	if player_visual:
+		var move_dir = target_position - self.position
+		if target_position.is_equal_approx(self.position):
+			player_visual.play_anim("idle")
+		else:
+			player_visual.update_facing(move_dir)
+
+		# player_visual.play_anim(state.anim_state)
+
+	
