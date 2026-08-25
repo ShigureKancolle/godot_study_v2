@@ -28,6 +28,7 @@ class EntityMovedEvent(Event):
     x: float = 0.0
     y: float = 0.0
     moving: bool = False
+    anim_state: str = ""
 
 @dataclass(frozen=True)
 class EntityJoinedEvent(Event):

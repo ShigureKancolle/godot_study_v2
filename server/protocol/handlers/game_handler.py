@@ -19,6 +19,7 @@ def enter_game_request_handler(context: ConnectionContext, proto: game_pb2.Enter
     gw = world.get_room()  # 有多个room就要通过proto来获取了
     cmd = commands.JoinCommand(
         account=context.account_id,
+        player_name=proto.player_name,
     )
     gw.enqueue_command(cmd)
 

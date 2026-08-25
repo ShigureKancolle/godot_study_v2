@@ -49,6 +49,7 @@ class MovementCompSystem(CompSystem):
         move_comp.dir_y = command.dir_y
         move_comp.moving = command.moving
         move_comp.input_changed = changed
+        move_comp.anim_state = "run" if command.moving else "idle"
 
         return []
 
@@ -79,14 +80,14 @@ class MovementCompSystem(CompSystem):
                     entity.entity_id,
                     transform_comp.x,
                     transform_comp.y,
-                    move_comp.moving
+                    move_comp.moving,
+                    move_comp.anim_state
                 ))
 
             move_comp.input_changed = False
 
         return events
 
-            
 
 class JoinCompSystem(CompSystem):
     def apply_command(self, world: "game_world.GameWorld", command: "command.JoinCommand") -> list[event.Event]:
@@ -97,8 +98,8 @@ class JoinCompSystem(CompSystem):
             if entity.get_component(comps.PlayerComponent).account_id == command.account:
                 print(f"apply_command: joinCommand    entity joined  account: {command.account}")
                 return []
-        
-        entity = world.create_player(command.account)
+        # todo 这个playername应该放存档？ 存档没有才用客户端的
+        entity = world.create_player(command.account, command.player_name)
 
         if entity is None:
             print(f"apply_command: joinCommand   entity is None")

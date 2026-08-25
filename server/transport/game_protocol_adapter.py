@@ -20,7 +20,7 @@ class GameProtocolAdapter:
         self._event_handlers: dict[type, Callable] = {}
         self._moved_entitys: list[game_pb2.MovementEntry] = []
 
-    def register_event_handler(self, event_type: type, handler: Callable):
+    def register_event_handler(self, event_type: type, handler: "Callable"):
         self._event_handlers[event_type] = handler
 
     def publish_tick_result(self, tick_result: events.TickResult):
@@ -44,6 +44,7 @@ class GameProtocolAdapter:
             x=movement.x,
             y=movement.y,
             moving=movement.moving,
+            anim_state=movement.anim_state
         )
 
         self._moved_entitys.append(movement_entry)

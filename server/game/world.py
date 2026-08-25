@@ -138,12 +138,12 @@ class GameWorld:
     # endregion entity
 
     # region player
-    def create_player(self, account: str) -> "entity.Entity":
+    def create_player(self, account: str, player_name: str = "") -> "entity.Entity":
         entity_id = f"player: {account}_{self.get_next_entity_idx()}"
         speed = config_loader.get_speed("player")
         player = entity.Entity(entity_id=entity_id)
         player.entity_type = entity.EntityType.PLAYER
-        player.add_component(comps.PlayerComponent(account_id=account))
+        player.add_component(comps.PlayerComponent(account_id=account, player_name=player_name))
         player.add_component(comps.TransformComponent(x=0.0, y=0.0))
         player.add_component(comps.MovementComponent(speed=speed))
         player.add_component(comps.FacingComponent(facing=0.0))

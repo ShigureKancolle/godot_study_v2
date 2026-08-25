@@ -13,7 +13,7 @@ TICK_RATE = 30
 FIXED_DT = 1.0 / TICK_RATE
 
 class GameRuntime:
-    def __init__(self, world: game_world.GameWorld, protocol_adapter: game_protocol_adapter.GameProtocolAdapter):
+    def __init__(self, world: "game_world.GameWorld", protocol_adapter: "game_protocol_adapter.GameProtocolAdapter"):
         self._protocol_adapter = protocol_adapter
         self._world = world
         self._running = False

@@ -48,9 +48,11 @@ func _process(delta: float):
 	if player_visual:
 		var move_dir = target_position - self.position
 		if target_position.is_equal_approx(self.position):
-			player_visual.play_anim("idle")
+			pass
 		else:
 			player_visual.update_facing(move_dir)
+
+		player_visual.play_anim(entity_state.anim_state)
 
 		# player_visual.play_anim(state.anim_state)
 

@@ -13,7 +13,7 @@ static func apply(store: GameStore, frame: GameProto.MovementFrame) -> Array[Ent
 			continue
 
 		state.server_position = Vector2(entry.get_x(), entry.get_y())
-
+		state.anim_state = entry.get_anim_state()
 		state.moving = entry.get_moving()
 
 		changed_states.append(state)

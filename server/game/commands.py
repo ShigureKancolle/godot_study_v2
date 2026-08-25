@@ -21,6 +21,7 @@ class MoveCommand(WorldCommand):
 class JoinCommand(WorldCommand):
     ''' 客户端加入游戏请求 '''
     account: str = ""
+    player_name: str = ""
 
 @dataclass 
 class AttackCommand(WorldCommand):

@@ -32,6 +32,7 @@ message LoginAccepted {
 message EnterGameRequest {
   string room_id = 1;
   bool create_room = 2;
+  string player_name = 3;
 }
 
 // Server -> client
@@ -59,6 +60,7 @@ message MovementEntry {
   float y = 3;
   float speed = 4;
   bool moving = 5;
+  string anim_state = 6;
 }
 
 // Server -> client

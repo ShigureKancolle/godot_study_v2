@@ -22,5 +22,6 @@ func _process(_delta: float) -> void:
 func on_click_game_real():
 	WebSocketMgr.Get().send("enter_game_request", {
 		"room_id": "0",
-		"create_room": false
+		"create_room": false,
+		"player_name": ClientSession.Get().player_name
 	})

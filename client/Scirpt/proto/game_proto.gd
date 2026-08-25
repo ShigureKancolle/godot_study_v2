@@ -1016,6 +1016,11 @@ class EnterGameRequest:
 		service.field = __create_room
 		data[__create_room.tag] = service
 		
+		__player_name = PBField.new("player_name", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 3, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __player_name
+		data[__player_name.tag] = service
+		
 	var data = {}
 	
 	var __room_id: PBField
@@ -1043,6 +1048,19 @@ class EnterGameRequest:
 		__create_room.value = DEFAULT_VALUES_3[PB_DATA_TYPE.BOOL]
 	func set_create_room(value : bool) -> void:
 		__create_room.value = value
+	
+	var __player_name: PBField
+	func has_player_name() -> bool:
+		if __player_name.value != null:
+			return true
+		return false
+	func get_player_name() -> String:
+		return __player_name.value
+	func clear_player_name() -> void:
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__player_name.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_player_name(value : String) -> void:
+		__player_name.value = value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
@@ -1313,6 +1331,11 @@ class MovementEntry:
 		service.field = __moving
 		data[__moving.tag] = service
 		
+		__anim_state = PBField.new("anim_state", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 6, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __anim_state
+		data[__anim_state.tag] = service
+		
 	var data = {}
 	
 	var __entity_id: PBField
@@ -1379,6 +1402,19 @@ class MovementEntry:
 		__moving.value = DEFAULT_VALUES_3[PB_DATA_TYPE.BOOL]
 	func set_moving(value : bool) -> void:
 		__moving.value = value
+	
+	var __anim_state: PBField
+	func has_anim_state() -> bool:
+		if __anim_state.value != null:
+			return true
+		return false
+	func get_anim_state() -> String:
+		return __anim_state.value
+	func clear_anim_state() -> void:
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__anim_state.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_anim_state(value : String) -> void:
+		__anim_state.value = value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
