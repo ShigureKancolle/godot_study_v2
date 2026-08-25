@@ -45,7 +45,12 @@ class EntityAttackEvent(Event):
     attack_id: int = 0
 
 @dataclass(frozen=True)
-class WorldSnapshot:
+class WorldSnapshot(Event):
     room_id: str = ""
     server_tick: int = 0
     entities: dict[str, EntitySnapshot] = field(default_factory=dict)
+
+@dataclass(frozen=True)
+class EntityRemovedEvent(Event):
+    entity_id: str = ""
+    account: str = ""

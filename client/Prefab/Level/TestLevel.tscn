@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://cwi56253vlye7"]
+
+[ext_resource type="Script" uid="uid://bo8rt2672eijc" path="res://Scirpt/game/level/TestLevel.gd" id="1_fsj4o"]
+
+[node name="TestLevel" type="Node2D" unique_id=1951370242]
+script = ExtResource("1_fsj4o")
+
+[node name="Map" type="Node2D" parent="." unique_id=1534084676]
+
+[node name="Entity" type="Node2D" parent="." unique_id=976397134]
+
+[node name="Hud" type="Node2D" parent="." unique_id=457178477]
+
+[node name="Debug" type="Node2D" parent="." unique_id=467453600]

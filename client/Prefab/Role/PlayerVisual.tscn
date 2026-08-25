@@ -1,8 +1,10 @@
 [gd_scene format=3 uid="uid://yjdvw2mw27mc"]
 
+[ext_resource type="Script" uid="uid://cl5pficlut8qg" path="res://Scirpt/game/view/PlayerVisual.gd" id="1_5ie6y"]
 [ext_resource type="SpriteFrames" uid="uid://cq12vjl402xse" path="res://Prefab/Role/anim/player_anim.tres" id="2_rmt74"]
 
 [node name="PlayerVisual" type="Node2D" unique_id=1889249389]
+script = ExtResource("1_5ie6y")
 
 [node name="Body" type="AnimatedSprite2D" parent="." unique_id=1743655513]
 sprite_frames = ExtResource("2_rmt74")

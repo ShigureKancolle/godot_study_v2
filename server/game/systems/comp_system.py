@@ -1,5 +1,6 @@
 # coding=utf-8
 
+from game.entity_projector import project_entity_snapshot
 import game.model.components as comps
 import game.tools.collision as collision
 import game.model.config_loader as config_loader
@@ -89,23 +90,33 @@ class MovementCompSystem(CompSystem):
 
 class JoinCompSystem(CompSystem):
     def apply_command(self, world: "game_world.GameWorld", command: "command.JoinCommand") -> list[event.Event]:
+        print(f"apply_command: joinCommand   account: {command.account}")
+
+           
+        for entity in world.entities_with([comps.PlayerComponent]):
+            if entity.get_component(comps.PlayerComponent).account_id == command.account:
+                print(f"apply_command: joinCommand    entity joined  account: {command.account}")
+                return []
+        
         entity = world.create_player(command.account)
 
         if entity is None:
+            print(f"apply_command: joinCommand   entity is None")
             return []
         
         transform_comp = entity.get_component(comps.TransformComponent)
         if transform_comp is None:
+            print(f"apply_command: joinCommand   transform_comp is None")
             return []
 
-        events = [event.EntityJoinedEvent(
-            entity.entity_id,
+        entity_snapshot = project_entity_snapshot(entity)
+        env = event.EntityJoinedEvent(
             command.account,
-            transform_comp.x,
-            transform_comp.y,
-        )]
+            entity_snapshot
+        )
 
-        return events
+        print(f"apply_command: joinCommand   return env account: {command.account}")
+        return [env]
 
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         return []
@@ -144,6 +155,32 @@ class LoginCompSystem(CompSystem):
         print(f"login command: {command.account}")
         return []
     
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
+        return []
+
+class LeaveCompSystem(CompSystem):
+    def apply_command(self, world: "game_world.GameWorld", command: "command.LeaveCommand") -> list[event.Event]:
+        print(f"leave command: {command.account}")
+        entity = world.get_entity(command.entity_id)
+        if not entity:
+            return []
+
+        player_comp = entity.get_component(comps.PlayerComponent)
+        if player_comp is None:
+            return []
+
+        if player_comp.account_id != command.account:
+            return []
+
+        removed = world.remove_entity(entity.entity_id)
+        if removed is None:
+            return []
+        
+        return [event.EntityRemovedEvent(
+            entity.entity_id,
+            command.account
+        )]
+        
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         return []
     

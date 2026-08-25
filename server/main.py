@@ -1,6 +1,8 @@
 # coding=utf-8
 import sys
 import asyncio
+import logging
+from app.game_runtime import GameRuntime
 import game.world as world
 import game.model.entity as entity
 import game.commands as command
@@ -10,25 +12,23 @@ import game.systems.comp_system as comp_system
 import game.tick_pipeline as tick_pipeline
 from transport.game_protocol_adapter import GameProtocolAdapter
 import transport.websocket_server as websocket_server
-from app.bootstrap import build_client_router
+from app.bootstrap import build_client_router, register_adapter
 
 # 注册handler
 import protocol.handlers
 
 async def main():
     print("main() function is running...")
+    game_world = world.get_room()
+    protocol_adapter = GameProtocolAdapter(game_world)
+    register_adapter(protocol_adapter)
+    run_time = GameRuntime(world=game_world, protocol_adapter=protocol_adapter)
     build_client_router()
     socket = websocket_server.WebSocketServer()
-    try:
-        await socket.start()
-    except Exception as e:
-        print(e)
-        socket.close()
-
-def create_room():
-    game_world = world.get_room()
-    protocol_adapter = GameProtocolAdapter()
-
+    await asyncio.gather(
+        socket.start(),
+        run_time.run()
+    )
 
 def test_server():
     import proto.generated.game_pb2 as game_pb2
@@ -39,6 +39,10 @@ def test_server():
 
    
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
     print("server start")
     # asyncio.run(main())
     if "--test" in sys.argv:

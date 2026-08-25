@@ -41,7 +41,7 @@ func route(raw: PackedByteArray) -> void:
 		
 	var handler = _handlers.get(payload_name)
 	if not handler or not handler.is_valid():
-		push_error("未注册的处理函数")
+		push_error("未注册的处理函数  " + payload_name)
 		return
 		
 	handler.call(message)

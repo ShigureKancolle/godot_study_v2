@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import asyncio
+import logging
 import game.model.entity as entity
 import game.commands as command
 import game.events as event
@@ -11,6 +12,8 @@ import typing
 if typing.TYPE_CHECKING:
     import game.command_router as command_router
     import game.tick_pipeline as tick_pipeline
+
+logger = logging.getLogger(__name__)
 
 
 # region 单房间 先这样 到时候再加roommgr
@@ -41,12 +44,17 @@ class GameWorld:
         self._entites: dict[str, entity.Entity] = {}
         self._pending_commands: list[command.Command] = []
         self._tick: int = 0
+        self._entity_idx: int = 0
         self._command_router: "command_router.CommandRouter" = None
         self._tick_pipeline: "tick_pipeline.TickPipeline" = None
         self.register_command_handlers()
 
     async def start(self):
         pass
+
+    def get_next_entity_idx(self):
+        self._entity_idx += 1
+        return self._entity_idx
 
     # region loop
     def step(self, dt: float):
@@ -57,8 +65,13 @@ class GameWorld:
         commands = self._pending_commands
         self._pending_commands = []
 
-        for command in commands:
-            events.extend(self._tick_pipeline.dispatch(self, command))
+        for cur_command in commands:
+            try:
+                events.extend(self._tick_pipeline.dispatch(self, cur_command))
+            except Exception:
+                logger.exception(
+                    f"执行Command失败： server_tick={self._tick}, command={type(cur_command).__name__}, {cur_command}"
+                )
         
         events.extend(list(self._tick_pipeline.update(self, dt)))
 
@@ -98,6 +111,11 @@ class GameWorld:
         self._command_router.register(command.LoginCommand, login_comp_system.apply_command)
         self._tick_pipeline.add_system(login_comp_system)
 
+        # leave
+        leave_comp_system = comp_system.LeaveCompSystem()
+        self._command_router.register(command.LeaveCommand, leave_comp_system.apply_command)
+        self._tick_pipeline.add_system(leave_comp_system)
+
     # endregion command
 
     # region entity
@@ -113,14 +131,18 @@ class GameWorld:
     def entities_with(self, component_type: list[type]) -> list["entity.Entity"]:
         res = [entity for entity in self.get_entities() if all(comp_type in entity.get_comp_types() for comp_type in component_type)]
         return res
+
+    def remove_entity(self, entity_id: str) -> "entity.Entity | None":
+        return self._entites.pop(entity_id, None)
     
     # endregion entity
 
     # region player
     def create_player(self, account: str) -> "entity.Entity":
-        entity_id = f"player: {account}_{self._tick}"
-        speed = config_loader.get_speed(entity.EntityType.PLAYER)
+        entity_id = f"player: {account}_{self.get_next_entity_idx()}"
+        speed = config_loader.get_speed("player")
         player = entity.Entity(entity_id=entity_id)
+        player.entity_type = entity.EntityType.PLAYER
         player.add_component(comps.PlayerComponent(account_id=account))
         player.add_component(comps.TransformComponent(x=0.0, y=0.0))
         player.add_component(comps.MovementComponent(speed=speed))

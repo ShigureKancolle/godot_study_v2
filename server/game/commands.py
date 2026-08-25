@@ -28,6 +28,10 @@ class AttackCommand(WorldCommand):
     attack_id: int = 0
 
 @dataclass
+class LeaveCommand(WorldCommand):
+    account: str = ""
+
+@dataclass
 class SessionCommand:
     connection_id: int = 1
     account: str = ""
@@ -36,6 +40,8 @@ class SessionCommand:
 class LoginCommand(SessionCommand):
     # 这不是game请求 没有entity_id
     ''' 客户端登录请求 '''
+
+
 
 
 

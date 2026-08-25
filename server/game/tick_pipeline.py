@@ -5,6 +5,8 @@ import game.events as event
 import game.world as game_world
 import game.commands as command
 from typing import Generator
+import logging
+logger = logging.getLogger(__name__)
 
 class TickPipeline:
     def __init__(self):
@@ -19,8 +21,13 @@ class TickPipeline:
 
     def update(self, world: game_world.GameWorld, dt: float) -> Generator[event.Event, None, None]:
         for system in self._systems:
-            events = system.update(world, dt)
-            yield from events
+            try:
+                events = system.update(world, dt)
+                yield from events
+            except Exception:
+                logger.exception(
+                    f"System更新失败： server_tick={getattr(world, "_tick", "unknown")}, system={type(system).__name__}, dt={dt}"
+                )
 
     def add_system(self, system: comp_system.CompSystem):
         self._systems.append(system)

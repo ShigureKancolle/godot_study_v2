@@ -20,13 +20,13 @@ var wsp: WebSocketPeer = WebSocketPeer.new()
 func start() -> void:
 	wsp.connect_to_url("ws://{0}:{1}".format([HOST, PORT]))
 	
-func poll(delta: float) -> void:
+func poll(_delta: float) -> void:
 	wsp.poll()
 	var state = wsp.get_ready_state()
 	if state == WebSocketPeer.STATE_OPEN:
 		while wsp.get_available_packet_count():
 			var packet := wsp.get_packet()
-			print("数据包：", packet)
+			# print("数据包：", packet)
 			MessageRouter.Get().route(packet)
 	elif state == WebSocketPeer.STATE_CLOSING:
 		# 继续轮询才能正确关闭。

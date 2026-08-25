@@ -20,4 +20,5 @@ def login_handle(context: ConnectionContext, proto: game_pb2.LoginRequest):
         player_name=player_name,
     )
 
+    # 因为这不是一个world中的事件 所以直接通知客户端
     OutBoundQueue.get().send_to(context.connection_id, "login_accepted", accepted)

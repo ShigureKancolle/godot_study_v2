@@ -39,6 +39,8 @@ message WorldSnapshot {
   string room_id = 1;
   repeated EntityInfo entities = 2;
   int64 server_tick = 3;
+  string self_entity_id = 4;
+  string map_id = 5;
 }
 
 // Client -> server. The server must derive the controlled entity from the

@@ -1006,30 +1006,17 @@ class EnterGameRequest:
 	func _init():
 		var service
 		
-		__account = PBField.new("account", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
-		service = PBServiceField.new()
-		service.field = __account
-		data[__account.tag] = service
-		
-		__room_id = PBField.new("room_id", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		__room_id = PBField.new("room_id", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
 		service = PBServiceField.new()
 		service.field = __room_id
 		data[__room_id.tag] = service
 		
+		__create_room = PBField.new("create_room", PB_DATA_TYPE.BOOL, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.BOOL])
+		service = PBServiceField.new()
+		service.field = __create_room
+		data[__create_room.tag] = service
+		
 	var data = {}
-	
-	var __account: PBField
-	func has_account() -> bool:
-		if __account.value != null:
-			return true
-		return false
-	func get_account() -> String:
-		return __account.value
-	func clear_account() -> void:
-		data[1].state = PB_SERVICE_STATE.UNFILLED
-		__account.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
-	func set_account(value : String) -> void:
-		__account.value = value
 	
 	var __room_id: PBField
 	func has_room_id() -> bool:
@@ -1039,10 +1026,23 @@ class EnterGameRequest:
 	func get_room_id() -> String:
 		return __room_id.value
 	func clear_room_id() -> void:
-		data[2].state = PB_SERVICE_STATE.UNFILLED
+		data[1].state = PB_SERVICE_STATE.UNFILLED
 		__room_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
 	func set_room_id(value : String) -> void:
 		__room_id.value = value
+	
+	var __create_room: PBField
+	func has_create_room() -> bool:
+		if __create_room.value != null:
+			return true
+		return false
+	func get_create_room() -> bool:
+		return __create_room.value
+	func clear_create_room() -> void:
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__create_room.value = DEFAULT_VALUES_3[PB_DATA_TYPE.BOOL]
+	func set_create_room(value : bool) -> void:
+		__create_room.value = value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
@@ -1082,10 +1082,20 @@ class WorldSnapshot:
 		service.func_ref = Callable(self, "add_entities")
 		data[__entities.tag] = service
 		
-		__timestamp = PBField.new("timestamp", PB_DATA_TYPE.INT64, PB_RULE.OPTIONAL, 3, true, DEFAULT_VALUES_3[PB_DATA_TYPE.INT64])
+		__server_tick = PBField.new("server_tick", PB_DATA_TYPE.INT64, PB_RULE.OPTIONAL, 3, true, DEFAULT_VALUES_3[PB_DATA_TYPE.INT64])
 		service = PBServiceField.new()
-		service.field = __timestamp
-		data[__timestamp.tag] = service
+		service.field = __server_tick
+		data[__server_tick.tag] = service
+		
+		__self_entity_id = PBField.new("self_entity_id", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 4, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __self_entity_id
+		data[__self_entity_id.tag] = service
+		
+		__map_id = PBField.new("map_id", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 5, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __map_id
+		data[__map_id.tag] = service
 		
 	var data = {}
 	
@@ -1113,18 +1123,44 @@ class WorldSnapshot:
 		__entities.value.append(element)
 		return element
 	
-	var __timestamp: PBField
-	func has_timestamp() -> bool:
-		if __timestamp.value != null:
+	var __server_tick: PBField
+	func has_server_tick() -> bool:
+		if __server_tick.value != null:
 			return true
 		return false
-	func get_timestamp() -> int:
-		return __timestamp.value
-	func clear_timestamp() -> void:
+	func get_server_tick() -> int:
+		return __server_tick.value
+	func clear_server_tick() -> void:
 		data[3].state = PB_SERVICE_STATE.UNFILLED
-		__timestamp.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT64]
-	func set_timestamp(value : int) -> void:
-		__timestamp.value = value
+		__server_tick.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT64]
+	func set_server_tick(value : int) -> void:
+		__server_tick.value = value
+	
+	var __self_entity_id: PBField
+	func has_self_entity_id() -> bool:
+		if __self_entity_id.value != null:
+			return true
+		return false
+	func get_self_entity_id() -> String:
+		return __self_entity_id.value
+	func clear_self_entity_id() -> void:
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__self_entity_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_self_entity_id(value : String) -> void:
+		__self_entity_id.value = value
+	
+	var __map_id: PBField
+	func has_map_id() -> bool:
+		if __map_id.value != null:
+			return true
+		return false
+	func get_map_id() -> String:
+		return __map_id.value
+	func clear_map_id() -> void:
+		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__map_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_map_id(value : String) -> void:
+		__map_id.value = value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
