@@ -25,6 +25,8 @@ var hp: int = 0
 var max_hp: int = 0
 var dead: bool = false
 
+var is_local_player: bool = false
+
 static func from_entity_info(entity_info: GameProto.EntityInfo) -> EntityState:
 	var state = EntityState.new()
 	state.entity_id = entity_info.get_entity_id()

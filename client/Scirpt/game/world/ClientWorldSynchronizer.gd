@@ -31,6 +31,7 @@ func apply_movement_frame(frame: GameProto.MovementFrame):
 func apply_entity_spawned(entity_spawned: GameProto.EntitySpawned):
 	var state := EntityState.from_entity_info(entity_spawned.get_entity_info())
 	state.server_position = state.server_position
+	state.is_local_player = state.entity_id == store.self_entity_id
 	store.add_entity(state.entity_id, state)
 	SignalMgr.Get().snl_entity_added.emit(state)
 	
