@@ -1,8 +1,5 @@
 # coding=utf-8
-
-''' 
-分发客户端消息
-'''
+"""将每种客户端 payload 分发给唯一的 Command 构造 Handler。"""
 from typing import Callable
 from transport.connection_registry import ConnectionContext
 from singleton import Singleton

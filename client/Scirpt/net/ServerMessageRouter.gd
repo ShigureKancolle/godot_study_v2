@@ -1,5 +1,6 @@
 extends Singleton
 class_name MessageRouter
+## 将解码后的 ServerMessage payload 路由给已注册的客户端 Handler。
 const GameProto = preload("../proto/game_proto.gd")
 
 static var _instance: MessageRouter = null

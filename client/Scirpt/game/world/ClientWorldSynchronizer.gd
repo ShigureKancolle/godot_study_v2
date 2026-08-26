@@ -1,5 +1,6 @@
 extends RefCounted
 class_name ClientWorldSynchronizer
+## 按顺序通过 Reducer 应用服务端消息，并发出表现层信号。
 const GameProto := preload("res://Scirpt/proto/game_proto.gd")
 
 var store: GameStore = null

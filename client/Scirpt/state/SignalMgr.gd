@@ -24,6 +24,7 @@ signal snl_entity_updated(entity: EntityState)
 signal snl_entity_removed(entity_id: String)
 signal snl_store_cleared
 signal snl_entities_moved(change_states: Array[EntityState])
+signal snl_command_rejected(command_name: String, reason_code: String, reason_message: String)
 
 # Bootstrap
 signal snl_world_snapshot_applied(snapshot: GameProto.WorldSnapshot)

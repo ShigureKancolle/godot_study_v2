@@ -1,35 +1,26 @@
-# coding = utf-8
-from game import commands, world
-from game.entity_projector import project_entity_snapshot
-from transport.outbound_queue import OutBoundQueue
-from transport.connection_registry import ConnectionContext, ConnectionRegistry
+# coding=utf-8
+"""将已认证连接的游戏协议请求转换成 WorldCommand。"""
+
+from game import commands
+from protocol.contract import validate_enter_game_request, validate_move_intent
+from transport.connection_registry import ConnectionContext
 from proto.generated import game_pb2
-import time
-from game.events import EntityJoinedEvent, Event
 
 
 def enter_game_request_handler(context: ConnectionContext, proto: game_pb2.EnterGameRequest):
-    print("player enter game acc:", context.account_id)
-    if not context.account_id:
-        # 没有绑定账号
-        print("player enter game without account")
-        return []
-
-    # 这是world的事件 通过command来让world通知客户端
-    gw = world.get_room()  # 有多个room就要通过proto来获取了
-    cmd = commands.JoinCommand(
+    player_name = validate_enter_game_request(proto)
+    return commands.JoinCommand(
+        connection_id=context.connection_id,
         account=context.account_id,
-        player_name=proto.player_name,
+        player_name=player_name,
     )
-    gw.enqueue_command(cmd)
 
 def move_intent_handler(context: ConnectionContext, proto: game_pb2.MoveIntent):
-    print("player move intent:", proto)
-    gw = world.get_room()
-    cmd = commands.MoveCommand(
+    validate_move_intent(proto)
+    return commands.MoveCommand(
+        connection_id=context.connection_id,
         entity_id=context.player_entity_id,
         dir_x=proto.dir_x,
         dir_y=proto.dir_y,
         moving=proto.moving,
     )
-    gw.enqueue_command(cmd)

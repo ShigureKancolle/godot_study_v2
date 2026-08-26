@@ -1,7 +1,6 @@
 extends RefCounted
 class_name GameStore
-
-# 服务端world镜像
+## 保存最新服务端权威世界状态的客户端只读镜像。
 
 var server_tick: int = 0
 var map_id: String = ""

@@ -9,3 +9,4 @@ static func register(game_handler: GameHandler):
 	router.register(&"movement_frame", game_handler.on_movement_frame)
 	router.register(&"entity_spawned", game_handler.on_entity_spawned)
 	router.register(&"entity_removed", game_handler.on_entity_removed)
+	router.register(&"command_rejected", game_handler.on_command_rejected)

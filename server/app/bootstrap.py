@@ -1,4 +1,5 @@
 # coding=utf-8
+"""启动装配：注册协议路由和领域事件发布器。"""
 from protocol import codec
 from protocol import router
 from protocol.handlers import login_handler
@@ -19,3 +20,4 @@ def register_adapter(adapter: GameProtocolAdapter):
     adapter.register_event_handler(events.EntityJoinedEvent, adapter.publish_entity_joined)
     adapter.register_event_handler(events.EntityMovedEvent, adapter.to_movement_entry)
     adapter.register_event_handler(events.EntityRemovedEvent, adapter.publish_entity_removed)
+    adapter.register_event_handler(events.CommandRejectedEvent, adapter.publish_command_rejected)

@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-// The only editable protobuf contract in this repository.
-// Run tools/sync_proto.ps1 after changing this file. Never edit generated code.
+// 本仓库唯一可编辑的 Protobuf 协议源。
+// 修改后运行 tools/sync_proto.ps1，禁止手工修改生成代码。
 package game;
 
 message EntityInfo {
@@ -16,26 +16,26 @@ message EntityInfo {
   string ai_state = 9;
 }
 
-// Client -> server
+// 客户端 -> 服务端
 message LoginRequest {
   string account = 1;
   string player_name = 2;
 }
 
-// Server -> client
+// 服务端 -> 客户端
 message LoginAccepted {
   string account = 1;
   string player_name = 2;
 }
 
-// Client -> server
+// 客户端 -> 服务端
 message EnterGameRequest {
   string room_id = 1;
   bool create_room = 2;
   string player_name = 3;
 }
 
-// Server -> client
+// 服务端 -> 客户端
 message WorldSnapshot {
   string room_id = 1;
   repeated EntityInfo entities = 2;
@@ -44,8 +44,8 @@ message WorldSnapshot {
   string map_id = 5;
 }
 
-// Client -> server. The server must derive the controlled entity from the
-// authenticated connection; entity_id is retained temporarily for migration.
+// 客户端 -> 服务端。服务端必须从已认证连接推导受控实体；
+// entity_id 仅为迁移阶段临时保留。
 message MoveIntent {
   string entity_id = 1;
   float dir_x = 2;
@@ -53,7 +53,7 @@ message MoveIntent {
   bool moving = 4;
 }
 
-// Server -> client
+// 服务端 -> 客户端
 message MovementEntry {
   string entity_id = 1;
   float x = 2;
@@ -63,39 +63,63 @@ message MovementEntry {
   string anim_state = 6;
 }
 
-// Server -> client
+// 服务端 -> 客户端
 message MovementFrame {
   uint64 server_tick = 1;
   repeated MovementEntry entries = 2;
 }
 
-// Server -> client
+// 服务端 -> 客户端
 message EntityRemoved {
   string entity_id = 1;
 }
 
-// Server -> client
+// 服务端 -> 客户端
 message EntityRelocated {
   string entity_id = 1;
   float facing = 2;
 }
 
-// Server -> client
+// 服务端 -> 客户端
 message EntitySpawned {
   string entity_id = 1;
   EntityInfo entity_info = 2;
 }
 
-// Only messages sent from client to server are allowed in this envelope.
+message AttackStart {
+  string attacker_id = 1;
+  int32 attack_id = 2;
+}
+
+message AttackHit {
+  string attacker_id = 1;
+  int32 attack_id = 2;
+}
+
+message EntityHurt {
+  string hurt_entity_id = 1;
+  int32 attack_id = 2;
+}
+
+// 服务端 -> 客户端。说明客户端命令被拒绝的原因；
+// 这是单次请求的响应，不属于权威世界状态。
+message CommandRejected {
+  string command_name = 1;
+  string reason_code = 2;
+  string reason_message = 3;
+}
+
+// 该包络只允许承载客户端发往服务端的消息。
 message ClientMessage {
   oneof payload {
     LoginRequest login_request = 1;
     EnterGameRequest enter_game_request = 2;
     MoveIntent move_intent = 3;
+    AttackIntent attack_intent = 4;
   }
 }
 
-// Only messages sent from server to client are allowed in this envelope.
+// 该包络只允许承载服务端发往客户端的消息。
 message ServerMessage {
   string run_id = 1;
   uint64 server_tick = 2;
@@ -107,5 +131,9 @@ message ServerMessage {
     EntitySpawned entity_spawned = 6;
     EntityRemoved entity_removed = 7;
     EntityRelocated entity_relocated = 8;
+    CommandRejected command_rejected = 9;
+    AttackStart attack_start = 10;
+    AttackHit attack_hit = 11;
+    EntityHurt entity_hurt = 12;
   }
 }

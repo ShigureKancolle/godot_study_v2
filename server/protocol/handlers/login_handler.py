@@ -1,24 +1,15 @@
 # coding=utf-8
+"""只负责将 LoginRequest 协议消息转换成会话命令。"""
 
-from protocol import router
-from transport.outbound_queue import OutBoundQueue
-from transport.connection_registry import ConnectionContext, ConnectionRegistry
+from protocol.contract import validate_login_request
+from transport.connection_registry import ConnectionContext
 from game.commands import LoginCommand
 from proto.generated import game_pb2
 
 def login_handle(context: ConnectionContext, proto: game_pb2.LoginRequest):
-    print(f"player login acc: {proto.account}")
-    account = proto.account.strip()
-    player_name = proto.player_name.strip()
-    if not account:
-        raise ValueError("account is required")
-
-    ConnectionRegistry.get().bind_account(context.connection_id, account, player_name)
-
-    accepted = game_pb2.LoginAccepted(
+    account, player_name = validate_login_request(proto)
+    return LoginCommand(
+        connection_id=context.connection_id,
         account=account,
         player_name=player_name,
     )
-
-    # 因为这不是一个world中的事件 所以直接通知客户端
-    OutBoundQueue.get().send_to(context.connection_id, "login_accepted", accepted)

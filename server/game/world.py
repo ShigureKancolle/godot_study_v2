@@ -1,4 +1,5 @@
 # coding=utf-8
+"""单房间权威世界：持有实体、待处理命令和 tick 状态。"""
 
 import asyncio
 import logging
@@ -105,11 +106,6 @@ class GameWorld:
         attack_comp_system = comp_system.AttackCompSystem()
         self._command_router.register(command.AttackCommand, attack_comp_system.apply_command)
         self._tick_pipeline.add_system(attack_comp_system)
-
-        # login
-        login_comp_system = comp_system.LoginCompSystem()
-        self._command_router.register(command.LoginCommand, login_comp_system.apply_command)
-        self._tick_pipeline.add_system(login_comp_system)
 
         # leave
         leave_comp_system = comp_system.LeaveCompSystem()

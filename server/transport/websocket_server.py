@@ -1,13 +1,15 @@
 # coding=utf-8
+"""管理 WebSocket 连接，并在客户端与 AppRuntime 之间传递编码数据包。"""
 
 import websockets
 import asyncio
 import logging
 from transport.connection_registry import ConnectionRegistry, ConnectionContext
 from transport.outbound_queue import OutBoundQueue
-from protocol.router import ClientMessageRouter
 from protocol.codec import ProtocolCodec
-from game import commands, world
+import typing
+if typing.TYPE_CHECKING:
+    from app.app_runtime import AppRuntime
 
 HOST = "127.0.0.1"
 PORT = 8765
@@ -15,7 +17,8 @@ PORT = 8765
 logger = logging.getLogger(__name__)
 
 class WebSocketServer:
-    def __init__(self, host: str = HOST, port: int = PORT):
+    def __init__(self, app_runtime: "AppRuntime", host: str = HOST, port: int = PORT):
+        self.app_runtime = app_runtime
         self.registry = ConnectionRegistry.get()
         self.outbound_queue = OutBoundQueue.get()
         self.host = host
@@ -62,31 +65,15 @@ class WebSocketServer:
         except websockets.ConnectionClosed:
             print("客户端已断开")
         finally:
-            entity_id = context.player_entity_id
-            account = context.account_id
-            room_id = context.room_id
+            self.app_runtime.on_connection_closed(context)
             self.registry.remove(context.connection_id)
-            if entity_id:
-                game_world = world.get_room()
-
-                if game_world.room_id == room_id:
-                    game_world.enqueue_command(
-                        commands.LeaveCommand(
-                            entity_id,
-                            account
-                        )
-                    )
-
-
             print(f"移除客户端，当前人数： {len(self.registry.all_connections())}")
 
     async def on_bytes_received(self, context: ConnectionContext, payload: bytes):
-        # 怎么在这里分辨login请求 然后绑定account_id
-        # 怎么把各种协议分发出去
         message = ProtocolCodec.get().decode_client(payload)
-        ClientMessageRouter.get().to_command(context, message)
+        self.app_runtime.on_client_message(context, message)
 
-    async def _on_sender_task_done(self, task: asyncio.Task):
+    def _on_sender_task_done(self, task: asyncio.Task):
         if task.cancelled():
             return
 

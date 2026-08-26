@@ -1,7 +1,5 @@
 extends Node
-'''
-用于组装初始化客户端
-'''
+## 客户端装配入口：初始化传输、Store、路由和场景切换。
 
 const GameProto = preload("res://Scirpt/proto/game_proto.gd")
 const GAME_SCENE := "res://Prefab/Level/TestLevel.tscn"

@@ -1,14 +1,16 @@
 # coding=utf-8
 
-''' 
-客户端请求 
-服务端经过验证后更新游戏状态并返回事件通知客户端
-'''
-from dataclasses import dataclass, field
+"""由客户端请求或连接生命周期事件生成的应用命令。
+
+SessionCommand 面向连接和会话状态；WorldCommand 进入队列后只能由游戏 System
+应用到 GameWorld。
+"""
+from dataclasses import dataclass
 
 @dataclass
 class WorldCommand:
     entity_id: str = ""
+    connection_id: int = 0
 
 @dataclass
 class MoveCommand(WorldCommand):
@@ -34,16 +36,11 @@ class LeaveCommand(WorldCommand):
 
 @dataclass
 class SessionCommand:
-    connection_id: int = 1
+    connection_id: int = 0
     account: str = ""
 
 @dataclass
 class LoginCommand(SessionCommand):
-    # 这不是game请求 没有entity_id
-    ''' 客户端登录请求 '''
+    """认证并绑定连接；该命令不会进入 GameWorld。"""
 
-
-
-
-
-    
+    player_name: str = ""

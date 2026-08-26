@@ -1,11 +1,12 @@
 # coding=utf-8
-'''读表来给指令分配system'''
-from typing import Generator
+"""将每种 WorldCommand 映射到唯一负责它的游戏 System。"""
 
 import game.commands as command
-import game.world as world
 import game.systems.comp_system as comp_system
 import game.events as event
+import typing
+if typing.TYPE_CHECKING:
+    import game.world as world
 
 class CommandRouter:
     def __init__(self):
@@ -15,11 +16,14 @@ class CommandRouter:
     def register(self, command_type: type, handler: callable):
         self._handlers[command_type] = handler
 
-    def dispatch(self, world: world.GameWorld, command: command.WorldCommand):
+    def dispatch(self, world: "world.GameWorld", command: command.WorldCommand):
         command_type = type(command)
         handler = self._handlers.get(command_type)
         if handler is None:
-            # todo print error
-            raise []
-        else:
-            return handler(world, command)
+            return [event.CommandRejectedEvent(
+                connection_id=command.connection_id,
+                command_name=command_type.__name__,
+                reason_code="COMMAND_NOT_REGISTERED",
+                reason_message="没有游戏 System 负责该命令类型",
+            )]
+        return handler(world, command)

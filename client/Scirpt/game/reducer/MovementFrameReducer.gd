@@ -1,5 +1,6 @@
 extends Object
 class_name MovementFrameReducer
+## 将 MovementFrame 应用到已有 EntityState，不操作表现节点。
 
 const GameProto = preload("res://Scirpt/proto/game_proto.gd")
 

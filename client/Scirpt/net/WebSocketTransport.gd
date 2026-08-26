@@ -1,5 +1,6 @@
 extends Singleton
 class_name WebSocketMgr
+## 负责轮询 WebSocketPeer 和传输编码数据包，不包含游戏规则。
 
 const GameProto = preload("../proto/game_proto.gd")
 

@@ -75,19 +75,19 @@
 
 ### 1.2 确立不可违反的规则
 
-- [ ] `GameWorld` 是服务端唯一游戏状态持有者
-- [ ] System 可以修改 World，网络层不可以
-- [ ] Handler 只能把网络消息转换成 Command
-- [ ] 客户端 Store 只能通过服务端消息更新
-- [ ] UI 和表现节点不能直接修改权威镜像
-- [ ] 每条协议只有一个方向和一种语义
-- [ ] 配置只在 `shared_config` 修改
-- [ ] 生成代码禁止手改
-- [ ] 系统之间不互相偷偷调用，通过 World 或领域 Event 协作
+- [1] `GameWorld` 是服务端唯一游戏状态持有者
+- [1] System 可以修改 World，网络层不可以
+- [1] Handler 只能把网络消息转换成 Command
+- [1] 客户端 Store 只能通过服务端消息更新
+- [1] UI 和表现节点不能直接修改权威镜像
+- [1] 每条协议只有一个方向和一种语义
+- [1] 配置只在 `shared_config` 修改
+- [1] 生成代码禁止手改
+- [1] 系统之间不互相偷偷调用，通过 World 或领域 Event 协作
 
 ### 1.3 明确服务器 tick 顺序
 
-- [ ] 固定并记录 tick pipeline
+- [1] 固定并记录 tick pipeline
 
 建议顺序：
 
@@ -171,11 +171,11 @@ client/Script/
 任务：
 
 - [1] 只创建本阶段需要的目录
-- [ ] 不提前创建大量空接口和基类
-- [ ] `main.py` 只负责装配和启动
-- [ ] `GameBootstrap.gd` 只负责客户端初始化
-- [ ] 给每个模块写一段简短职责说明
-- [ ] 禁止循环依赖
+- [1] 不提前创建大量空接口和基类
+- [1] `main.py` 只负责装配和启动
+- [1] `GameBootstrap.gd` 只负责客户端初始化
+- [1] 给每个模块写一段简短职责说明
+- [1] 禁止循环依赖
 
 验收标准：
 
@@ -215,7 +215,7 @@ client/Script/
 - [1] 定义 `MoveIntentCommand`
 - [1] 定义 `AttackCommand`
 - [1] 所有 Command 包含调用者身份
-- [ ] Command 校验失败返回明确原因
+- [1] Command 校验失败返回明确原因
 
 验收标准：
 
@@ -233,7 +233,7 @@ client/Script/
 - [1] 玩家不能提交坐标
 - [1] 非法实体不能移动
 - [1] 死亡或锁定实体不能移动
-- [ ] 移动结果写入 `GameWorld`
+- [1] 移动结果写入 `GameWorld`
 
 ### 协议
 
@@ -257,14 +257,14 @@ client/Script/
 点击按钮->EnterGameRequest->WorldSnapshot->创建游戏场景，同步游戏世界
 - [1] 实现 WebSocket 连接
 - [1] 实现 protobuf 编解码
-- [ ] 实现 `GameStore`
-- [ ] 实现 `WorldSnapshotReducer`
-- [ ] 实现 `MovementFrameReducer`
-- [ ] 实现 `EntityViewFactory`
-- [ ] 实现最小玩家节点
-- [ ] 实现远程位置插值
-- [ ] 本地玩家暂时也使用服务端坐标
-- [ ] 输入层只发送 `MoveIntent`
+- [1] 实现 `GameStore`
+- [1] 实现 `WorldSnapshotReducer`
+- [1] 实现 `MovementFrameReducer`
+- [1] 实现 `EntityViewFactory`
+- [1] 实现最小玩家节点
+- [1] 实现远程位置插值
+- [1] 本地玩家暂时也使用服务端坐标
+- [1] 输入层只发送 `MoveIntent`
 
 验收标准：
 
@@ -276,7 +276,7 @@ client/Script/
 
 ## 阶段 5：拆分客户端实体表现
 
-- [ ] `EntityView` 只保存实体 ID 和子表现组件引用
+- [1] `EntityView` 只保存实体 ID 和子表现组件引用
 - [ ] `EntityViewFactory` 决定创建哪种实体视图
 - [ ] `MotionPresenter` 只负责位置表现
 - [ ] `AnimationPresenter` 只负责动画

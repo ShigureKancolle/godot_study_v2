@@ -1677,6 +1677,88 @@ class EntitySpawned:
 			return PB_ERR.PARSE_INCOMPLETE
 		return result
 	
+class CommandRejected:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__command_name = PBField.new("command_name", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __command_name
+		data[__command_name.tag] = service
+		
+		__reason_code = PBField.new("reason_code", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __reason_code
+		data[__reason_code.tag] = service
+		
+		__reason_message = PBField.new("reason_message", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 3, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __reason_message
+		data[__reason_message.tag] = service
+		
+	var data = {}
+	
+	var __command_name: PBField
+	func has_command_name() -> bool:
+		if __command_name.value != null:
+			return true
+		return false
+	func get_command_name() -> String:
+		return __command_name.value
+	func clear_command_name() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__command_name.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_command_name(value : String) -> void:
+		__command_name.value = value
+	
+	var __reason_code: PBField
+	func has_reason_code() -> bool:
+		if __reason_code.value != null:
+			return true
+		return false
+	func get_reason_code() -> String:
+		return __reason_code.value
+	func clear_reason_code() -> void:
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__reason_code.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_reason_code(value : String) -> void:
+		__reason_code.value = value
+	
+	var __reason_message: PBField
+	func has_reason_message() -> bool:
+		if __reason_message.value != null:
+			return true
+		return false
+	func get_reason_message() -> String:
+		return __reason_message.value
+	func clear_reason_message() -> void:
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__reason_message.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_reason_message(value : String) -> void:
+		__reason_message.value = value
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
 class ClientMessage:
 	extends RefCounted
 	func _init():
@@ -1838,6 +1920,12 @@ class ServerMessage:
 		service.func_ref = Callable(self, "new_entity_relocated")
 		data[__entity_relocated.tag] = service
 		
+		__command_rejected = PBField.new("command_rejected", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 9, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __command_rejected
+		service.func_ref = Callable(self, "new_command_rejected")
+		data[__command_rejected.tag] = service
+		
 	var data = {}
 	
 	enum PayloadCase {
@@ -1848,6 +1936,7 @@ class ServerMessage:
 		ENTITY_SPAWNED = 6,
 		ENTITY_REMOVED = 7,
 		ENTITY_RELOCATED = 8,
+		COMMAND_REJECTED = 9,
 	}
 	var _payload_case: int = 0
 
@@ -1898,6 +1987,8 @@ class ServerMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		__entity_relocated.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__login_accepted.value = LoginAccepted.new()
 		return __login_accepted.value
 	
@@ -1922,6 +2013,8 @@ class ServerMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		__entity_relocated.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__world_snapshot.value = WorldSnapshot.new()
 		return __world_snapshot.value
 	
@@ -1946,6 +2039,8 @@ class ServerMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		__entity_relocated.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__movement_frame.value = MovementFrame.new()
 		return __movement_frame.value
 	
@@ -1970,6 +2065,8 @@ class ServerMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		__entity_relocated.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__entity_spawned.value = EntitySpawned.new()
 		return __entity_spawned.value
 	
@@ -1994,6 +2091,8 @@ class ServerMessage:
 		_payload_case = 7
 		__entity_relocated.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__entity_removed.value = EntityRemoved.new()
 		return __entity_removed.value
 	
@@ -2018,8 +2117,36 @@ class ServerMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		data[8].state = PB_SERVICE_STATE.FILLED
 		_payload_case = 8
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__entity_relocated.value = EntityRelocated.new()
 		return __entity_relocated.value
+	
+	var __command_rejected: PBField
+	func has_command_rejected() -> bool:
+		return data[9].state == PB_SERVICE_STATE.FILLED
+	func get_command_rejected() -> CommandRejected:
+		return __command_rejected.value
+	func clear_command_rejected() -> void:
+		data[9].state = PB_SERVICE_STATE.UNFILLED
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_command_rejected() -> CommandRejected:
+		__login_accepted.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__world_snapshot.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__movement_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__entity_spawned.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__entity_removed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__entity_relocated.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[8].state = PB_SERVICE_STATE.UNFILLED
+		data[9].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 9
+		__command_rejected.value = CommandRejected.new()
+		return __command_rejected.value
 	
 	func get_payload_case() -> int:
 		return _payload_case

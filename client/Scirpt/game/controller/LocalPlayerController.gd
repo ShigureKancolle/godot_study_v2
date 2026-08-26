@@ -1,5 +1,6 @@
 extends Node
 class_name LocalPlayerController
+## 采集本地输入，只在意图变化时发送 MoveIntent。
 
 var entity_id: String = ""
 var _last_direction: Vector2 = Vector2.ZERO

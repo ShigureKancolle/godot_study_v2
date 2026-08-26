@@ -1,10 +1,13 @@
 # coding=utf-8
+"""先执行待处理命令，再按确定顺序更新已注册的 System。"""
+import typing
 import game.systems.comp_system as comp_system
 import game.command_router as command_router
 import game.events as event
-import game.world as game_world
 import game.commands as command
-from typing import Generator
+if typing.TYPE_CHECKING:
+    import game.world as game_world
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -13,13 +16,10 @@ class TickPipeline:
         self._systems: list[comp_system.CompSystem] = []
         self._router: command_router.CommandRouter = None
 
-    def tick(self, dt: float):
-        pass
-
-    def dispatch(self, world: game_world.GameWorld, command: command.WorldCommand) -> Generator[event.Event, None, None]:
+    def dispatch(self, world: "game_world.GameWorld", command: command.WorldCommand):
         return self._router.dispatch(world, command)
 
-    def update(self, world: game_world.GameWorld, dt: float) -> Generator[event.Event, None, None]:
+    def update(self, world: "game_world.GameWorld", dt: float):
         for system in self._systems:
             try:
                 events = system.update(world, dt)

@@ -1,7 +1,5 @@
 # coding=utf-8
-'''
-编码解码器
-'''
+"""编解码方向明确的 Protobuf 包络，不包含业务逻辑。"""
 from google.protobuf.message import Message
 import proto.generated.game_pb2 as game_pb2
 from google.protobuf.json_format import MessageToDict, ParseDict

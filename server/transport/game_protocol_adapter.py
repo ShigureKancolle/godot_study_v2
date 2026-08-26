@@ -1,4 +1,5 @@
 # coding=utf-8
+"""将领域事件和快照转换成服务端出站 Protobuf 消息。"""
 
 import typing
 
@@ -36,7 +37,12 @@ class GameProtocolAdapter:
                 server_tick=server_tick,
                 entries=self._moved_entitys
             )
-            self._outbound.broadcast("movement_frame", msg, room_id= self._game_world.room_id)
+            self._outbound.broadcast(
+                "movement_frame",
+                msg,
+                room_id=self._game_world.room_id,
+                server_tick=server_tick,
+            )
         
     def to_movement_entry(self, movement: events.EntityMovedEvent, server_tick: int) -> game_pb2.MovementEntry:
         movement_entry = game_pb2.MovementEntry(
@@ -54,7 +60,25 @@ class GameProtocolAdapter:
         entity_leaved = game_pb2.EntityRemoved(
             entity_id=entity_leaved.entity_id
         )
-        self._outbound.broadcast("entity_removed", entity_leaved, room_id=self._game_world.room_id)
+        self._outbound.broadcast(
+            "entity_removed",
+            entity_leaved,
+            room_id=self._game_world.room_id,
+            server_tick=server_tick,
+        )
+
+    def publish_command_rejected(self, rejected: events.CommandRejectedEvent, server_tick: int):
+        message = game_pb2.CommandRejected(
+            command_name=rejected.command_name,
+            reason_code=rejected.reason_code,
+            reason_message=rejected.reason_message,
+        )
+        self._outbound.send_to(
+            rejected.connection_id,
+            "command_rejected",
+            message,
+            server_tick=server_tick,
+        )
 
     def publish_entity_joined(self, entity_joined: events.EntityJoinedEvent, server_tick: int):
         print(f"publish_entity_joined  server_tick: {server_tick}  account: {entity_joined.account}")
@@ -75,7 +99,13 @@ class GameProtocolAdapter:
 
         context.room_id = self._game_world.room_id
         context.player_entity_id = entity_joined.entity_info.entity_id
-        self._outbound.broadcast("entity_spawned", entity_spawned, exclude_ids=[context.connection_id], room_id=context.room_id)
+        self._outbound.broadcast(
+            "entity_spawned",
+            entity_spawned,
+            exclude_ids=[context.connection_id],
+            room_id=context.room_id,
+            server_tick=server_tick,
+        )
 
     def _make_all_snapshot(self, server_tick: int, room_id: str, self_entity_id: str) -> game_pb2.WorldSnapshot:
         msg = game_pb2.WorldSnapshot()

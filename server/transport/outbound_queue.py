@@ -1,7 +1,5 @@
 # coding=utf-8
-'''
-排队发送协议
-'''
+"""编码服务端消息，并按目标连接将数据包放入发送队列。"""
 from google.protobuf.message import Message
 from dataclasses import dataclass, field
 from protocol.codec import ProtocolCodec
@@ -26,19 +24,21 @@ class OutBoundQueue:
         print(f"OutBoundQueue.send_to   proto_name: {proto_name}, body: {body}")
         print(f"run_id: {run_id},  server_tick: {server_tick}")
         # 构建协议
-        payload = ProtocolCodec.get().encode_server(proto_name, body)
+        payload = ProtocolCodec.get().encode_server(proto_name, body, run_id=run_id, server_tick=server_tick)
 
         # 传给指定连接
         self.queue.put_nowait(OutBoundMessage(payload=payload, recipient_ids=[connection_id], proto_name=proto_name))
 
-    def broadcast(self, proto_name: str, body: Message, include_ids: list[str] = [], exclude_ids: list[str] = [], room_id: str = ""):
+    def broadcast(self, proto_name: str, body: Message, include_ids: list[int] | None = None, exclude_ids: list[int] | None = None, room_id: str = "", run_id: str = "", server_tick: int = 0):
+        include_ids = include_ids or []
+        exclude_ids = exclude_ids or []
         print(f"OutBoundQueue.broadcast   proto_name: {proto_name}, body: {body}")
         print(f"room_id: {room_id},  exclude_ids: {exclude_ids}")
-        payload = ProtocolCodec.get().encode_server(proto_name, body)
+        payload = ProtocolCodec.get().encode_server(proto_name, body, run_id=run_id, server_tick=server_tick)
 
         def check_context(context: connection_registry.ConnectionContext):
             # include_ids不传代表所有连接
-            if include_ids and context.connection_id not in exclude_ids:
+            if include_ids and context.connection_id not in include_ids:
                 return False
 
             if room_id and context.room_id != room_id:

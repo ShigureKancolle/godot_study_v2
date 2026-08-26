@@ -1,4 +1,5 @@
 # coding=utf-8
+"""游戏运行时：按固定频率推进 GameWorld 并发布权威 TickResult。"""
 
 import time
 import asyncio

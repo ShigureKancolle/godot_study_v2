@@ -1,5 +1,6 @@
 extends RefCounted
 class_name GameHandler
+## 应用权威游戏消息，并将命令拒绝信息提供给 UI 和日志。
 
 const GameProto = preload("res://Scirpt/proto/game_proto.gd")
 
@@ -27,3 +28,11 @@ func on_entity_spawned(msg: GameProto.ServerMessage):
 func on_entity_removed(msg: GameProto.ServerMessage):
 	var entity_removed := msg.get_entity_removed()
 	_client_world.apply_entity_removed(entity_removed.get_entity_id())
+
+func on_command_rejected(msg: GameProto.ServerMessage):
+	var rejected := msg.get_command_rejected()
+	var command_name := rejected.get_command_name()
+	var reason_code := rejected.get_reason_code()
+	var reason_message := rejected.get_reason_message()
+	push_warning("命令被拒绝 [%s/%s]：%s" % [command_name, reason_code, reason_message])
+	SignalMgr.Get().snl_command_rejected.emit(command_name, reason_code, reason_message)

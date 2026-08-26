@@ -1,5 +1,6 @@
 extends Singleton
 class_name ProtocolCodec
+## 根据请求名称和标量字典构建 ClientMessage Protobuf 包络。
 
 static var _instance: ProtocolCodec = null
 

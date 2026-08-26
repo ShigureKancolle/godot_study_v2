@@ -1,4 +1,5 @@
 # coding=utf-8
+"""GameWorld 每个 tick 产生的不可变领域事件和只读快照。"""
 
 from dataclasses import dataclass, field
 
@@ -55,3 +56,10 @@ class WorldSnapshot(Event):
 class EntityRemovedEvent(Event):
     entity_id: str = ""
     account: str = ""
+
+@dataclass(frozen=True)
+class CommandRejectedEvent(Event):
+    connection_id: int = 0
+    command_name: str = ""
+    reason_code: str = ""
+    reason_message: str = ""

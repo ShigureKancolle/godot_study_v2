@@ -1,7 +1,5 @@
 # coding=utf-8
-'''
-注册连接 上下文
-'''
+"""持有临时 WebSocket 连接上下文以及认证身份绑定。"""
 import typing
 from typing import Any
 from typing import Callable
