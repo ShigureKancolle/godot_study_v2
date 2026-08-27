@@ -2,9 +2,13 @@
 """将已认证连接的游戏协议请求转换成 WorldCommand。"""
 
 from game import commands
-from protocol.contract import validate_enter_game_request, validate_move_intent
 from transport.connection_registry import ConnectionContext
 from proto.generated import game_pb2
+from protocol.contract import (
+    validate_enter_game_request,
+    validate_move_intent, 
+    validate_attack_intent
+)
 
 
 def enter_game_request_handler(context: ConnectionContext, proto: game_pb2.EnterGameRequest):
@@ -23,4 +27,12 @@ def move_intent_handler(context: ConnectionContext, proto: game_pb2.MoveIntent):
         dir_x=proto.dir_x,
         dir_y=proto.dir_y,
         moving=proto.moving,
+    )
+
+def attack_intent_handler(context: ConnectionContext, proto: game_pb2.AttackIntent):
+    attack_id = validate_attack_intent(proto)
+    return commands.AttackCommand(
+        connection_id=context.connection_id,
+        entity_id=context.player_entity_id,
+        attack_id=attack_id,
     )

@@ -18,9 +18,9 @@ static func create_role_view(entity_state: EntityState):
 	var motion_presenter = MotionPresenter.new(view)
 	var animation_presenter = AnimationPresenter.new(view)
 	var nameplate_presenter = NameplatePresenter.new(view)
-	view.add_presenter(motion_presenter)
-	view.add_presenter(animation_presenter)
-	view.add_presenter(nameplate_presenter)
+	view.add_presenter(MotionPresenter.presenter_name, motion_presenter)
+	view.add_presenter(AnimationPresenter.presenter_name, animation_presenter)
+	view.add_presenter(NameplatePresenter.presenter_name, nameplate_presenter)
+	view.entity_visual = view_visual
 
-	view.setup(entity_state)
 	return view

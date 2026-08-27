@@ -22,4 +22,7 @@ func all_entities():
 
 func clear() -> void:
 	room_id = ""
+	server_tick = 0
+	map_id = ""
+	self_entity_id = ""
 	entities.clear()

@@ -713,22 +713,27 @@ class EntityInfo:
 		service.field = __y
 		data[__y.tag] = service
 		
-		__facing = PBField.new("facing", PB_DATA_TYPE.FLOAT, PB_RULE.OPTIONAL, 6, true, DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT])
+		__facing_x = PBField.new("facing_x", PB_DATA_TYPE.FLOAT, PB_RULE.OPTIONAL, 6, true, DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT])
 		service = PBServiceField.new()
-		service.field = __facing
-		data[__facing.tag] = service
+		service.field = __facing_x
+		data[__facing_x.tag] = service
 		
-		__anim_state = PBField.new("anim_state", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 7, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		__facing_y = PBField.new("facing_y", PB_DATA_TYPE.FLOAT, PB_RULE.OPTIONAL, 7, true, DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT])
+		service = PBServiceField.new()
+		service.field = __facing_y
+		data[__facing_y.tag] = service
+		
+		__anim_state = PBField.new("anim_state", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 8, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
 		service = PBServiceField.new()
 		service.field = __anim_state
 		data[__anim_state.tag] = service
 		
-		__moving = PBField.new("moving", PB_DATA_TYPE.BOOL, PB_RULE.OPTIONAL, 8, true, DEFAULT_VALUES_3[PB_DATA_TYPE.BOOL])
+		__moving = PBField.new("moving", PB_DATA_TYPE.BOOL, PB_RULE.OPTIONAL, 9, true, DEFAULT_VALUES_3[PB_DATA_TYPE.BOOL])
 		service = PBServiceField.new()
 		service.field = __moving
 		data[__moving.tag] = service
 		
-		__ai_state = PBField.new("ai_state", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 9, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		__ai_state = PBField.new("ai_state", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 10, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
 		service = PBServiceField.new()
 		service.field = __ai_state
 		data[__ai_state.tag] = service
@@ -800,18 +805,31 @@ class EntityInfo:
 	func set_y(value : float) -> void:
 		__y.value = value
 	
-	var __facing: PBField
-	func has_facing() -> bool:
-		if __facing.value != null:
+	var __facing_x: PBField
+	func has_facing_x() -> bool:
+		if __facing_x.value != null:
 			return true
 		return false
-	func get_facing() -> float:
-		return __facing.value
-	func clear_facing() -> void:
+	func get_facing_x() -> float:
+		return __facing_x.value
+	func clear_facing_x() -> void:
 		data[6].state = PB_SERVICE_STATE.UNFILLED
-		__facing.value = DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT]
-	func set_facing(value : float) -> void:
-		__facing.value = value
+		__facing_x.value = DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT]
+	func set_facing_x(value : float) -> void:
+		__facing_x.value = value
+	
+	var __facing_y: PBField
+	func has_facing_y() -> bool:
+		if __facing_y.value != null:
+			return true
+		return false
+	func get_facing_y() -> float:
+		return __facing_y.value
+	func clear_facing_y() -> void:
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__facing_y.value = DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT]
+	func set_facing_y(value : float) -> void:
+		__facing_y.value = value
 	
 	var __anim_state: PBField
 	func has_anim_state() -> bool:
@@ -821,7 +839,7 @@ class EntityInfo:
 	func get_anim_state() -> String:
 		return __anim_state.value
 	func clear_anim_state() -> void:
-		data[7].state = PB_SERVICE_STATE.UNFILLED
+		data[8].state = PB_SERVICE_STATE.UNFILLED
 		__anim_state.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
 	func set_anim_state(value : String) -> void:
 		__anim_state.value = value
@@ -834,7 +852,7 @@ class EntityInfo:
 	func get_moving() -> bool:
 		return __moving.value
 	func clear_moving() -> void:
-		data[8].state = PB_SERVICE_STATE.UNFILLED
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__moving.value = DEFAULT_VALUES_3[PB_DATA_TYPE.BOOL]
 	func set_moving(value : bool) -> void:
 		__moving.value = value
@@ -847,7 +865,7 @@ class EntityInfo:
 	func get_ai_state() -> String:
 		return __ai_state.value
 	func clear_ai_state() -> void:
-		data[9].state = PB_SERVICE_STATE.UNFILLED
+		data[10].state = PB_SERVICE_STATE.UNFILLED
 		__ai_state.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
 	func set_ai_state(value : String) -> void:
 		__ai_state.value = value
@@ -1400,6 +1418,16 @@ class MovementEntry:
 		service.field = __anim_state
 		data[__anim_state.tag] = service
 		
+		__facing_x = PBField.new("facing_x", PB_DATA_TYPE.FLOAT, PB_RULE.OPTIONAL, 7, true, DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT])
+		service = PBServiceField.new()
+		service.field = __facing_x
+		data[__facing_x.tag] = service
+		
+		__facing_y = PBField.new("facing_y", PB_DATA_TYPE.FLOAT, PB_RULE.OPTIONAL, 8, true, DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT])
+		service = PBServiceField.new()
+		service.field = __facing_y
+		data[__facing_y.tag] = service
+		
 	var data = {}
 	
 	var __entity_id: PBField
@@ -1479,6 +1507,32 @@ class MovementEntry:
 		__anim_state.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
 	func set_anim_state(value : String) -> void:
 		__anim_state.value = value
+	
+	var __facing_x: PBField
+	func has_facing_x() -> bool:
+		if __facing_x.value != null:
+			return true
+		return false
+	func get_facing_x() -> float:
+		return __facing_x.value
+	func clear_facing_x() -> void:
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__facing_x.value = DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT]
+	func set_facing_x(value : float) -> void:
+		__facing_x.value = value
+	
+	var __facing_y: PBField
+	func has_facing_y() -> bool:
+		if __facing_y.value != null:
+			return true
+		return false
+	func get_facing_y() -> float:
+		return __facing_y.value
+	func clear_facing_y() -> void:
+		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__facing_y.value = DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT]
+	func set_facing_y(value : float) -> void:
+		__facing_y.value = value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)

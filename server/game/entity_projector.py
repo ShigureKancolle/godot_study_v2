@@ -6,7 +6,7 @@ from game.model import components
 
 
 def project_entity_snapshot(entity: Entity) -> EntitySnapshot:
-    name, x, y, facing, anim_state, moving, ai_state = "", 0, 0, 0, "", False, ""
+    name, x, y, facing, anim_state, moving, ai_state = "", 0, 0, (0, 0), "", False, ""
     if player_component := entity.get_component(components.PlayerComponent):
         player_component: components.PlayerComponent
         name = player_component.player_name

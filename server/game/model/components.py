@@ -22,7 +22,18 @@ class MovementComponent(Component):
 
 @dataclass
 class FacingComponent(Component):
-    facing: float = 0.0
+    _facing: tuple[float, float] = (0.0, 0.0)
+
+    def __init__(self, facing: tuple[float, float] = (0.0, 0.0)):
+        self._facing = facing
+
+    @property
+    def facing(self) -> tuple[float, float]:
+        return self._facing
+
+    @facing.setter
+    def facing(self, value: tuple[float, float]):
+        self._facing = value
 
 @dataclass
 class PlayerComponent(Component):

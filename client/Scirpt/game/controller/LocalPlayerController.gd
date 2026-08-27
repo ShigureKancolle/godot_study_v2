@@ -7,9 +7,13 @@ var _last_direction: Vector2 = Vector2.ZERO
 var _last_moving: bool = false
 
 func setup(target_entity_id: String):
-	self.entity_id = target_entity_id
+	entity_id = target_entity_id
 
 func _process(delta: float):
+	_move_intent(delta)
+	_attack_intent(delta)
+	
+func _move_intent(_delta: float):
 	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
 	var moving = dir != Vector2.ZERO
@@ -19,7 +23,7 @@ func _process(delta: float):
 		return
 
 	WebSocketMgr.Get().send("move_intent", {
-		"entity_id": self.entity_id,
+		"entity_id": entity_id,
 		"dir_x": dir.x,
 		"dir_y": dir.y,
 		"moving": moving
@@ -27,5 +31,19 @@ func _process(delta: float):
 
 	_last_direction = dir
 	_last_moving = moving
+
+
+func _attack_intent(_delta: float):
+	var attack := Input.is_action_just_pressed("atk_left")
+
+	if not attack:
+		return
+
+	var attack_id = 1004
+	WebSocketMgr.Get().send("attack_intent", {
+		"attacker_id": entity_id,
+		"attack": attack_id
+	})
+
 
 	

@@ -50,7 +50,9 @@ class GameProtocolAdapter:
             x=movement.x,
             y=movement.y,
             moving=movement.moving,
-            anim_state=movement.anim_state
+            anim_state=movement.anim_state,
+            facing_x=movement.facing[0],
+            facing_y=movement.facing[1],
         )
 
         self._moved_entitys.append(movement_entry)
@@ -121,15 +123,37 @@ class GameProtocolAdapter:
         msg.entities.extend(entity_infos)
         return msg
 
-    def make_entity_info_by_entity_snapshot(self, entity_snapshot: "world.EntitySnapshot") -> game_pb2.EntityInfo:
+    def make_entity_info_by_entity_snapshot(self, entity_snapshot: "events.EntitySnapshot") -> game_pb2.EntityInfo:
         entity_info = game_pb2.EntityInfo()
         entity_info.entity_id = entity_snapshot.entity_id
         entity_info.player_name = entity_snapshot.player_name
         entity_info.entity_type = entity_snapshot.entity_type
         entity_info.x = entity_snapshot.x
         entity_info.y = entity_snapshot.y
-        entity_info.facing = entity_snapshot.facing
+        entity_info.facing_x = entity_snapshot.facing[0]
+        entity_info.facing_y = entity_snapshot.facing[1]
         entity_info.anim_state = entity_snapshot.anim_state
         entity_info.moving = entity_snapshot.moving
         entity_info.ai_state = entity_snapshot.ai_state
         return entity_info
+
+    def publish_entity_attack_start(self, entity_attack_start: events.EntityAttackStartEvent, server_tick: int):
+        # 玩家攻击才走这个方法
+        print(f"publish_entity_attack_start  server_tick: {server_tick}  attacker_id: {entity_attack_start.entity_id}  attack_id: {entity_attack_start.attack_id}")
+        msg = game_pb2.EntityAttackStart(
+            attacker_id=entity_attack_start.entity_id,
+            attack_id=entity_attack_start.attack_id,
+            facing=entity_attack_start.facing,
+        )
+        self._outbound.broadcast(
+            "entity_attack_start",
+            msg,
+            room_id=self._game_world.room_id,
+            server_tick=server_tick,
+        )
+
+    def publish_entity_attack_hit(self, entity_attack_hit: events.EntityAttackHitEvent, server_tick: int):
+        pass
+
+    def publish_entity_hurt(self, entity_hurt: events.EntityHurtEvent, server_tick: int):
+        pass

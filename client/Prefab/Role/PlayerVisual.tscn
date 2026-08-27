@@ -6,6 +6,8 @@
 [node name="PlayerVisual" type="Node2D" unique_id=1889249389]
 script = ExtResource("1_5ie6y")
 
+[node name="AtkEffect" type="Node2D" parent="." unique_id=1334521338]
+
 [node name="Body" type="AnimatedSprite2D" parent="." unique_id=1743655513]
 sprite_frames = ExtResource("2_rmt74")
 animation = &"Down_Idle"

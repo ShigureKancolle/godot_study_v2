@@ -36,3 +36,7 @@ func on_command_rejected(msg: GameProto.ServerMessage):
 	var reason_message := rejected.get_reason_message()
 	push_warning("命令被拒绝 [%s/%s]：%s" % [command_name, reason_code, reason_message])
 	SignalMgr.Get().snl_command_rejected.emit(command_name, reason_code, reason_message)
+
+func on_attack_start(msg: GameProto.ServerMessage):
+	var attack_start := msg.get_attack_start()
+	_client_world.apply_attack_start(attack_start)

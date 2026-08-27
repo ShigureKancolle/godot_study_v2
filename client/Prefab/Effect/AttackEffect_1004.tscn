@@ -1,37 +1,37 @@
 [gd_scene format=3 uid="uid://cnbnpp7yvrpri"]
 
-[ext_resource type="Texture2D" uid="uid://bwxvvd4y7bfmr" path="res://Prefab/CommonTexture/VFX/Player_Attack_ThinSlashFX_Preview.png" id="1_xgc2x"]
+[ext_resource type="Texture2D" uid="uid://bwxvvd4y7bfmr" path="res://Prefab/CommonTexture/VFX/Player_Attack_ThinSlashFX_Preview.png" id="1_n3nob"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_8s67n"]
-atlas = ExtResource("1_xgc2x")
+atlas = ExtResource("1_n3nob")
 region = Rect2(0, 0, 192, 96)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_k4xct"]
-atlas = ExtResource("1_xgc2x")
+atlas = ExtResource("1_n3nob")
 region = Rect2(192, 0, 192, 96)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ntxfx"]
-atlas = ExtResource("1_xgc2x")
+atlas = ExtResource("1_n3nob")
 region = Rect2(384, 0, 192, 96)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rvrv7"]
-atlas = ExtResource("1_xgc2x")
+atlas = ExtResource("1_n3nob")
 region = Rect2(576, 0, 192, 96)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_e4ksk"]
-atlas = ExtResource("1_xgc2x")
+atlas = ExtResource("1_n3nob")
 region = Rect2(768, 0, 192, 96)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ileol"]
-atlas = ExtResource("1_xgc2x")
+atlas = ExtResource("1_n3nob")
 region = Rect2(960, 0, 192, 96)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jjni0"]
-atlas = ExtResource("1_xgc2x")
+atlas = ExtResource("1_n3nob")
 region = Rect2(1152, 0, 192, 96)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_muq38"]
-atlas = ExtResource("1_xgc2x")
+atlas = ExtResource("1_n3nob")
 region = Rect2(1344, 0, 192, 96)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_c1bf2"]
@@ -61,15 +61,19 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_muq38")
 }],
-"loop": false,
+"loop": true,
 "name": &"default",
 "speed": 12.0
 }]
 
-[node name="AttackEffect" type="Node2D" unique_id=1951489812]
+[node name="AttackEffect_1004" type="Node2D" unique_id=1951489812]
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1222093502]
-position = Vector2(129, 0)
+[node name="Scale" type="Node2D" parent="." unique_id=218363313]
+position = Vector2(17, 0)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Scale" unique_id=1222093502]
+position = Vector2(96, 0)
 sprite_frames = SubResource("SpriteFrames_c1bf2")
-frame = 7
-frame_progress = 1.0
+autoplay = "default"
+frame = 3
+frame_progress = 0.6699502

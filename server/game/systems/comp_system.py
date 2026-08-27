@@ -24,10 +24,10 @@ class CompSystem:
         pass
 
     def apply_command(world: "game_world.GameWorld", command: "command.Command") -> list[event.Event]:
-        pass
+        raise NotImplementedError("apply_command must be implemented in subclasses")
 
     def update(world: "game_world.GameWorld", dt: float) -> list[event.Event]:
-        pass
+        raise NotImplementedError("update must be implemented in subclasses")
 
     @staticmethod
     def reject(command: "command.WorldCommand", reason_code: str, reason_message: str):
@@ -71,6 +71,10 @@ class MovementCompSystem(CompSystem):
         move_comp.moving = command.moving
         move_comp.input_changed = changed
         move_comp.anim_state = "run" if command.moving else "idle"
+
+        facing_comp = entity.get_component(comps.FacingComponent)
+        if  facing_comp and changed and (command.dir_x != 0.0 or command.dir_y != 0.0):
+            facing_comp.facing = (command.dir_x, command.dir_y)
 
         return []
 
@@ -122,16 +126,22 @@ class MovementCompSystem(CompSystem):
             transform_comp.x = new_x
             transform_comp.y = new_y
 
+            
+
             position_changed = transform_comp.x != old_x or transform_comp.y != old_y
 
             if move_comp.input_changed or position_changed:
+                facing = (dir_vec.x, dir_vec.y)
+                if facing_comp := entity.get_component(comps.FacingComponent):
+                    facing = facing_comp.facing
                 
                 events.append(event.EntityMovedEvent(
                     entity.entity_id,
                     transform_comp.x,
                     transform_comp.y,
                     move_comp.moving,
-                    move_comp.anim_state
+                    move_comp.anim_state,
+                    facing,
                 ))
 
             move_comp.input_changed = False

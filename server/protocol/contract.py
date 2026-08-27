@@ -68,6 +68,11 @@ def validate_move_intent(message):
             "dir_x 和 dir_y 必须是有限数",
         )
 
+def validate_attack_intent(message):
+    attack_id = _required_text(message.attack_id, "attack_intent", "attack_id")
+    return attack_id
+
+
 def validate_client_message(client_message):
     kind = client_message.WhichOneof("payload")
 

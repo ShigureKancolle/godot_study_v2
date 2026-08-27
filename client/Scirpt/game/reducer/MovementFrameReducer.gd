@@ -1,8 +1,8 @@
-extends Object
+extends ClientReducerBase
 class_name MovementFrameReducer
 ## 将 MovementFrame 应用到已有 EntityState，不操作表现节点。
 
-const GameProto = preload("res://Scirpt/proto/game_proto.gd")
+# const GameProto = preload("res://Scirpt/proto/game_proto.gd")
 
 static func apply(store: GameStore, frame: GameProto.MovementFrame) -> Array[EntityState]:
 	var changed_states: Array[EntityState] = []
@@ -16,7 +16,7 @@ static func apply(store: GameStore, frame: GameProto.MovementFrame) -> Array[Ent
 		state.server_position = Vector2(entry.get_x(), entry.get_y())
 		state.anim_state = entry.get_anim_state()
 		state.moving = entry.get_moving()
-
+		state.facing_dir = Vector2(entry.get_facing_x(), entry.get_facing_y())
 		changed_states.append(state)
 
 	store.server_tick = max(store.server_tick, frame.get_server_tick())

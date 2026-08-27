@@ -277,15 +277,15 @@ client/Script/
 ## 阶段 5：拆分客户端实体表现
 
 - [1] `EntityView` 只保存实体 ID 和子表现组件引用
-- [ ] `EntityViewFactory` 决定创建哪种实体视图
-- [ ] `MotionPresenter` 只负责位置表现
-- [ ] `AnimationPresenter` 只负责动画
-- [ ] `CombatPresenter` 只负责攻击、受击和死亡表现
-- [ ] 血条由单独 Presenter 管理
-- [ ] 视锥由单独 Presenter 管理
-- [ ] 不在实体更新时删除并重新挂载全部组件
-- [ ] 不让 Presenter 直接监听底层 WebSocket
-- [ ] Store 更新统一经过 reducer
+- [1] `EntityViewFactory` 决定创建哪种实体视图
+- [1] `MotionPresenter` 只负责位置表现
+- [1] `AnimationPresenter` 只负责动画
+- [1] `CombatPresenter` 只负责攻击、受击和死亡表现
+- [1] 血条由单独 Presenter 管理
+- [1] 视锥由单独 Presenter 管理
+- [1] 不在实体更新时删除并重新挂载全部组件
+- [1] 不让 Presenter 直接监听底层 WebSocket
+- [1] Store 更新统一经过 reducer
 
 验收标准：
 

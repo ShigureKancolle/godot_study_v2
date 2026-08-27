@@ -28,10 +28,8 @@ func _process(delta: float) -> void:
 	web_socket_mgr.poll(delta)
 
 func reset_game_store():
-	if not game_store:
-		return
-	game_store.clear()
-
+	if client_world_synchronizer:
+		client_world_synchronizer.reset_world()
 # func create_game_store():
 # 	if game_store:
 # 		return

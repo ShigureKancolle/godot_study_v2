@@ -19,10 +19,11 @@ func _ready():
 		spawn_entity(state)
 
 	SignalMgr.Get().snl_entities_moved.connect(hdl_entities_moved)
-	
+	SignalMgr.Get().snl_attack_start.connect(hdl_attack_start)
 	SignalMgr.Get().snl_entity_added.connect(spawn_entity)
 	SignalMgr.Get().snl_entity_removed.connect(remove_entity)
 	SignalMgr.Get().snl_entity_updated.connect(update_entity)
+	SignalMgr.Get().snl_store_cleared.connect(clear_entity_views)
 
 
 func spawn_entity(entity_state: EntityState):
@@ -30,21 +31,43 @@ func spawn_entity(entity_state: EntityState):
 		return
 
 	var view = EntityViewFactory.create_entity_view(entity_state)
+	if not view:
+		print("[TestLevel] create entity view failed")
+		return
 	entity.add_child(view)
+	view.setup(entity_state)
 	entity_views[entity_state.entity_id] = view
 
 func update_entity(entity_state: EntityState):
 	var view = entity_views.get(entity_state.entity_id, null)
 	if view:
-		view.apply_entity_state(entity_state)
+		view.apply_state(entity_state)
 
 func remove_entity(entity_id: String):
 	var view = entity_views.get(entity_id, null)
 	if view:
+		entity_views.erase(entity_id)
 		entity.remove_child(view)
 		view.queue_free()
 
 func hdl_entities_moved(change_states: Array[EntityState]):
 	for entity_state in change_states:
 		if entity_state.entity_id in entity_views:
-			entity_views[entity_state.entity_id].apply_moved(entity_state)
+			entity_views[entity_state.entity_id].apply_movement(entity_state)
+
+func hdl_attack_start(attacker_id: String, attack_id: String):
+	print("[TestLevel] attack start: ", attacker_id, " ", attack_id)
+	var entity_view = entity_views.get(attacker_id, null)
+	if entity_view:
+		entity_view.apply_attack_start(attack_id)
+
+func clear_entity_views():
+	for view in entity_views.values():
+		if is_instance_valid(view):
+			view.queue_free()
+
+	entity_views.clear()
+
+func _exit_tree():
+	if SignalMgr.Get().snl_store_cleared.is_connected(clear_entity_views):
+		SignalMgr.Get().snl_store_cleared.disconnect(clear_entity_views)

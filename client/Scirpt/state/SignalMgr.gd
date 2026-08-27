@@ -1,5 +1,6 @@
 extends Singleton
 class_name SignalMgr
+@warning_ignore_start("unused_signal")
 
 const GameProto := preload("res://Scirpt/proto/game_proto.gd")
 

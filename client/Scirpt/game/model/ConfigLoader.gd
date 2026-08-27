@@ -283,7 +283,7 @@ static func _build_terrain_capability(entry_dict: Dictionary) -> TerrainCapabili
 
 ## 读取 res://config/ 下的 JSON 文件
 static func _load_json(filename: String) -> Dictionary:
-	var path: String = "res://res/config/" + filename
+	var path: String = "res://config/" + filename
 	if not FileAccess.file_exists(path):
 		push_warning("ConfigLoader: 配置文件不存在: " + path)
 		return {}

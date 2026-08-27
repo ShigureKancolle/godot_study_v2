@@ -10,7 +10,7 @@ class EntitySnapshot:
     entity_type: int = 0
     x: float = 0.0
     y: float = 0.0
-    facing: float = 0.0
+    facing: tuple[float, float] = field(default_factory=tuple)
     anim_state: str = ""
     moving: bool = False
     ai_state: str = ""
@@ -30,6 +30,7 @@ class EntityMovedEvent(Event):
     y: float = 0.0
     moving: bool = False
     anim_state: str = ""
+    facing: tuple[float, float] = field(default_factory=tuple)
 
 @dataclass(frozen=True)
 class EntityJoinedEvent(Event):
@@ -42,9 +43,22 @@ class EntityFacingEvent(Event):
     facing: float = 0.0
 
 @dataclass(frozen=True)
-class EntityAttackEvent(Event):
+class EntityAttackStartEvent(Event):
     entity_id: str = ""
     attack_id: int = 0
+    facing: float = 0.0
+
+@dataclass(frozen=True)
+class EntityAttackHitEvent(Event):
+    entity_id: str = ""
+    attack_id: int = 0
+    hit_entity_ids: list[str] = field(default_factory=list)
+
+@dataclass(frozen=True)
+class EntityHurtEvent(Event):
+    entity_id: str = ""
+    damage: int = 0
+    is_critical: bool = False
 
 @dataclass(frozen=True)
 class WorldSnapshot(Event):

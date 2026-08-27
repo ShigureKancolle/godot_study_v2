@@ -10,10 +10,11 @@ message EntityInfo {
   uint64 entity_type = 3;
   float x = 4;
   float y = 5;
-  float facing = 6;
-  string anim_state = 7;
-  bool moving = 8;
-  string ai_state = 9;
+  float facing_x = 6;
+  float facing_y = 7;
+  string anim_state = 8;
+  bool moving = 9;
+  string ai_state = 10;
 }
 
 // 客户端 -> 服务端
@@ -66,6 +67,8 @@ message MovementEntry {
   float speed = 4;
   bool moving = 5;
   string anim_state = 6;
+  float facing_x = 7;
+  float facing_y = 8;
 }
 
 // 服务端 -> 客户端
@@ -94,6 +97,7 @@ message EntitySpawned {
 message AttackStart {
   string attacker_id = 1;
   int32 attack_id = 2;
+  float atk_facing = 3;  // 相对于(1,0)方向的弧度 在负派到派
 }
 
 message AttackHit {

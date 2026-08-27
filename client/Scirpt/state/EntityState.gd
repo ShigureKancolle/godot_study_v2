@@ -17,7 +17,7 @@ var player_name: String = ""
 var entity_type: int = 0
 
 var server_position: Vector2 = Vector2.ZERO
-var facing: float = 0.0
+var facing_dir: Vector2 = Vector2.ZERO
 var anim_state: String = ""
 var moving: bool = false
 
@@ -33,7 +33,7 @@ static func from_entity_info(entity_info: GameProto.EntityInfo) -> EntityState:
 	state.player_name = entity_info.get_player_name()
 	state.entity_type = entity_info.get_entity_type()
 	state.server_position = Vector2(entity_info.get_x(), entity_info.get_y())
-	state.facing = entity_info.get_facing()
+	state.facing_dir = Vector2(entity_info.get_facing_x(), entity_info.get_facing_y())
 	state.anim_state = entity_info.get_anim_state()
 	state.moving = entity_info.get_moving()
 	# state.hp = entity_info.hp

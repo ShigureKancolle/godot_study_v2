@@ -11,7 +11,7 @@ func _init(store: GameStore):
 	self.store = store
 
 func apply_world_snapshot(snapshot: GameProto.WorldSnapshot):
-	CompSystem.apply_world_snapshot(store, snapshot)
+	WorldSnapshotReducer.apply(store, snapshot)
 	_last_movement_tick = snapshot.get_server_tick()
 	SignalMgr.Get().snl_world_snapshot_applied.emit(snapshot)
 
@@ -29,14 +29,23 @@ func apply_movement_frame(frame: GameProto.MovementFrame):
 
 
 func apply_entity_spawned(entity_spawned: GameProto.EntitySpawned):
-	var state := EntityState.from_entity_info(entity_spawned.get_entity_info())
-	state.server_position = state.server_position
-	state.is_local_player = state.entity_id == store.self_entity_id
-	store.add_entity(state.entity_id, state)
+	var state := EntitySpawnedReducer.apply(store, entity_spawned.get_entity_info())
 	SignalMgr.Get().snl_entity_added.emit(state)
 	
 
 func apply_entity_removed(entity_id: String):
-	store.remove_entity(entity_id)
+	EntityRemovedReducer.apply(store, entity_id)
 	SignalMgr.Get().snl_entity_removed.emit(entity_id)
 # func apply_entity_relocated()
+
+func apply_attack_start(attack_start: GameProto.AttackStart):
+	var attacker_id := attack_start.get_attacker_id()
+	var attack_id := attack_start.get_attack_id()
+	SignalMgr.Get().snl_attack_start.emit(attacker_id, attack_id)
+
+func reset_world():
+	WorldResetReducer.apply(store)
+
+	_last_movement_tick = -1
+
+	SignalMgr.Get().snl_store_cleared.emit()
