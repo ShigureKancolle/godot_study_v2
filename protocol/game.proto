@@ -53,6 +53,11 @@ message MoveIntent {
   bool moving = 4;
 }
 
+message AttackIntent {
+  string attacker_id = 1;
+  int32 attack_id = 2;
+}
+
 // 服务端 -> 客户端
 message MovementEntry {
   string entity_id = 1;

@@ -41,7 +41,7 @@ def main():
     script_path = Path(__file__).resolve()
     project_root = script_path.parent.parent
 
-    src_dir = project_root / "shared_config"
+    src_dir = project_root / "json_config"
     dst_dirs = [
         project_root / "server" / "config",
         project_root / "client" / "config",
