@@ -26,7 +26,7 @@ signal snl_entity_removed(entity_id: String)
 signal snl_store_cleared
 signal snl_entities_moved(change_states: Array[EntityState])
 signal snl_command_rejected(command_name: String, reason_code: String, reason_message: String)
-signal snl_attack_start
+signal snl_attack_start(attacker_id: String, attack_id: int, atk_facing: float)
 signal snl_entities_combat(change_states: Array[EntityState])
 
 

@@ -8,7 +8,7 @@ var entity_id: String = ""
 var hp: int = 0
 var max_hp: int = 0
 var dead: bool = false
-var atk_facing: float = 0.0
+var atk_facing: float = 0.0 # 这个与节点的rotation互为相反数
 
 
 static func from_entity_info(entity_info: GameProto.CombatEntityInfo) -> CombatEntityState:

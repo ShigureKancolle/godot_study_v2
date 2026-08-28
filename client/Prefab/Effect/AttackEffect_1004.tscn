@@ -61,8 +61,8 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_muq38")
 }],
-"loop": true,
-"name": &"default",
+"loop": false,
+"name": &"Attack",
 "speed": 12.0
 }]
 
@@ -74,6 +74,4 @@ position = Vector2(17, 0)
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Scale" unique_id=1222093502]
 position = Vector2(96, 0)
 sprite_frames = SubResource("SpriteFrames_c1bf2")
-autoplay = "default"
-frame = 3
-frame_progress = 0.6699502
+animation = &"Attack"

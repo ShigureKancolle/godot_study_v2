@@ -13,8 +13,11 @@ from app.bootstrap import build_client_router, register_adapter
 # 注册handler
 import protocol.handlers
 
+
+logger = logging.getLogger(__name__)
+
 async def main():
-    print("main() function is running...")
+    logger.debug("main() function is running")
     game_world = world.get_room()
     protocol_adapter = GameProtocolAdapter(game_world)
     register_adapter(protocol_adapter)
@@ -31,7 +34,7 @@ def test_server():
     import proto.generated.game_pb2 as game_pb2
     import protocol.router as router
     import transport.connection_registry as connection_registry
-    print("test_server() function is running...")
+    logger.debug("test_server() function is running")
 
 
    
@@ -40,10 +43,10 @@ if __name__ == '__main__':
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
-    print("server start")
+    logger.info("服务端启动")
     # asyncio.run(main())
     if "--test" in sys.argv:
         test_server()
     else:
         asyncio.run(main())
-    print("server end")
+    logger.info("服务端已停止")

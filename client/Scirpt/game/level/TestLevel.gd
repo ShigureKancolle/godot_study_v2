@@ -56,11 +56,11 @@ func hdl_entities_moved(change_states: Array[EntityState]):
 		if entity_state.entity_id in entity_views:
 			entity_views[entity_state.entity_id].apply_movement(entity_state)
 
-func hdl_attack_start(attacker_id: String, attack_id: String, attack_facing: float):
+func hdl_attack_start(attacker_id: String, attack_id: int, atk_facing: float):
 	print("[TestLevel] attack start: ", attacker_id, " ", attack_id)
 	var entity_view = entity_views.get(attacker_id, null)
 	if entity_view:
-		entity_view.apply_attack_start(attack_id)
+		entity_view.apply_attack_start(attack_id, atk_facing)
 
 func hdl_entities_combat(change_states: Array[EntityState]):
 	for entity_state in change_states:

@@ -6,6 +6,7 @@ import asyncio
 import logging
 from transport.connection_registry import ConnectionRegistry, ConnectionContext
 from transport.outbound_queue import OutBoundQueue
+from transport.protocol_log import should_log_protocol
 from protocol.codec import ProtocolCodec
 import typing
 if typing.TYPE_CHECKING:
@@ -36,19 +37,19 @@ class WebSocketServer:
         self.sender_task.add_done_callback(self._on_sender_task_done)
 
         async with websockets.serve(self.handle, self.host, self.port):
-            print(f"server start at {self.host}:{self.port}")
+            logger.info("WebSocket 服务已启动：host=%s, port=%s", self.host, self.port)
             await asyncio.Future()
 
         
 
     async def handle(self, websocket: websockets.WebSocketCommonProtocol):
-        print("客户端已连接")
         context: ConnectionContext = self.registry.add(websocket)
+        logger.info("客户端已连接：connection_id=%s", context.connection_id)
         try:
-            print("等待客户端信息。。。")
+            logger.debug("等待客户端消息：connection_id=%s", context.connection_id)
             async for payload in websocket:
                 if not isinstance(payload, bytes):
-                    print(f"收到非protobuf客户端信息：{payload}")
+                    logger.warning("收到非 Protobuf 客户端消息：payload=%s", payload)
                     continue
                 try:
                     await self.on_bytes_received(context, payload)
@@ -63,11 +64,11 @@ class WebSocketServer:
                     )
 
         except websockets.ConnectionClosed:
-            print("客户端已断开")
+            logger.info("客户端已断开：connection_id=%s", context.connection_id)
         finally:
             self.app_runtime.on_connection_closed(context)
             self.registry.remove(context.connection_id)
-            print(f"移除客户端，当前人数： {len(self.registry.all_connections())}")
+            logger.info("移除客户端：connection_id=%s, 当前人数=%s", context.connection_id, len(self.registry.all_connections()))
 
     async def on_bytes_received(self, context: ConnectionContext, payload: bytes):
         message = ProtocolCodec.get().decode_client(payload)
@@ -99,7 +100,11 @@ class WebSocketServer:
             for context in self.registry.all_connections():
                 if context.connection_id in packet.recipient_ids:
                     try:
-                        print(f"WebSocketServer.sender_loop   proto_name: {packet.proto_name}")
+                        if should_log_protocol(packet.proto_name):
+                            logger.info(
+                                "WebSocketServer.sender_loop proto_name=%s",
+                                packet.proto_name,
+                            )
                         await context.websocket.send(packet.payload)
                     except websockets.ConnectionClosed:
                         # 接收协程的 finally 会负责删除这个连接；这里不能让一个

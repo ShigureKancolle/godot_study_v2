@@ -4,8 +4,13 @@ from google.protobuf.message import Message
 from dataclasses import dataclass, field
 from protocol.codec import ProtocolCodec
 import transport.connection_registry as connection_registry
+from transport.protocol_log import should_log_protocol
 import asyncio
+import logging
 from singleton import Singleton
+
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class OutBoundMessage:
@@ -21,8 +26,14 @@ class OutBoundQueue:
         '''
             body 是具体的协议  LoginAccepted, MovementFrame....
         '''
-        print(f"OutBoundQueue.send_to   proto_name: {proto_name}, body: {body}")
-        print(f"run_id: {run_id},  server_tick: {server_tick}")
+        if should_log_protocol(proto_name):
+            logger.info(
+                "发送指定协议：proto_name=%s, body=%s, run_id=%s, server_tick=%s",
+                proto_name,
+                body,
+                run_id,
+                server_tick,
+            )
         # 构建协议
         payload = ProtocolCodec.get().encode_server(proto_name, body, run_id=run_id, server_tick=server_tick)
 
@@ -32,8 +43,14 @@ class OutBoundQueue:
     def broadcast(self, proto_name: str, body: Message, include_ids: list[int] | None = None, exclude_ids: list[int] | None = None, room_id: str = "", run_id: str = "", server_tick: int = 0):
         include_ids = include_ids or []
         exclude_ids = exclude_ids or []
-        print(f"OutBoundQueue.broadcast   proto_name: {proto_name}, body: {body}")
-        print(f"room_id: {room_id},  exclude_ids: {exclude_ids}")
+        if should_log_protocol(proto_name):
+            logger.info(
+                "广播协议：proto_name=%s, body=%s, room_id=%s, exclude_ids=%s",
+                proto_name,
+                body,
+                room_id,
+                exclude_ids,
+            )
         payload = ProtocolCodec.get().encode_server(proto_name, body, run_id=run_id, server_tick=server_tick)
 
         def check_context(context: connection_registry.ConnectionContext):

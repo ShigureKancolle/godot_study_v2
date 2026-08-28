@@ -18,6 +18,10 @@ import sys
 import glob
 import argparse
 import subprocess
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 # ==================== 用户配置区 ====================
@@ -94,24 +98,24 @@ def compile_proto_files(input_dir: str, output_dir: str) -> bool:
     proto_files = find_proto_files(input_dir)
 
     if not proto_files:
-        print(f"ERROR: no .proto files found in {input_dir}")
-        print("   请检查 INPUT_DIR 配置是否正确")
+        logger.error("未找到 .proto 文件：input_dir=%s", input_dir)
+        logger.error("请检查 INPUT_DIR 配置是否正确")
         return False
 
     # 确保输出目录存在
     os.makedirs(output_dir, exist_ok=True)
 
-    print("=" * 60)
-    print("protobuf 编译工具")
-    print("=" * 60)
-    print(f"输入目录: {input_dir}")
-    print(f"输出目录: {output_dir}")
-    print(f"找到 {len(proto_files)} 个 .proto 文件:")
+    logger.info("%s", "=" * 60)
+    logger.info("protobuf 编译工具")
+    logger.info("%s", "=" * 60)
+    logger.info("输入目录：%s", input_dir)
+    logger.info("输出目录：%s", output_dir)
+    logger.info("找到 %s 个 .proto 文件：", len(proto_files))
     for pf in proto_files:
         # 显示相对路径，更清晰
         rel_path = os.path.relpath(pf, input_dir)
-        print(f"  - {rel_path}")
-    print("-" * 60)
+        logger.info("  - %s", rel_path)
+    logger.info("%s", "-" * 60)
 
     # 构造 protoc 命令参数
     # -I: 指定 proto 源目录（作为 import 根目录）
@@ -136,19 +140,18 @@ def compile_proto_files(input_dir: str, output_dir: str) -> bool:
         # 统计生成的文件
         generated_files = glob.glob(os.path.join(output_dir, "**", "*_pb2.py"), recursive=True)
 
-        print(f"OK: generated {len(generated_files)} protobuf file(s):")
+        logger.info("已生成 %s 个 protobuf 文件：", len(generated_files))
         for gf in generated_files:
             rel_path = os.path.relpath(gf, output_dir)
-            print(f"  {rel_path}")
+            logger.info("  %s", rel_path)
 
-        print()
-        print("提示：如果输出目录不在 Python 路径中，")
-        print("     请确保运行时能正确 import 这些生成的模块。")
+        logger.info("提示：如果输出目录不在 Python 路径中，")
+        logger.info("请确保运行时能正确 import 这些生成的模块。")
         return True
 
     except subprocess.CalledProcessError as e:
-        print("ERROR: protobuf compilation failed")
-        print(f"错误信息: {e.stderr}")
+        logger.error("protobuf 编译失败")
+        logger.error("错误信息：%s", e.stderr)
         return False
 
 
@@ -172,16 +175,14 @@ def main():
 
     # 检查输入目录是否存在
     if not os.path.isdir(input_dir):
-        print(f"ERROR: input directory does not exist: {input_dir}")
-        print("   请修改脚本顶部的 INPUT_DIR 配置")
+        logger.error("输入目录不存在：%s", input_dir)
+        logger.error("请修改脚本顶部的 INPUT_DIR 配置")
         sys.exit(1)
 
     # 检查 grpcio-tools 是否安装
     if not check_grpc_tools():
-        print("ERROR: grpcio-tools is not installed")
-        print()
-        print("请先安装依赖：")
-        print("  pip install grpcio-tools")
+        logger.error("未安装 grpcio-tools")
+        logger.error("请先安装依赖：pip install grpcio-tools")
         sys.exit(1)
 
     # 执行编译
@@ -193,14 +194,18 @@ def main():
         cmd = [sys.executable, "-m", "grpc_tools.protoc", f"-I{input_dir}", f"--python_out={output_dir}", *proto_files]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            print("ERROR: protobuf compilation failed")
-            print(result.stderr)
+            logger.error("protobuf 编译失败")
+            logger.error("错误信息：%s", result.stderr)
             success = False
         else:
-            print(f"OK: compiled {os.path.basename(input_path)}")
+            logger.info("已编译：%s", os.path.basename(input_path))
             success = True
     sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
     main()

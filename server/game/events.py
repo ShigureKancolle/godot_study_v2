@@ -56,7 +56,7 @@ class EntityFacingEvent(Event):
 class EntityAttackStartEvent(Event):
     entity_id: str = ""
     attack_id: int = 0
-    facing: float = 0.0
+    atk_facing: float = 0.0
 
 @dataclass(frozen=True)
 class EntityAttackHitEvent(Event):
@@ -67,6 +67,7 @@ class EntityAttackHitEvent(Event):
 @dataclass(frozen=True)
 class EntityHurtEvent(Event):
     entity_id: str = ""
+    attacker_id: str = ""
     damage: int = 0
     is_critical: bool = False
 

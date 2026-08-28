@@ -30,7 +30,7 @@ def move_intent_handler(context: ConnectionContext, proto: game_pb2.MoveIntent):
     )
 
 def attack_intent_handler(context: ConnectionContext, proto: game_pb2.AttackIntent):
-    attack_id = validate_attack_intent(proto)
+    attacker_id, attack_id = validate_attack_intent(proto)
     return commands.AttackCommand(
         connection_id=context.connection_id,
         entity_id=context.player_entity_id,

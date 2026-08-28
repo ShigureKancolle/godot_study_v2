@@ -15,3 +15,5 @@ def atk_rotate_intent_handler(context: ConnectionContext, proto: game_pb2.EnterG
         entity_id=entity_id,
         atk_facing=atk_facing,
     )
+
+

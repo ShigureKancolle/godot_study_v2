@@ -33,7 +33,11 @@
 import os
 import shutil
 import sys
+import logging
 from pathlib import Path
+
+
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -49,18 +53,17 @@ def main():
 
     # 检查源目录
     if not src_dir.exists():
-        print(f"[ERROR] 源目录不存在: {src_dir}")
+        logger.error("源目录不存在：%s", src_dir)
         sys.exit(1)
 
     # 收集要同步的 JSON 文件
     json_files = sorted(src_dir.glob("*.json"))
     if not json_files:
-        print(f"[WARN] 源目录无 JSON 文件: {src_dir}")
+        logger.warning("源目录无 JSON 文件：%s", src_dir)
         sys.exit(0)
 
-    print(f"源目录: {src_dir}")
-    print(f"待同步文件: {[f.name for f in json_files]}")
-    print()
+    logger.info("源目录：%s", src_dir)
+    logger.info("待同步文件：%s", [file.name for file in json_files])
 
     # 同步到每个目标目录
     total_copied = 0
@@ -68,17 +71,20 @@ def main():
         # 创建目标目录(含父目录)
         dst_dir.mkdir(parents=True, exist_ok=True)
 
-        print(f"同步到: {dst_dir}")
+        logger.info("同步到：%s", dst_dir)
         for src_file in json_files:
             dst_file = dst_dir / src_file.name
             shutil.copy2(src_file, dst_file)
-            print(f"  {src_file.name} -> {dst_file.relative_to(project_root)}")
+            logger.info("  %s -> %s", src_file.name, dst_file.relative_to(project_root))
             total_copied += 1
-        print()
 
-    print(f"同步完成,共复制 {total_copied} 个文件")
-    print("提示: 客户端需在 Godot 编辑器里刷新(res://config 变更后才生效)")
+    logger.info("同步完成，共复制 %s 个文件", total_copied)
+    logger.info("提示：客户端需在 Godot 编辑器里刷新（res://config 变更后才生效）")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
     main()

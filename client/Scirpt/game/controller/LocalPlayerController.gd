@@ -40,10 +40,11 @@ func _attack_intent(_delta: float):
 	if not attack:
 		return
 
+	# 其实不应该在这里发送请求？ 因为攻击id肯定不在这里
 	var attack_id = 1004
 	WebSocketMgr.Get().send("attack_intent", {
 		"attacker_id": entity_id,
-		"attack": attack_id
+		"attack_id": attack_id
 	})
 
 func _atk_rotate_intent(_delta: float):
@@ -59,5 +60,5 @@ func _atk_rotate_intent(_delta: float):
 	var angle := dir.angle_to(Vector2.RIGHT)
 	WebSocketMgr.Get().send("atk_rotate_intent", {
 		"entity_id": entity_id,
-		"angle": angle
+		"atk_facing": angle
 	})

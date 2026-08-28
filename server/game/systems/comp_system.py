@@ -2,6 +2,7 @@
 """游戏 System：校验命令、修改 GameWorld 组件并产生领域事件。"""
 
 import math
+import logging
 from game.entity_projector import project_entity_snapshot
 import game.model.components as comps
 import game.model.combat_component as combat_component
@@ -13,9 +14,9 @@ import typing
 if typing.TYPE_CHECKING:
     import game.commands as command
     import game.world as game_world
-    
-    
-    
+
+
+logger = logging.getLogger(__name__)
 
 class CompSystem:
     def __init__(self, *args, **kwargs):
@@ -156,23 +157,23 @@ class MovementCompSystem(CompSystem):
 
 class JoinCompSystem(CompSystem):
     def apply_command(self, world: "game_world.GameWorld", command: "command.JoinCommand") -> list[event.Event]:
-        print(f"apply_command: joinCommand   account: {command.account}")
+        logger.debug("处理加入命令：account=%s", command.account)
 
            
         for entity in world.entities_with([comps.PlayerComponent]):
             if entity.get_component(comps.PlayerComponent).account_id == command.account:
-                print(f"apply_command: joinCommand    entity joined  account: {command.account}")
+                logger.info("拒绝重复加入：account=%s", command.account)
                 return self.reject(command, "ALREADY_JOINED", "该账号在当前世界中已经存在实体")
         # todo 这个playername应该放存档？ 存档没有才用客户端的
         entity = world.create_player(command.account, command.player_name)
 
         if entity is None:
-            print(f"apply_command: joinCommand   entity is None")
+            logger.error("创建玩家实体失败：account=%s", command.account)
             return self.reject(command, "CREATE_ENTITY_FAILED", "无法创建玩家实体")
         
         transform_comp = entity.get_component(comps.TransformComponent)
         if transform_comp is None:
-            print(f"apply_command: joinCommand   transform_comp is None")
+            logger.error("创建的玩家实体缺少 TransformComponent：account=%s", command.account)
             return self.reject(command, "INVALID_PLAYER_ENTITY", "创建的玩家实体缺少 TransformComponent")
 
         entity_snapshot = project_entity_snapshot(entity)
@@ -181,15 +182,17 @@ class JoinCompSystem(CompSystem):
             entity_snapshot
         )
 
-        print(f"apply_command: joinCommand   return env account: {command.account}")
+        logger.debug("加入命令处理完成：account=%s", command.account)
         return [env]
 
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         return []
 
+    
+
 class AttackCompSystem(CompSystem):
     def init(self, *args, **kwargs):
-        pass
+        self._pending_attacks: list[combat_component.PendingAttack] = []
 
     def apply_command(self, world: "game_world.GameWorld", command: "command.AttackCommand") -> list[event.Event]:
         attacker = world.get_entity(command.entity_id)
@@ -199,26 +202,92 @@ class AttackCompSystem(CompSystem):
         transform_comp = attacker.get_component(comps.TransformComponent)
         if transform_comp is None:
             return self.reject(command, "ATTACK_NOT_SUPPORTED", "该实体不能攻击")
+
+        _combat_comp = attacker.get_component(combat_component.CombatComponent)
+        if _combat_comp is None:
+            return self.reject(command, "ATTACK_NOT_SUPPORTED", "该实体缺少 CombatComponent")
+
+        _combat_comp: combat_component.CombatComponent
+        if _combat_comp.is_dead:
+            return self.reject(command, "DEAD", "该实体已死亡")
                
         attack_config = config_loader.get_attack_config(command.attack_id)
         if attack_config is None:
             return self.reject(command, "ATTACK_CONFIG_NOT_FOUND", "请求的攻击没有对应配置")
      
-        # 获取攻击形状
-        shape_list = attack_config.shape_list
-        for shape in shape_list:
-            pass
+        pending_attack = combat_component.PendingAttack(
+            attacker_id=command.entity_id,
+            attack_id=command.attack_id,
+            atk_facing=_combat_comp.atk_facing,
+        )
+        self._pending_attacks.append(pending_attack)
 
         # 可能需要维护一个攻击队列，用于处理攻击的顺序
-        return []
+        evn = event.EntityAttackStartEvent(
+            command.entity_id,
+            command.attack_id,
+            _combat_comp.atk_facing,
+        )
+
+        return [evn]
 
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
-        return []
+        events: list[event.Event] = []
+        finished: list[combat_component.PendingAttack] = []
+
+        for atk_pending in self._pending_attacks:
+            atk_pending.elapsed_ms += dt * 1000.0
+            atk_config = config_loader.get_attack_config(atk_pending.attack_id)
+            if atk_config is None:
+                continue
+
+            finish = False
+            for idx, shape in enumerate(atk_config.shape_list):
+                if idx in atk_pending.fired_shape_indexes:
+                    continue
+                if atk_pending.elapsed_ms < shape.hit_time:
+                    continue
+
+                if idx == len(atk_config.shape_list) - 1:
+                    finish = True
+                atk_pending.fired_shape_indexes.add(idx)
+                hit_entity_ids = self._get_attack_hits(world, atk_pending.attacker_id, atk_pending.atk_facing, shape)
+
+                if hit_entity_ids:
+                    events.append(event.EntityAttackHitEvent(
+                        atk_pending.attacker_id,
+                        atk_pending.attack_id,
+                        hit_entity_ids,
+                    ))
+
+                for target_id in hit_entity_ids:
+                    damage = self._calculate_damage(world, atk_pending.attacker_id, target_id, atk_pending.attack_id, shape)
+                    self._apply_damage(world, target_id, damage)
+                    events.append(event.EntityHurtEvent(
+                        target_id,
+                        atk_pending.attacker_id,
+                        damage,
+                    ))
+
+            if finish:
+                finished.append(atk_pending)
+
+        for attack in finished:
+            self._pending_attacks.remove(attack)
+
+        return events
+
+    def _get_attack_hits(self, world: "game_world.GameWorld", attacker_id: str, atk_facing: float, shape: "config_loader.AttackShape") -> list[str]:
+        pass
+
+    def _calculate_damage(self, world: "game_world.GameWorld", attacker_id: str, target_id: str, attack_id: int, shape: "config_loader.AttackShape") -> int:
+        pass
+    
 
 
 class LeaveCompSystem(CompSystem):
     def apply_command(self, world: "game_world.GameWorld", command: "command.LeaveCommand") -> list[event.Event]:
-        print(f"leave command: {command.account}")
+        logger.debug("处理离开命令：account=%s", command.account)
         entity = world.get_entity(command.entity_id)
         if not entity:
             return []

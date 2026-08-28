@@ -41,7 +41,8 @@ func apply_entity_removed(entity_id: String):
 func apply_attack_start(attack_start: GameProto.AttackStart):
 	var attacker_id := attack_start.get_attacker_id()
 	var attack_id := attack_start.get_attack_id()
-	SignalMgr.Get().snl_attack_start.emit(attacker_id, attack_id)
+	var atk_facing := attack_start.get_atk_facing()
+	SignalMgr.Get().snl_attack_start.emit(attacker_id, attack_id, atk_facing)
 
 func apply_combat_frame(frame: GameProto.CombatFrame):
 	var frame_tick := frame.get_server_tick()

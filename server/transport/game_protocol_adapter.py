@@ -2,6 +2,7 @@
 """将领域事件和快照转换成服务端出站 Protobuf 消息。"""
 
 import typing
+import logging
 
 from game.entity_projector import project_entity_snapshot
 from transport.outbound_queue import OutBoundQueue
@@ -11,7 +12,9 @@ import proto.generated.game_pb2 as game_pb2
 if typing.TYPE_CHECKING:
     import game.world as world
     from typing import Callable
-    
+
+
+logger = logging.getLogger(__name__)
 
 class GameProtocolAdapter:
     def __init__(self, world: "world.GameWorld"):
@@ -98,11 +101,11 @@ class GameProtocolAdapter:
         )
 
     def publish_entity_joined(self, entity_joined: events.EntityJoinedEvent, server_tick: int):
-        print(f"publish_entity_joined  server_tick: {server_tick}  account: {entity_joined.account}")
+        logger.debug("发布实体加入事件：server_tick=%s, account=%s", server_tick, entity_joined.account)
         # 获取连接
         context = self._connections.get_context_by_account_id(entity_joined.account)
         if not context:
-            print(f"publish_entity_joined  not context  account: {entity_joined.account}")
+            logger.warning("发布实体加入事件时找不到连接：account=%s", entity_joined.account)
             return
 
         # 刚进入的玩家需要游戏世界的快照
@@ -162,14 +165,19 @@ class GameProtocolAdapter:
 
     def publish_entity_attack_start(self, entity_attack_start: events.EntityAttackStartEvent, server_tick: int):
         # 玩家攻击才走这个方法
-        print(f"publish_entity_attack_start  server_tick: {server_tick}  attacker_id: {entity_attack_start.entity_id}  attack_id: {entity_attack_start.attack_id}")
-        msg = game_pb2.EntityAttackStart(
+        logger.debug(
+            "发布攻击开始事件：server_tick=%s, attacker_id=%s, attack_id=%s",
+            server_tick,
+            entity_attack_start.entity_id,
+            entity_attack_start.attack_id,
+        )
+        msg = game_pb2.AttackStart(
             attacker_id=entity_attack_start.entity_id,
             attack_id=entity_attack_start.attack_id,
-            facing=entity_attack_start.facing,
+            atk_facing=entity_attack_start.atk_facing,
         )
         self._outbound.broadcast(
-            "entity_attack_start",
+            "attack_start",
             msg,
             room_id=self._game_world.room_id,
             server_tick=server_tick,

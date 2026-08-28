@@ -69,8 +69,18 @@ def validate_move_intent(message):
         )
 
 def validate_attack_intent(message):
-    attack_id = _required_text(message.attack_id, "attack_intent", "attack_id")
-    return attack_id
+    if not math.isfinite(message.attack_id):
+        raise ProtocolValidationError(
+            "attack_intent",
+            "NON_FINITE_DIRECTION",
+            "attack_id 必须是有限数",
+        )
+    
+
+    attacker_id = _required_text(message.attacker_id, "attack_intent", "attacker_id")
+    attack_id = message.attack_id
+   
+    return attacker_id, attack_id
 
 
 def validate_client_message(client_message):

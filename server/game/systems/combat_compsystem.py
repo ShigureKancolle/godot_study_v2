@@ -23,6 +23,9 @@ class CombatCompSystem(CompSystem):
         if _combat_comp.atk_facing_locking:
             return self.reject(command, "COMPONENT_LOCKED", "实体战斗组件转向已锁定")
 
+        if abs(_combat_comp.atk_facing - command.atk_facing) < 0.01:
+            return []
+
         _combat_comp.atk_facing = command.atk_facing
 
         env = event.EntityAtkRotateEvent(
