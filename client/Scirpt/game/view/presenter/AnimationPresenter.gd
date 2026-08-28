@@ -34,7 +34,7 @@ func _move_dir_to_facing(dir: Vector2) -> String:
 	else:
 		dir_str = "Up"
 
-	print("[AnimationPresenter]  dir: " + dir_str)
+	# print("[AnimationPresenter]  dir: " + dir_str)
 	return dir_str
 
 func play_anim(anim_name: String = "idle") -> void:

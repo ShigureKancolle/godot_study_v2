@@ -1,7 +1,7 @@
 extends Object
 class_name HandlerRegister
 
-static func register(game_handler: GameHandler):
+static func register(game_handler: GameHandler, combat_handler: CombatHandler):
 	var router := MessageRouter.Get()
 	
 	router.register(&"login_accepted", LoginHandler.on_login_accepted)
@@ -11,3 +11,4 @@ static func register(game_handler: GameHandler):
 	router.register(&"entity_removed", game_handler.on_entity_removed)
 	router.register(&"command_rejected", game_handler.on_command_rejected)
 	router.register(&"attack_start", game_handler.on_attack_start)
+	router.register(&"combat_frame", combat_handler.on_combat_frame)

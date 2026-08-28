@@ -7,7 +7,9 @@ import game.model.entity as entity
 import game.commands as command
 import game.events as event
 import game.systems.comp_system as comp_system
+import game.systems.combat_compsystem as combat_comp_system
 import game.model.components as comps
+import game.model.combat_component as combat_component
 import game.model.config_loader as config_loader
 import typing
 if typing.TYPE_CHECKING:
@@ -112,7 +114,10 @@ class GameWorld:
         self._command_router.register(command.LeaveCommand, leave_comp_system.apply_command)
         self._tick_pipeline.add_system(leave_comp_system)
 
-        # attack
+        # combat
+        _combat_comp_system = combat_comp_system.CombatCompSystem()
+        self._command_router.register(command.AtkRotateCommand, _combat_comp_system.apply_command)
+        self._tick_pipeline.add_system(_combat_comp_system)
         
 
     # endregion command
@@ -146,7 +151,9 @@ class GameWorld:
         player.add_component(comps.TransformComponent(x=0.0, y=0.0))
         player.add_component(comps.MovementComponent(speed=speed))
         player.add_component(comps.FacingComponent(facing=(0.0, 0.0)))
-        player.add_component(comps.CombatComponent())
+        combat_comp = combat_component.CombatComponent()
+        combat_comp.load_combat_config(1)
+        player.add_component(combat_comp)
         self.add_entity(player)
         return player
 

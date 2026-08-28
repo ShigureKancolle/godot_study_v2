@@ -91,3 +91,16 @@ def validate_client_message(client_message):
     if validator is not None:
         validator(getattr(client_message, kind))
     return True
+
+def validate_atk_rotate_intent(message):
+    if not math.isfinite(message.atk_facing):
+           raise ProtocolValidationError(
+               "atk_rotate_intent",
+               "NON_FINITE_DIRECTION",
+               "atk_facing 必须是有限数",
+           )
+
+    atk_facing = message.atk_facing
+    entity_id = _required_text(message.entity_id, "atk_rotate_intent", "entity_id")
+   
+    return atk_facing, entity_id

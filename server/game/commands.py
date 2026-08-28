@@ -7,6 +7,7 @@ SessionCommand 面向连接和会话状态；WorldCommand 进入队列后只能�
 """
 from dataclasses import dataclass
 
+# region WorldCommand
 @dataclass
 class WorldCommand:
     entity_id: str = ""
@@ -34,6 +35,14 @@ class AttackCommand(WorldCommand):
 class LeaveCommand(WorldCommand):
     account: str = ""
 
+@dataclass 
+class AtkRotateCommand(WorldCommand):
+    ''' 客户端旋转请求 '''
+    atk_facing: float = 0.0
+
+# endregion 
+
+# region SessionCommand
 @dataclass
 class SessionCommand:
     connection_id: int = 0
@@ -42,5 +51,4 @@ class SessionCommand:
 @dataclass
 class LoginCommand(SessionCommand):
     """认证并绑定连接；该命令不会进入 GameWorld。"""
-
     player_name: str = ""

@@ -22,5 +22,9 @@ static func create_role_view(entity_state: EntityState):
 	view.add_presenter(AnimationPresenter.presenter_name, animation_presenter)
 	view.add_presenter(NameplatePresenter.presenter_name, nameplate_presenter)
 	view.entity_visual = view_visual
+	
+	if entity_state.combat_entity_state:
+		var combat_presenter = CombatPresenter.new(view)
+		view.add_presenter(CombatPresenter.presenter_name, combat_presenter)
 
 	return view

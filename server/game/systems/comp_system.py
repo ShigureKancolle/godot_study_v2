@@ -4,6 +4,8 @@
 import math
 from game.entity_projector import project_entity_snapshot
 import game.model.components as comps
+import game.model.combat_component as combat_component
+
 import game.tools.collision as collision
 import game.model.config_loader as config_loader
 import game.events as event
@@ -23,10 +25,10 @@ class CompSystem:
     def init(self, *args, **kwargs):
         pass
 
-    def apply_command(world: "game_world.GameWorld", command: "command.Command") -> list[event.Event]:
+    def apply_command(self, world: "game_world.GameWorld", command: "command.Command") -> list[event.Event]:
         raise NotImplementedError("apply_command must be implemented in subclasses")
 
-    def update(world: "game_world.GameWorld", dt: float) -> list[event.Event]:
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         raise NotImplementedError("update must be implemented in subclasses")
 
     @staticmethod
@@ -57,7 +59,7 @@ class MovementCompSystem(CompSystem):
             return self.reject(command, "MOVEMENT_LOCKED", "该实体的移动已被锁定")
 
         transform_comp = entity.get_component(comps.TransformComponent)
-        combat_comp = entity.get_component(comps.CombatComponent)
+        combat_comp = entity.get_component(combat_component.CombatComponent)
         if transform_comp is None:
             return self.reject(command, "INVALID_MOVEMENT_ENTITY", "该实体缺少移动所需组件")
 
@@ -91,7 +93,7 @@ class MovementCompSystem(CompSystem):
         for entity in world.entities_with([comps.MovementComponent, comps.TransformComponent]):
             move_comp = entity.get_component(comps.MovementComponent)
             transform_comp = entity.get_component(comps.TransformComponent)
-            combat_comp = entity.get_component(comps.CombatComponent)
+            combat_comp = entity.get_component(combat_component.CombatComponent)
 
             if move_comp.is_locked or combat_comp is not None and combat_comp.is_dead:
                 # 被限制了不能移动的entity 通知客户端停止移动了

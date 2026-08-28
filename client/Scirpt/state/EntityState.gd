@@ -21,11 +21,10 @@ var facing_dir: Vector2 = Vector2.ZERO
 var anim_state: String = ""
 var moving: bool = false
 
-var hp: int = 0
-var max_hp: int = 0
-var dead: bool = false
-
 var is_local_player: bool = false
+
+var combat_entity_state: CombatEntityState = null
+
 
 static func from_entity_info(entity_info: GameProto.EntityInfo) -> EntityState:
 	var state = EntityState.new()
@@ -36,7 +35,5 @@ static func from_entity_info(entity_info: GameProto.EntityInfo) -> EntityState:
 	state.facing_dir = Vector2(entity_info.get_facing_x(), entity_info.get_facing_y())
 	state.anim_state = entity_info.get_anim_state()
 	state.moving = entity_info.get_moving()
-	# state.hp = entity_info.hp
-	# state.max_hp = entity_info.max_hp
-	# state.dead = entity_info.dead
+	state.combat_entity_state = CombatEntityState.from_entity_info(entity_info.get_combat_entity_info())
 	return state

@@ -20,12 +20,15 @@ class GameProtocolAdapter:
         self._connections = ConnectionRegistry.get()
         self._event_handlers: dict[type, Callable] = {}
         self._moved_entitys: list[game_pb2.MovementEntry] = []
+        self._moved_entitys = []
+        self._combat_entitys: dict[str, game_pb2.CombatEntry]  = {}
 
     def register_event_handler(self, event_type: type, handler: "Callable"):
         self._event_handlers[event_type] = handler
 
     def publish_tick_result(self, tick_result: events.TickResult):
         self._moved_entitys = []
+        self._combat_entitys = {}
         server_tick = tick_result.server_tick
         for event in tick_result.events:
             event_type = type(event)
@@ -39,6 +42,18 @@ class GameProtocolAdapter:
             )
             self._outbound.broadcast(
                 "movement_frame",
+                msg,
+                room_id=self._game_world.room_id,
+                server_tick=server_tick,
+            )
+
+        if self._combat_entitys:
+            msg = game_pb2.CombatFrame(
+                server_tick=server_tick,
+                combats=self._combat_entitys.values()
+            )
+            self._outbound.broadcast(
+                "combat_frame",
                 msg,
                 room_id=self._game_world.room_id,
                 server_tick=server_tick,
@@ -135,6 +150,14 @@ class GameProtocolAdapter:
         entity_info.anim_state = entity_snapshot.anim_state
         entity_info.moving = entity_snapshot.moving
         entity_info.ai_state = entity_snapshot.ai_state
+
+        # 战斗组件
+        combat_entity_info = game_pb2.CombatEntityInfo(
+            entity_id=entity_snapshot.entity_id,
+            atk_facing=entity_snapshot.combat_snapshot.atk_facing,
+        )
+        
+        entity_info.combat_entity_info.CopyFrom(combat_entity_info)
         return entity_info
 
     def publish_entity_attack_start(self, entity_attack_start: events.EntityAttackStartEvent, server_tick: int):
@@ -157,3 +180,11 @@ class GameProtocolAdapter:
 
     def publish_entity_hurt(self, entity_hurt: events.EntityHurtEvent, server_tick: int):
         pass
+
+    def to_combat_atk_rotate_entry(self, entity_atk_rotate: events.EntityAtkRotateEvent, server_tick: int):
+        entry = self._combat_entitys.get(entity_atk_rotate.entity_id, None)
+        if not entry:
+            entry = game_pb2.CombatEntityInfo()
+            entry.entity_id = entity_atk_rotate.entity_id
+            self._combat_entitys[entity_atk_rotate.entity_id] = entry
+        entry.atk_facing = entity_atk_rotate.atk_facing

@@ -34,11 +34,3 @@ class Entity:
 
     def get_comp_types(self) -> list[type]:
         return list(self._components.keys())
-
-    # def get_room_entity_info(self) -> event.EntityInfo:
-    #     return event.EntityInfo(
-    #         entity_id=self._entity_id,
-    #         entity_type=self.entity_type,
-    #         transform=self.get_component(comps.TransformComponent),
-    #         combat=self.get_component(comps.CombatComponent),
-    #     )

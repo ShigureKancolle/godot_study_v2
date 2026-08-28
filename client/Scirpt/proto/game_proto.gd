@@ -683,6 +683,70 @@ class PBPacker:
 ############### USER DATA BEGIN ################
 
 
+class CombatEntityInfo:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__entity_id = PBField.new("entity_id", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __entity_id
+		data[__entity_id.tag] = service
+		
+		__atk_facing = PBField.new("atk_facing", PB_DATA_TYPE.FLOAT, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT])
+		service = PBServiceField.new()
+		service.field = __atk_facing
+		data[__atk_facing.tag] = service
+		
+	var data = {}
+	
+	var __entity_id: PBField
+	func has_entity_id() -> bool:
+		if __entity_id.value != null:
+			return true
+		return false
+	func get_entity_id() -> String:
+		return __entity_id.value
+	func clear_entity_id() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__entity_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_entity_id(value : String) -> void:
+		__entity_id.value = value
+	
+	var __atk_facing: PBField
+	func has_atk_facing() -> bool:
+		if __atk_facing.value != null:
+			return true
+		return false
+	func get_atk_facing() -> float:
+		return __atk_facing.value
+	func clear_atk_facing() -> void:
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__atk_facing.value = DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT]
+	func set_atk_facing(value : float) -> void:
+		__atk_facing.value = value
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
 class EntityInfo:
 	extends RefCounted
 	func _init():
@@ -737,6 +801,12 @@ class EntityInfo:
 		service = PBServiceField.new()
 		service.field = __ai_state
 		data[__ai_state.tag] = service
+		
+		__combat_entity_info = PBField.new("combat_entity_info", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 11, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __combat_entity_info
+		service.func_ref = Callable(self, "new_combat_entity_info")
+		data[__combat_entity_info.tag] = service
 		
 	var data = {}
 	
@@ -869,6 +939,20 @@ class EntityInfo:
 		__ai_state.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
 	func set_ai_state(value : String) -> void:
 		__ai_state.value = value
+	
+	var __combat_entity_info: PBField
+	func has_combat_entity_info() -> bool:
+		if __combat_entity_info.value != null:
+			return true
+		return false
+	func get_combat_entity_info() -> CombatEntityInfo:
+		return __combat_entity_info.value
+	func clear_combat_entity_info() -> void:
+		data[11].state = PB_SERVICE_STATE.UNFILLED
+		__combat_entity_info.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_combat_entity_info() -> CombatEntityInfo:
+		__combat_entity_info.value = CombatEntityInfo.new()
+		return __combat_entity_info.value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
@@ -1319,6 +1403,198 @@ class MoveIntent:
 			return PB_ERR.PARSE_INCOMPLETE
 		return result
 	
+class AtkRotateIntent:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__entity_id = PBField.new("entity_id", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __entity_id
+		data[__entity_id.tag] = service
+		
+		__atk_facing = PBField.new("atk_facing", PB_DATA_TYPE.FLOAT, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT])
+		service = PBServiceField.new()
+		service.field = __atk_facing
+		data[__atk_facing.tag] = service
+		
+	var data = {}
+	
+	var __entity_id: PBField
+	func has_entity_id() -> bool:
+		if __entity_id.value != null:
+			return true
+		return false
+	func get_entity_id() -> String:
+		return __entity_id.value
+	func clear_entity_id() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__entity_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_entity_id(value : String) -> void:
+		__entity_id.value = value
+	
+	var __atk_facing: PBField
+	func has_atk_facing() -> bool:
+		if __atk_facing.value != null:
+			return true
+		return false
+	func get_atk_facing() -> float:
+		return __atk_facing.value
+	func clear_atk_facing() -> void:
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__atk_facing.value = DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT]
+	func set_atk_facing(value : float) -> void:
+		__atk_facing.value = value
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
+class AtkRotateEntry:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__entity_id = PBField.new("entity_id", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __entity_id
+		data[__entity_id.tag] = service
+		
+		__atk_facing = PBField.new("atk_facing", PB_DATA_TYPE.FLOAT, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT])
+		service = PBServiceField.new()
+		service.field = __atk_facing
+		data[__atk_facing.tag] = service
+		
+	var data = {}
+	
+	var __entity_id: PBField
+	func has_entity_id() -> bool:
+		if __entity_id.value != null:
+			return true
+		return false
+	func get_entity_id() -> String:
+		return __entity_id.value
+	func clear_entity_id() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__entity_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_entity_id(value : String) -> void:
+		__entity_id.value = value
+	
+	var __atk_facing: PBField
+	func has_atk_facing() -> bool:
+		if __atk_facing.value != null:
+			return true
+		return false
+	func get_atk_facing() -> float:
+		return __atk_facing.value
+	func clear_atk_facing() -> void:
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__atk_facing.value = DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT]
+	func set_atk_facing(value : float) -> void:
+		__atk_facing.value = value
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
+class AtkRotateFrame:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__server_tick = PBField.new("server_tick", PB_DATA_TYPE.INT64, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.INT64])
+		service = PBServiceField.new()
+		service.field = __server_tick
+		data[__server_tick.tag] = service
+		
+		var __entries_default: Array[AtkRotateEntry] = []
+		__entries = PBField.new("entries", PB_DATA_TYPE.MESSAGE, PB_RULE.REPEATED, 2, true, __entries_default)
+		service = PBServiceField.new()
+		service.field = __entries
+		service.func_ref = Callable(self, "add_entries")
+		data[__entries.tag] = service
+		
+	var data = {}
+	
+	var __server_tick: PBField
+	func has_server_tick() -> bool:
+		if __server_tick.value != null:
+			return true
+		return false
+	func get_server_tick() -> int:
+		return __server_tick.value
+	func clear_server_tick() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__server_tick.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT64]
+	func set_server_tick(value : int) -> void:
+		__server_tick.value = value
+	
+	var __entries: PBField
+	func get_entries() -> Array[AtkRotateEntry]:
+		return __entries.value
+	func clear_entries() -> void:
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__entries.value.clear()
+	func add_entries() -> AtkRotateEntry:
+		var element = AtkRotateEntry.new()
+		__entries.value.append(element)
+		return element
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
 class AttackIntent:
 	extends RefCounted
 	func _init():
@@ -1619,6 +1895,70 @@ class MovementFrame:
 			return PB_ERR.PARSE_INCOMPLETE
 		return result
 	
+class CombatFrame:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__server_tick = PBField.new("server_tick", PB_DATA_TYPE.UINT64, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64])
+		service = PBServiceField.new()
+		service.field = __server_tick
+		data[__server_tick.tag] = service
+		
+		var __combats_default: Array[CombatEntityInfo] = []
+		__combats = PBField.new("combats", PB_DATA_TYPE.MESSAGE, PB_RULE.REPEATED, 2, true, __combats_default)
+		service = PBServiceField.new()
+		service.field = __combats
+		service.func_ref = Callable(self, "add_combats")
+		data[__combats.tag] = service
+		
+	var data = {}
+	
+	var __server_tick: PBField
+	func has_server_tick() -> bool:
+		if __server_tick.value != null:
+			return true
+		return false
+	func get_server_tick() -> int:
+		return __server_tick.value
+	func clear_server_tick() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__server_tick.value = DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64]
+	func set_server_tick(value : int) -> void:
+		__server_tick.value = value
+	
+	var __combats: PBField
+	func get_combats() -> Array[CombatEntityInfo]:
+		return __combats.value
+	func clear_combats() -> void:
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__combats.value.clear()
+	func add_combats() -> CombatEntityInfo:
+		var element = CombatEntityInfo.new()
+		__combats.value.append(element)
+		return element
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
 class EntityRemoved:
 	extends RefCounted
 	func _init():
@@ -1810,6 +2150,11 @@ class AttackStart:
 		service.field = __attack_id
 		data[__attack_id.tag] = service
 		
+		__atk_facing = PBField.new("atk_facing", PB_DATA_TYPE.FLOAT, PB_RULE.OPTIONAL, 3, true, DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT])
+		service = PBServiceField.new()
+		service.field = __atk_facing
+		data[__atk_facing.tag] = service
+		
 	var data = {}
 	
 	var __attacker_id: PBField
@@ -1837,6 +2182,19 @@ class AttackStart:
 		__attack_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT32]
 	func set_attack_id(value : int) -> void:
 		__attack_id.value = value
+	
+	var __atk_facing: PBField
+	func has_atk_facing() -> bool:
+		if __atk_facing.value != null:
+			return true
+		return false
+	func get_atk_facing() -> float:
+		return __atk_facing.value
+	func clear_atk_facing() -> void:
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__atk_facing.value = DEFAULT_VALUES_3[PB_DATA_TYPE.FLOAT]
+	func set_atk_facing(value : float) -> void:
+		__atk_facing.value = value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
@@ -2098,6 +2456,12 @@ class ClientMessage:
 		service.func_ref = Callable(self, "new_attack_intent")
 		data[__attack_intent.tag] = service
 		
+		__atk_rotate_intent = PBField.new("atk_rotate_intent", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 5, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __atk_rotate_intent
+		service.func_ref = Callable(self, "new_atk_rotate_intent")
+		data[__atk_rotate_intent.tag] = service
+		
 	var data = {}
 	
 	enum PayloadCase {
@@ -2106,6 +2470,7 @@ class ClientMessage:
 		ENTER_GAME_REQUEST = 2,
 		MOVE_INTENT = 3,
 		ATTACK_INTENT = 4,
+		ATK_ROTATE_INTENT = 5,
 	}
 	var _payload_case: int = 0
 
@@ -2126,6 +2491,8 @@ class ClientMessage:
 		data[3].state = PB_SERVICE_STATE.UNFILLED
 		__attack_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
 		__login_request.value = LoginRequest.new()
 		return __login_request.value
 	
@@ -2146,6 +2513,8 @@ class ClientMessage:
 		data[3].state = PB_SERVICE_STATE.UNFILLED
 		__attack_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
 		__enter_game_request.value = EnterGameRequest.new()
 		return __enter_game_request.value
 	
@@ -2166,6 +2535,8 @@ class ClientMessage:
 		_payload_case = 3
 		__attack_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
 		__move_intent.value = MoveIntent.new()
 		return __move_intent.value
 	
@@ -2186,8 +2557,32 @@ class ClientMessage:
 		data[3].state = PB_SERVICE_STATE.UNFILLED
 		data[4].state = PB_SERVICE_STATE.FILLED
 		_payload_case = 4
+		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
 		__attack_intent.value = AttackIntent.new()
 		return __attack_intent.value
+	
+	var __atk_rotate_intent: PBField
+	func has_atk_rotate_intent() -> bool:
+		return data[5].state == PB_SERVICE_STATE.FILLED
+	func get_atk_rotate_intent() -> AtkRotateIntent:
+		return __atk_rotate_intent.value
+	func clear_atk_rotate_intent() -> void:
+		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_atk_rotate_intent() -> AtkRotateIntent:
+		__login_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__enter_game_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__move_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__attack_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		data[5].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 5
+		__atk_rotate_intent.value = AtkRotateIntent.new()
+		return __atk_rotate_intent.value
 	
 	func get_payload_case() -> int:
 		return _payload_case
@@ -2287,6 +2682,12 @@ class ServerMessage:
 		service.func_ref = Callable(self, "new_entity_hurt")
 		data[__entity_hurt.tag] = service
 		
+		__combat_frame = PBField.new("combat_frame", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 13, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __combat_frame
+		service.func_ref = Callable(self, "new_combat_frame")
+		data[__combat_frame.tag] = service
+		
 	var data = {}
 	
 	enum PayloadCase {
@@ -2301,6 +2702,7 @@ class ServerMessage:
 		ATTACK_START = 10,
 		ATTACK_HIT = 11,
 		ENTITY_HURT = 12,
+		COMBAT_FRAME = 13,
 	}
 	var _payload_case: int = 0
 
@@ -2359,6 +2761,8 @@ class ServerMessage:
 		data[11].state = PB_SERVICE_STATE.UNFILLED
 		__entity_hurt.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[12].state = PB_SERVICE_STATE.UNFILLED
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[13].state = PB_SERVICE_STATE.UNFILLED
 		__login_accepted.value = LoginAccepted.new()
 		return __login_accepted.value
 	
@@ -2391,6 +2795,8 @@ class ServerMessage:
 		data[11].state = PB_SERVICE_STATE.UNFILLED
 		__entity_hurt.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[12].state = PB_SERVICE_STATE.UNFILLED
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[13].state = PB_SERVICE_STATE.UNFILLED
 		__world_snapshot.value = WorldSnapshot.new()
 		return __world_snapshot.value
 	
@@ -2423,6 +2829,8 @@ class ServerMessage:
 		data[11].state = PB_SERVICE_STATE.UNFILLED
 		__entity_hurt.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[12].state = PB_SERVICE_STATE.UNFILLED
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[13].state = PB_SERVICE_STATE.UNFILLED
 		__movement_frame.value = MovementFrame.new()
 		return __movement_frame.value
 	
@@ -2455,6 +2863,8 @@ class ServerMessage:
 		data[11].state = PB_SERVICE_STATE.UNFILLED
 		__entity_hurt.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[12].state = PB_SERVICE_STATE.UNFILLED
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[13].state = PB_SERVICE_STATE.UNFILLED
 		__entity_spawned.value = EntitySpawned.new()
 		return __entity_spawned.value
 	
@@ -2487,6 +2897,8 @@ class ServerMessage:
 		data[11].state = PB_SERVICE_STATE.UNFILLED
 		__entity_hurt.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[12].state = PB_SERVICE_STATE.UNFILLED
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[13].state = PB_SERVICE_STATE.UNFILLED
 		__entity_removed.value = EntityRemoved.new()
 		return __entity_removed.value
 	
@@ -2519,6 +2931,8 @@ class ServerMessage:
 		data[11].state = PB_SERVICE_STATE.UNFILLED
 		__entity_hurt.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[12].state = PB_SERVICE_STATE.UNFILLED
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[13].state = PB_SERVICE_STATE.UNFILLED
 		__entity_relocated.value = EntityRelocated.new()
 		return __entity_relocated.value
 	
@@ -2551,6 +2965,8 @@ class ServerMessage:
 		data[11].state = PB_SERVICE_STATE.UNFILLED
 		__entity_hurt.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[12].state = PB_SERVICE_STATE.UNFILLED
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[13].state = PB_SERVICE_STATE.UNFILLED
 		__command_rejected.value = CommandRejected.new()
 		return __command_rejected.value
 	
@@ -2583,6 +2999,8 @@ class ServerMessage:
 		data[11].state = PB_SERVICE_STATE.UNFILLED
 		__entity_hurt.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[12].state = PB_SERVICE_STATE.UNFILLED
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[13].state = PB_SERVICE_STATE.UNFILLED
 		__attack_start.value = AttackStart.new()
 		return __attack_start.value
 	
@@ -2615,6 +3033,8 @@ class ServerMessage:
 		_payload_case = 11
 		__entity_hurt.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[12].state = PB_SERVICE_STATE.UNFILLED
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[13].state = PB_SERVICE_STATE.UNFILLED
 		__attack_hit.value = AttackHit.new()
 		return __attack_hit.value
 	
@@ -2647,8 +3067,44 @@ class ServerMessage:
 		data[11].state = PB_SERVICE_STATE.UNFILLED
 		data[12].state = PB_SERVICE_STATE.FILLED
 		_payload_case = 12
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[13].state = PB_SERVICE_STATE.UNFILLED
 		__entity_hurt.value = EntityHurt.new()
 		return __entity_hurt.value
+	
+	var __combat_frame: PBField
+	func has_combat_frame() -> bool:
+		return data[13].state == PB_SERVICE_STATE.FILLED
+	func get_combat_frame() -> CombatFrame:
+		return __combat_frame.value
+	func clear_combat_frame() -> void:
+		data[13].state = PB_SERVICE_STATE.UNFILLED
+		__combat_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_combat_frame() -> CombatFrame:
+		__login_accepted.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__world_snapshot.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__movement_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__entity_spawned.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__entity_removed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__entity_relocated.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
+		__attack_start.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[10].state = PB_SERVICE_STATE.UNFILLED
+		__attack_hit.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[11].state = PB_SERVICE_STATE.UNFILLED
+		__entity_hurt.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[12].state = PB_SERVICE_STATE.UNFILLED
+		data[13].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 13
+		__combat_frame.value = CombatFrame.new()
+		return __combat_frame.value
 	
 	func get_payload_case() -> int:
 		return _payload_case

@@ -43,6 +43,17 @@ func apply_attack_start(attack_start: GameProto.AttackStart):
 	var attack_id := attack_start.get_attack_id()
 	SignalMgr.Get().snl_attack_start.emit(attacker_id, attack_id)
 
+func apply_combat_frame(frame: GameProto.CombatFrame):
+	var frame_tick := frame.get_server_tick()
+	if frame_tick <= _last_movement_tick:
+		return
+
+	_last_movement_tick = frame_tick
+	var change_states := CombatFrameReducer.apply(store, frame)
+
+	if not change_states.is_empty():
+		SignalMgr.Get().snl_entities_combat.emit(change_states)
+
 func reset_world():
 	WorldResetReducer.apply(store)
 

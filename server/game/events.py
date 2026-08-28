@@ -4,6 +4,15 @@
 from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
+class CombatSnapshot:
+    # hp: int = 100
+    # max_hp: int = 100
+    # attack: int = 10
+    # defense: int = 10
+    entity_id: str = ""
+    atk_facing: float = 0.0
+
+@dataclass(frozen=True)
 class EntitySnapshot:
     entity_id: str = ""
     player_name: str = ""
@@ -14,6 +23,7 @@ class EntitySnapshot:
     anim_state: str = ""
     moving: bool = False
     ai_state: str = ""
+    combat_snapshot: CombatSnapshot = field(default_factory=CombatSnapshot)
 
 class Event:
     pass
@@ -70,6 +80,11 @@ class WorldSnapshot(Event):
 class EntityRemovedEvent(Event):
     entity_id: str = ""
     account: str = ""
+
+@dataclass(frozen=True)
+class EntityAtkRotateEvent(Event):
+    entity_id: str = ""
+    atk_facing: float = 0.0
 
 @dataclass(frozen=True)
 class CommandRejectedEvent(Event):

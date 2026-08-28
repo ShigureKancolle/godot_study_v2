@@ -12,6 +12,7 @@ func setup(target_entity_id: String):
 func _process(delta: float):
 	_move_intent(delta)
 	_attack_intent(delta)
+	_atk_rotate_intent(delta)
 	
 func _move_intent(_delta: float):
 	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -45,5 +46,18 @@ func _attack_intent(_delta: float):
 		"attack": attack_id
 	})
 
+func _atk_rotate_intent(_delta: float):
+	# 获取鼠标位置
+	var role := get_parent() as Node2D
+	var mouse_pos := role.get_global_mouse_position()
+	var entity_pos := role.get_global_position()
+	var dir := (mouse_pos - entity_pos).normalized()
 
-	
+	if dir.is_zero_approx():
+		return
+
+	var angle := dir.angle_to(Vector2.RIGHT)
+	WebSocketMgr.Get().send("atk_rotate_intent", {
+		"entity_id": entity_id,
+		"angle": angle
+	})

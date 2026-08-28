@@ -7,7 +7,8 @@ import unittest
 from app.app_runtime import AppRuntime
 from game.commands import JoinCommand, MoveCommand
 from game.events import CommandRejectedEvent
-from game.model.components import CombatComponent, MovementComponent, TransformComponent
+from game.model.components import MovementComponent, TransformComponent
+from game.model.combat_component import CombatComponent
 from game.world import GameWorld
 from proto.generated import game_pb2
 from protocol.contract import ProtocolValidationError, validate_move_intent

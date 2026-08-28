@@ -4,6 +4,11 @@ syntax = "proto3";
 // 修改后运行 tools/sync_proto.ps1，禁止手工修改生成代码。
 package game;
 
+message CombatEntityInfo {
+  string entity_id = 1;
+  float atk_facing = 2;
+}
+
 message EntityInfo {
   string entity_id = 1;
   string player_name = 2;
@@ -15,7 +20,9 @@ message EntityInfo {
   string anim_state = 8;
   bool moving = 9;
   string ai_state = 10;
+  CombatEntityInfo combat_entity_info = 11;
 }
+
 
 // 客户端 -> 服务端
 message LoginRequest {
@@ -54,6 +61,24 @@ message MoveIntent {
   bool moving = 4;
 }
 
+// 客户端 -> 服务端  请求转向
+message AtkRotateIntent {
+  string entity_id = 1;
+  float atk_facing = 2;
+}
+
+// s->c
+message AtkRotateEntry {
+  string entity_id = 1;
+  float atk_facing = 2;
+}
+
+message AtkRotateFrame {
+  int64 server_tick = 1;
+  repeated AtkRotateEntry entries = 2;
+}
+
+
 message AttackIntent {
   string attacker_id = 1;
   int32 attack_id = 2;
@@ -75,6 +100,11 @@ message MovementEntry {
 message MovementFrame {
   uint64 server_tick = 1;
   repeated MovementEntry entries = 2;
+}
+
+message CombatFrame {
+  uint64 server_tick = 1;
+  repeated CombatEntityInfo combats = 2;
 }
 
 // 服务端 -> 客户端
@@ -125,6 +155,7 @@ message ClientMessage {
     EnterGameRequest enter_game_request = 2;
     MoveIntent move_intent = 3;
     AttackIntent attack_intent = 4;
+    AtkRotateIntent atk_rotate_intent = 5;
   }
 }
 
@@ -144,5 +175,6 @@ message ServerMessage {
     AttackStart attack_start = 10;
     AttackHit attack_hit = 11;
     EntityHurt entity_hurt = 12;
+    CombatFrame combat_frame = 13;
   }
 }

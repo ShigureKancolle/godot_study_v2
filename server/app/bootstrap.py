@@ -4,6 +4,8 @@ from protocol import codec
 from protocol import router
 from protocol.handlers import login_handler
 from protocol.handlers import game_handler
+from protocol.handlers import combat_handler
+
 from transport.game_protocol_adapter import GameProtocolAdapter
 import game.events as events
 
@@ -16,6 +18,7 @@ def build_client_router():
     client_router.register("enter_game_request", game_handler.enter_game_request_handler)
     client_router.register("move_intent", game_handler.move_intent_handler)
     client_router.register("attack_intent", game_handler.attack_intent_handler)
+    client_router.register("atk_rotate_intent", combat_handler.atk_rotate_intent_handler)
 
 def register_adapter(adapter: GameProtocolAdapter):
     adapter.register_event_handler(events.EntityJoinedEvent, adapter.publish_entity_joined)
@@ -25,3 +28,5 @@ def register_adapter(adapter: GameProtocolAdapter):
     adapter.register_event_handler(events.EntityAttackStartEvent, adapter.publish_entity_attack_start)
     adapter.register_event_handler(events.EntityAttackHitEvent, adapter.publish_entity_attack_hit)
     adapter.register_event_handler(events.EntityHurtEvent, adapter.publish_entity_hurt)
+    adapter.register_event_handler(events.EntityAtkRotateEvent, adapter.to_combat_atk_rotate_entry)
+    

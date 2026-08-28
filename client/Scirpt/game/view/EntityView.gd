@@ -28,6 +28,9 @@ func setup(entity_state: EntityState):
 	get_presenter(MotionPresenter.presenter_name).set_position(entity_state.server_position)
 	get_presenter(AnimationPresenter.presenter_name).update_facing(entity_state.facing_dir)
 	get_presenter(NameplatePresenter.presenter_name).set_view_name(entity_state.player_name, entity_state.is_local_player)
+	var combat_state = entity_state.combat_entity_state
+	if combat_state:
+		get_presenter(CombatPresenter.presenter_name).setup(combat_state)
 	__setup(entity_state)
 
 func __setup(entity_state: EntityState):
@@ -39,6 +42,9 @@ func dispose():
 func apply_attack_start(attack_id: String):
 	pass
 
+func apply_atk_rotate(facing: float):
+	get_presenter(CombatPresenter.presenter_name).apply_atk_facing(facing)
+
 func apply_movement(state: EntityState) -> void:
 	get_presenter(MotionPresenter.presenter_name).set_target_position(state.server_position)
 	get_presenter(AnimationPresenter.presenter_name).play_anim(state.anim_state)
@@ -48,3 +54,8 @@ func apply_animation(state: EntityState) -> void:
 
 func apply_state(state: EntityState) -> void:
 	apply_movement(state)
+
+func apply_combat(state: CombatEntityState) -> void:
+	if not state:
+		return
+	apply_atk_rotate(state.atk_facing)

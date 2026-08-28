@@ -41,13 +41,5 @@ class PlayerComponent(Component):
     player_name: str = ""
 
 @dataclass
-class CombatComponent(Component):
-    hp: int = 100
-    max_hp: int = 100
-    attack: int = 0
-    defense: int = 0
-    is_dead: bool = False
-
-@dataclass
 class CollisionComponent(Component):
     body_radius: float = 0.0

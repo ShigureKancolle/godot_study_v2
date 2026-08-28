@@ -2,20 +2,22 @@
 
 [ext_resource type="Script" uid="uid://cl5pficlut8qg" path="res://Scirpt/game/view/PlayerVisual.gd" id="1_5ie6y"]
 [ext_resource type="SpriteFrames" uid="uid://cq12vjl402xse" path="res://Prefab/Role/anim/player_anim.tres" id="2_rmt74"]
+[ext_resource type="Texture2D" uid="uid://2qqrmqv047on" path="res://Prefab/CommonTexture/arrowBeige_right.png" id="3_uwd32"]
 
 [node name="PlayerVisual" type="Node2D" unique_id=1889249389]
 script = ExtResource("1_5ie6y")
 
 [node name="AtkEffect" type="Node2D" parent="." unique_id=1334521338]
 
+[node name="FacingArrow" type="Sprite2D" parent="." unique_id=1709146306]
+texture = ExtResource("3_uwd32")
+offset = Vector2(30, 0)
+
 [node name="Body" type="AnimatedSprite2D" parent="." unique_id=1743655513]
 sprite_frames = ExtResource("2_rmt74")
 animation = &"Down_Idle"
 autoplay = "Down_Idle"
 frame_progress = 0.24110062
-
-[node name="FacingArrow" type="Sprite2D" parent="." unique_id=1709146306]
-position = Vector2(35, 0)
 
 [node name="NameLabel" type="Label" parent="." unique_id=1956648074]
 anchors_preset = 7
