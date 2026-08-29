@@ -17,6 +17,8 @@ func on_world_snapshot(msg: GameProto.ServerMessage):
 	_client_world.apply_world_snapshot(world_snapshot)
 
 func on_movement_frame(msg: GameProto.ServerMessage):
+	# print("on_movement_frame")
+	# print(msg)
 	var movement_frame := msg.get_movement_frame()
 	_client_world.apply_movement_frame(movement_frame)
 	# var changed_states := MovementFrameReducer.apply(GameBootstrap.game_store, movement_frame)

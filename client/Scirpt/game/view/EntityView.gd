@@ -39,7 +39,7 @@ func __setup(entity_state: EntityState):
 func dispose():
 	pass
 
-func apply_attack_start(attack_id: String, atk_facing: float):
+func apply_attack_start(attack_id: int, atk_facing: float):
 	get_presenter(CombatPresenter.presenter_name).apply_attack_start(attack_id, atk_facing)
 
 func apply_atk_rotate(facing: float):
