@@ -8,8 +8,21 @@ var store: GameStore = null
 var _last_movement_tick: int = -1
 var _last_combat_tick: int = -1
 
+var run_id: String = ""
+var _last_world_tick: int = -1
+var _processed_event_ids: Dictionary[int, bool] = {}
+
 func _init(store: GameStore):
 	self.store = store
+
+func apply_world_frame(server_tick: int, frame: GameProto.WorldFrame):
+	if server_tick <= _last_world_tick:
+		return
+
+	var changes := WorldFrameReducer.apply(store, frame)
+	_last_world_tick = server_tick
+	store.server_tick = server_tick
+
 
 func apply_world_snapshot(snapshot: GameProto.WorldSnapshot):
 	WorldSnapshotReducer.apply(store, snapshot)
@@ -46,21 +59,23 @@ func apply_attack_start(attack_start: GameProto.AttackStart):
 	var atk_facing := attack_start.get_atk_facing()
 	SignalMgr.Get().snl_attack_start.emit(attacker_id, attack_id, atk_facing)
 
-func apply_combat_frame(frame: GameProto.CombatFrame):
-	var frame_tick := frame.get_server_tick()
-	if frame_tick <= _last_combat_tick:
-		return
 
-	_last_combat_tick = frame_tick
-	var change_states := CombatFrameReducer.apply(store, frame)
+# func apply_combat_frame(frame: GameProto.CombatFrame):
+# 	var frame_tick := frame.get_server_tick()
+# 	if frame_tick <= _last_movement_tick:
+# 		return
 
-	if not change_states.is_empty():
-		SignalMgr.Get().snl_entities_combat.emit(change_states)
+# 	_last_movement_tick = frame_tick
+# 	var change_states := CombatFrameReducer.apply(store, frame)
+
+
+# 	if not change_states.is_empty():
+# 		SignalMgr.Get().snl_entities_combat.emit(change_states)
 
 func reset_world():
 	WorldResetReducer.apply(store)
 
 	_last_movement_tick = -1
-	_last_combat_tick = -1
 
+	_last_world_tick = -1
 	SignalMgr.Get().snl_store_cleared.emit()

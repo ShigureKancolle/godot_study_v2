@@ -9,6 +9,11 @@ var _client_world: ClientWorldSynchronizer = null
 func _init(client_world: ClientWorldSynchronizer):
 	_client_world = client_world
 
+func on_world_frame(msg: GameProto.ServerMessage):
+	var world_frame := msg.get_world_frame()
+	var server_tick := msg.get_server_tick()
+	_client_world.apply_world_frame(server_tick, world_frame)
+
 
 func on_world_snapshot(msg: GameProto.ServerMessage):
 	print("世界快照：", msg.get_world_snapshot())

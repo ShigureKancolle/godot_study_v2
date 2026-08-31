@@ -5,12 +5,13 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class CombatSnapshot:
-    # hp: int = 100
-    # max_hp: int = 100
-    # attack: int = 10
-    # defense: int = 10
+    hp: int = 100
+    max_hp: int = 100
+    attack: int = 10
+    defense: int = 10
     entity_id: str = ""
     atk_facing: float = 0.0
+    dead: bool = False
 
 @dataclass(frozen=True)
 class EntitySnapshot:
@@ -81,6 +82,13 @@ class WorldSnapshot(Event):
 class EntityRemovedEvent(Event):
     entity_id: str = ""
     account: str = ""
+
+@dataclass(frozen=True)
+class EntityHealthChangedEvent(Event):
+    entity_id: str = ""
+    hp: int = 0
+    max_hp: int = 0
+    dead: bool = False
 
 @dataclass(frozen=True)
 class EntityAtkRotateEvent(Event):

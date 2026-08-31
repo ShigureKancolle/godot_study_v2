@@ -2,4 +2,8 @@ extends ClientReducerBase
 class_name EntityRemovedReducer
 
 static func apply(store: GameStore, entity_id: String):
-    store.remove_entity(entity_id)
+	store.remove_entity(entity_id)
+
+static func apply_by_world_frame(store: GameStore, frame: GameProto.WorldFrame):
+	for entity_id in frame.get_removed_entity_ids():
+		apply(store, entity_id)

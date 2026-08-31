@@ -7,6 +7,9 @@ package game;
 message CombatEntityInfo {
   string entity_id = 1;
   float atk_facing = 2;
+  int32 hp = 3;
+  int32 max_hp = 4;
+  bool dead = 5;
 }
 
 message EntityInfo {
@@ -102,9 +105,29 @@ message MovementFrame {
   repeated MovementEntry entries = 2;
 }
 
-message CombatFrame {
-  uint64 server_tick = 1;
-  repeated CombatEntityInfo combats = 2;
+// 瞄准朝向增量
+message AnimStateDelta {
+  string entity_id = 1;
+  float atk_facing = 2;
+}
+
+// hp变化增量
+message HealthStateDelta {
+  string entity_id = 1;
+  int32 hp = 2;
+  int32 max_hp = 3;
+  bool dead = 4;
+}
+
+// 之后追加 mp 能量条  cd  。。。。更多的战斗状态
+
+// 离散的世界事件
+message DamageEvent {
+  string attacker_id = 1;
+  string target_id = 2;
+  int32 attack_id = 3;
+  int32 damage = 4;
+  bool critical = 5; // 被这次攻击打死了
 }
 
 // 服务端 -> 客户端
@@ -149,6 +172,30 @@ message CommandRejected {
   string reason_message = 3;
 }
 
+// 离散的世界事件
+message WorldEvent {
+  uint64 event_id = 1;
+
+  oneof payload {
+    AttackStart attack_start = 2;
+    AttackHit attack_hit = 3;
+    DamageEvent damage = 4;
+  }
+}
+
+// 世界帧消息
+message WorldFrame {
+  // 合批处理的事件
+  repeated EntityInfo spawned_entities = 1; // 这帧生成的实体
+  repeated string removed_entity_ids = 2;  // 这帧消除的实体
+  
+  repeated MovementEntry movements = 3; // 这帧移动的实体
+  repeated AnimStateDelta anims = 4; // 动画参数变更
+  repeated HealthStateDelta health_states = 5; // 血量变化
+
+  repeated WorldEvent events = 6; // 单独处理的事件
+}
+
 // 该包络只允许承载客户端发往服务端的消息。
 message ClientMessage {
   oneof payload {
@@ -168,6 +215,8 @@ message ServerMessage {
   oneof payload {
     LoginAccepted login_accepted = 3;
     WorldSnapshot world_snapshot = 4;
+
+    // 这段都被worldframe代替了
     MovementFrame movement_frame = 5;
     EntitySpawned entity_spawned = 6;
     EntityRemoved entity_removed = 7;
@@ -176,6 +225,9 @@ message ServerMessage {
     AttackStart attack_start = 10;
     AttackHit attack_hit = 11;
     EntityHurt entity_hurt = 12;
-    CombatFrame combat_frame = 13;
+    // CombatFrame combat_frame = 13;
+    // ------------------------
+
+    WorldFrame world_frame = 14;
   }
 }

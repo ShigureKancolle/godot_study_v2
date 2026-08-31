@@ -8,7 +8,7 @@ from app.game_runtime import GameRuntime
 import game.world as world
 from transport.game_protocol_adapter import GameProtocolAdapter
 import transport.websocket_server as websocket_server
-from app.bootstrap import build_client_router, register_adapter
+from app.bootstrap import build_client_router
 
 # 注册handler
 import protocol.handlers
@@ -20,7 +20,6 @@ async def main():
     logger.debug("main() function is running")
     game_world = world.get_room()
     protocol_adapter = GameProtocolAdapter(game_world)
-    register_adapter(protocol_adapter)
     game_runtime = GameRuntime(world=game_world, protocol_adapter=protocol_adapter)
     app_runtime = AppRuntime(game_world)
     build_client_router()
