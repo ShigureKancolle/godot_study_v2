@@ -23,6 +23,8 @@ func apply_world_frame(server_tick: int, frame: GameProto.WorldFrame):
 	_last_world_tick = server_tick
 	store.server_tick = server_tick
 
+	# 发送消息
+
 
 func apply_world_snapshot(snapshot: GameProto.WorldSnapshot):
 	WorldSnapshotReducer.apply(store, snapshot)
