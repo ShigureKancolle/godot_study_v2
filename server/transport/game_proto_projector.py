@@ -50,4 +50,14 @@ class GameProtoProjector:
             entity_id=rotate.entity_id,
             atk_facing=rotate.atk_facing,
         )
-   
+
+    @staticmethod
+    def attack_start(event: events.EntityAttackStartEvent) -> game_pb2.WorldEvent:
+        return game_pb2.WorldEvent(
+            event_id = 1,
+            attack_start = game_pb2.AttackStart(
+                attacker_id=event.entity_id,
+                attack_id=event.attack_id,
+                atk_facing=event.atk_facing,
+            ),
+        )

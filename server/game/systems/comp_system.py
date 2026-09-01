@@ -278,11 +278,10 @@ class AttackCompSystem(CompSystem):
         return events
 
     def _get_attack_hits(self, world: "game_world.GameWorld", attacker_id: str, atk_facing: float, shape: "config_loader.AttackShape") -> list[str]:
-        pass
+        return []
 
     def _calculate_damage(self, world: "game_world.GameWorld", attacker_id: str, target_id: str, attack_id: int, shape: "config_loader.AttackShape") -> int:
-        pass
-    
+        return 0
 
 
 class LeaveCompSystem(CompSystem):

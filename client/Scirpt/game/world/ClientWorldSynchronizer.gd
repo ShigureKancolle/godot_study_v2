@@ -20,11 +20,42 @@ func apply_world_frame(server_tick: int, frame: GameProto.WorldFrame):
 		return
 
 	var changes := WorldFrameReducer.apply(store, frame)
+
 	_last_world_tick = server_tick
 	store.server_tick = server_tick
 
 	# 发送消息
+	_emit_world_frame_changes(changes)
 
+func _emit_world_frame_changes(changes: WorldFrameChanges):
+	# 批量信号
+	if not changes.moved.is_empty():
+		SignalMgr.Get().snl_entities_moved.emit(changes.moved)
+
+	if not changes.aims_changed.is_empty():
+		SignalMgr.Get().snl_entities_aims_changed.emit(changes.aims_changed)
+	
+	if not changes.health_changed.is_empty():
+		SignalMgr.Get().snl_entities_health_changed.emit(changes.health_changed)
+
+	# 单独信号
+	for spawn in changes.spawned:
+		SignalMgr.Get().snl_entity_added.emit(spawn)
+
+	for removed in changes.removed:
+		SignalMgr.Get().snl_entity_removed.emit(removed)
+
+	# 离散事件
+	for env in changes.events:
+		_emit_world_event(env)
+
+func _emit_world_event(env: GameProto.WorldEvent):
+	# 处理离散事件
+	
+	match env.get_payload_case():
+		GameProto.WorldEvent.PayloadCase.ATTACK_START:
+			var attack_start: GameProto.AttackStart = env.get_attack_start()
+			apply_attack_start(attack_start)
 
 func apply_world_snapshot(snapshot: GameProto.WorldSnapshot):
 	WorldSnapshotReducer.apply(store, snapshot)

@@ -75,7 +75,7 @@ class WorldFrameBuilder:
         self.spawned_entities[event.entity_info.entity_id] = GameProtoProjector.entity_info(event.entity_info)
 
     def _event_handler_entity_attack_start_event(self, event: events.EntityAttackStartEvent):
-        pass
+        self.events.append(GameProtoProjector.attack_start(event))
 
     def _event_handler_entity_hurt_event(self, event: events.EntityHurtEvent):
         pass

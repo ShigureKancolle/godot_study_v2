@@ -42,6 +42,9 @@ func dispose():
 func apply_attack_start(attack_id: int, atk_facing: float):
 	get_presenter(CombatPresenter.presenter_name).apply_attack_start(attack_id, atk_facing)
 
+func apply_aims_changed(aims_state: EntityState):
+	get_presenter(CombatPresenter.presenter_name).apply_atk_facing(aims_state.combat_entity_state.atk_facing)
+
 func apply_atk_rotate(facing: float):
 	get_presenter(CombatPresenter.presenter_name).apply_atk_facing(facing)
 

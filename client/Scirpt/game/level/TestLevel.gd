@@ -25,6 +25,7 @@ func _ready():
 	SignalMgr.Get().snl_entity_updated.connect(update_entity)
 	SignalMgr.Get().snl_store_cleared.connect(clear_entity_views)
 	SignalMgr.Get().snl_entities_combat.connect(hdl_entities_combat)
+	SignalMgr.Get().snl_entities_aims_changed.connect(hdl_entities_aims_changed)
 
 
 func spawn_entity(entity_state: EntityState):
@@ -66,6 +67,12 @@ func hdl_entities_combat(change_states: Array[EntityState]):
 	for entity_state in change_states:
 		if entity_state.entity_id in entity_views:
 			entity_views[entity_state.entity_id].apply_combat(entity_state.combat_entity_state)
+
+func hdl_entities_aims_changed(change_states: Array[EntityState]):
+	for entity_state in change_states:
+		if entity_state.entity_id in entity_views:
+			entity_views[entity_state.entity_id].apply_aims_changed(entity_state)
+
 
 func clear_entity_views():
 	for view in entity_views.values():
