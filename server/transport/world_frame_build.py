@@ -14,7 +14,7 @@ class WorldFrameBuilder:
         self.server_tick = server_tick
 
         self.movements: dict[str, game_pb2.MovementEntry] = {}
-        self.anims: dict[str, game_pb2.AnimStateDelta] = {}
+        self.aims: dict[str, game_pb2.AimStateDelta] = {}
         self.health_states: dict[str, game_pb2.HealthStateDelta] = {}
 
         self.spawned_entities: dict[str, game_pb2.EntityInfo] = {}
@@ -46,11 +46,11 @@ class WorldFrameBuilder:
 
     def has_changes(self) -> bool:
         return (
-            bool(self.movements) or 
-            bool(self.anims) or 
-            bool(self.health_states) or 
-            bool(self.spawned_entities) or 
-            bool(self.removed_entities) or 
+            bool(self.movements) or
+            bool(self.aims) or
+            bool(self.health_states) or
+            bool(self.spawned_entities) or
+            bool(self.removed_entities) or
             bool(self.events)
         )
 
@@ -58,7 +58,7 @@ class WorldFrameBuilder:
     def build(self) -> game_pb2.WorldFrame:
         world_frame = game_pb2.WorldFrame()
         world_frame.movements.extend(self.movements.values())
-        world_frame.anims.extend(self.anims.values())
+        world_frame.aims.extend(self.aims.values())
         world_frame.health_states.extend(self.health_states.values())
         world_frame.spawned_entities.extend(self.spawned_entities.values())
         world_frame.removed_entity_ids.extend(self.removed_entities)
@@ -87,7 +87,7 @@ class WorldFrameBuilder:
         pass
 
     def _event_handler_entity_atk_rotate_event(self, event: events.EntityAtkRotateEvent):
-        self.anims[event.entity_id] = GameProtoProjector.anim_state(event)
+        self.aims[event.entity_id] = GameProtoProjector.aim_state(event)
 
 
 

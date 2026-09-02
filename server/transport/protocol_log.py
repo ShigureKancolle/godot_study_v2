@@ -5,8 +5,7 @@ import os
 
 
 _HIGH_FREQUENCY_PROTOCOLS = frozenset({
-    "movement_frame",
-    "combat_frame",
+    "world_frame",
 })
 
 # 默认不打印高频帧；排查网络同步时设置为 1 可临时打开。

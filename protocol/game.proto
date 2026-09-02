@@ -70,18 +70,6 @@ message AtkRotateIntent {
   float atk_facing = 2;
 }
 
-// s->c
-message AtkRotateEntry {
-  string entity_id = 1;
-  float atk_facing = 2;
-}
-
-message AtkRotateFrame {
-  int64 server_tick = 1;
-  repeated AtkRotateEntry entries = 2;
-}
-
-
 message AttackIntent {
   string attacker_id = 1;
   int32 attack_id = 2;
@@ -99,14 +87,8 @@ message MovementEntry {
   float facing_y = 8;
 }
 
-// 服务端 -> 客户端
-message MovementFrame {
-  uint64 server_tick = 1;
-  repeated MovementEntry entries = 2;
-}
-
 // 瞄准朝向增量
-message AnimStateDelta {
+message AimStateDelta {
   string entity_id = 1;
   float atk_facing = 2;
 }
@@ -127,24 +109,7 @@ message DamageEvent {
   string target_id = 2;
   int32 attack_id = 3;
   int32 damage = 4;
-  bool critical = 5; // 被这次攻击打死了
-}
-
-// 服务端 -> 客户端
-message EntityRemoved {
-  string entity_id = 1;
-}
-
-// 服务端 -> 客户端
-message EntityRelocated {
-  string entity_id = 1;
-  float facing = 2;
-}
-
-// 服务端 -> 客户端
-message EntitySpawned {
-  string entity_id = 1;
-  EntityInfo entity_info = 2;
+  bool critical = 5; // 是否为暴击
 }
 
 message AttackStart {
@@ -156,12 +121,6 @@ message AttackStart {
 message AttackHit {
   string attacker_id = 1;
   int32 attack_id = 2;
-}
-
-message EntityHurt {
-  string hurt_entity_id = 1;
-  string attacker_id = 2;
-  int32 damage = 3;
 }
 
 // 服务端 -> 客户端。说明客户端命令被拒绝的原因；
@@ -190,7 +149,7 @@ message WorldFrame {
   repeated string removed_entity_ids = 2;  // 这帧消除的实体
   
   repeated MovementEntry movements = 3; // 这帧移动的实体
-  repeated AnimStateDelta anims = 4; // 动画参数变更
+  repeated AimStateDelta aims = 4; // 瞄准朝向变化
   repeated HealthStateDelta health_states = 5; // 血量变化
 
   repeated WorldEvent events = 6; // 单独处理的事件
@@ -212,22 +171,12 @@ message ServerMessage {
   string run_id = 1;
   uint64 server_tick = 2;
 
+  // 5、6、7、8、10、11、12、13 已由 WorldFrame 替代，禁止复用这些字段号。
+
   oneof payload {
     LoginAccepted login_accepted = 3;
     WorldSnapshot world_snapshot = 4;
-
-    // 这段都被worldframe代替了
-    MovementFrame movement_frame = 5;
-    EntitySpawned entity_spawned = 6;
-    EntityRemoved entity_removed = 7;
-    EntityRelocated entity_relocated = 8;
     CommandRejected command_rejected = 9;
-    AttackStart attack_start = 10;
-    AttackHit attack_hit = 11;
-    EntityHurt entity_hurt = 12;
-    // CombatFrame combat_frame = 13;
-    // ------------------------
-
     WorldFrame world_frame = 14;
   }
 }

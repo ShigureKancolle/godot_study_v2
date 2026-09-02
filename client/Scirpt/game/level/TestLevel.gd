@@ -24,7 +24,6 @@ func _ready():
 	SignalMgr.Get().snl_entity_removed.connect(remove_entity)
 	SignalMgr.Get().snl_entity_updated.connect(update_entity)
 	SignalMgr.Get().snl_store_cleared.connect(clear_entity_views)
-	SignalMgr.Get().snl_entities_combat.connect(hdl_entities_combat)
 	SignalMgr.Get().snl_entities_aims_changed.connect(hdl_entities_aims_changed)
 
 
@@ -62,11 +61,6 @@ func hdl_attack_start(attacker_id: String, attack_id: int, atk_facing: float):
 	var entity_view = entity_views.get(attacker_id, null)
 	if entity_view:
 		entity_view.apply_attack_start(attack_id, atk_facing)
-
-func hdl_entities_combat(change_states: Array[EntityState]):
-	for entity_state in change_states:
-		if entity_state.entity_id in entity_views:
-			entity_views[entity_state.entity_id].apply_combat(entity_state.combat_entity_state)
 
 func hdl_entities_aims_changed(change_states: Array[EntityState]):
 	for entity_state in change_states:

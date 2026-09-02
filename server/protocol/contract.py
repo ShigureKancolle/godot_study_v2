@@ -20,11 +20,8 @@ CLIENT_MESSAGE_TYPES = {
 SERVER_MESSAGE_TYPES = {
     "login_accepted",
     "world_snapshot",
-    "movement_frame",
-    "entity_spawned",
-    "entity_removed",
-    "entity_relocated",
     "command_rejected",
+    "world_frame",
 }
 
 

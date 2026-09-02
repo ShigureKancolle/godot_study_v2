@@ -45,8 +45,8 @@ class GameProtoProjector:
         )
 
     @staticmethod
-    def anim_state(rotate: events.EntityAtkRotateEvent) -> game_pb2.AnimStateDelta:
-        return game_pb2.AnimStateDelta(
+    def aim_state(rotate: events.EntityAtkRotateEvent) -> game_pb2.AimStateDelta:
+        return game_pb2.AimStateDelta(
             entity_id=rotate.entity_id,
             atk_facing=rotate.atk_facing,
         )

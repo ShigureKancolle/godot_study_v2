@@ -2,15 +2,15 @@ extends ClientReducerBase
 class_name AimsChangeReducer
 static func apply_by_world_frame(store: GameStore, frame: GameProto.WorldFrame) -> Array[EntityState]:
 	var changed_states: Array[EntityState] = []
-	for aim_state_delta in frame.get_anims():
-		var state := _apply_AnimStateDelta(store, aim_state_delta)
+	for aim_state_delta in frame.get_aims():
+		var state := _apply_aim_state_delta(store, aim_state_delta)
 		if state != null:
 			changed_states.append(state)
 
 	return changed_states
 	
-static func _apply_AnimStateDelta(store: GameStore, combat_entry: GameProto.AnimStateDelta) -> EntityState:
-	var entity_id: String = combat_entry.get_entity_id()
+static func _apply_aim_state_delta(store: GameStore, aim_state: GameProto.AimStateDelta) -> EntityState:
+	var entity_id: String = aim_state.get_entity_id()
 	var state := store.get_entity(entity_id)
 	if state == null:
 		return null
@@ -18,6 +18,5 @@ static func _apply_AnimStateDelta(store: GameStore, combat_entry: GameProto.Anim
 	var combat_state := state.combat_entity_state
 	if combat_state == null:
 		return null
-	combat_state.atk_facing = combat_entry.get_atk_facing()
+	combat_state.atk_facing = aim_state.get_atk_facing()
 	return state
-	
