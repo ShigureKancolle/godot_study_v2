@@ -20,7 +20,7 @@ class EntitySnapshot:
     entity_type: int = 0
     x: float = 0.0
     y: float = 0.0
-    facing: tuple[float, float] = field(default_factory=tuple)
+    facing: tuple[float, float] = (0.0, 0.0)
     anim_state: str = ""
     moving: bool = False
     ai_state: str = ""
@@ -69,6 +69,7 @@ class EntityAttackHitEvent(Event):
 class EntityHurtEvent(Event):
     entity_id: str = ""
     attacker_id: str = ""
+    attack_id: int = 0
     damage: int = 0
     is_critical: bool = False
 
@@ -101,3 +102,7 @@ class CommandRejectedEvent(Event):
     command_name: str = ""
     reason_code: str = ""
     reason_message: str = ""
+
+@dataclass(frozen=True)
+class EntitySpawnedEvent(Event):
+    entity_info: EntitySnapshot = field(default_factory=EntitySnapshot)

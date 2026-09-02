@@ -9,6 +9,10 @@ script = ExtResource("1_fsj4o")
 
 [node name="Entity" type="Node2D" parent="." unique_id=976397134]
 
+[node name="Effect" type="Node2D" parent="." unique_id=1638257952]
+
+[node name="DamageNum" type="Node2D" parent="." unique_id=1361740435]
+
 [node name="Hud" type="Node2D" parent="." unique_id=457178477]
 
 [node name="Debug" type="Node2D" parent="." unique_id=467453600]

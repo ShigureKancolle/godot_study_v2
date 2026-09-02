@@ -53,6 +53,9 @@ func _emit_world_event(env: GameProto.WorldEvent):
 		GameProto.WorldEvent.PayloadCase.ATTACK_START:
 			var attack_start: GameProto.AttackStart = env.get_attack_start()
 			apply_attack_start(attack_start)
+		GameProto.WorldEvent.PayloadCase.DAMAGE:
+			var damage_event: GameProto.DamageEvent = env.get_damage()
+			apply_damage_event(damage_event)
 
 func apply_world_snapshot(snapshot: GameProto.WorldSnapshot):
 	WorldSnapshotReducer.apply(store, snapshot)
@@ -65,6 +68,14 @@ func apply_attack_start(attack_start: GameProto.AttackStart):
 	var atk_facing := attack_start.get_atk_facing()
 	SignalMgr.Get().snl_attack_start.emit(attacker_id, attack_id, atk_facing)
 
+func apply_damage_event(damage_event: GameProto.DamageEvent):
+	var target_id := damage_event.get_target_id()
+	var damage := damage_event.get_damage()
+	var attacker_id := damage_event.get_attacker_id()
+	var attack_id := damage_event.get_attack_id()
+	var critical := damage_event.get_critical()
+
+	SignalMgr.Get().snl_damage_received.emit(attacker_id, target_id, attack_id, damage, critical)
 
 func reset_world():
 	WorldResetReducer.apply(store)

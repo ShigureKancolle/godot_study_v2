@@ -40,6 +40,13 @@ class AtkRotateCommand(WorldCommand):
     ''' 客户端旋转请求 '''
     atk_facing: float = 0.0
 
+@dataclass
+class SpawnEnemyCommand(WorldCommand):
+    ''' 生成敌人 '''
+    enemy_type: str = ""
+    x: float = 0.0
+    y: float = 0.0
+
 # endregion 
 
 # region SessionCommand

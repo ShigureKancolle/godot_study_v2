@@ -33,6 +33,8 @@ class WorldFrameBuilder:
             events.EntityRemovedEvent: self._event_handler_entity_removed_event,
             events.EntityHealthChangedEvent: self._event_handler_entity_health_changed_event,
             events.EntityAtkRotateEvent: self._event_handler_entity_atk_rotate_event,
+            events.EntitySpawnedEvent: self._event_handler_entity_joined_event,
+            events.EntityAttackHitEvent: self._event_handler_entity_attack_hit_event,
         }
 
 
@@ -71,14 +73,14 @@ class WorldFrameBuilder:
 
         self.movements[event.entity_id] = movement_entry
 
-    def _event_handler_entity_joined_event(self, event: events.EntityJoinedEvent):
+    def _event_handler_entity_joined_event(self, event: events.EntityJoinedEvent | events.EntitySpawnedEvent):
         self.spawned_entities[event.entity_info.entity_id] = GameProtoProjector.entity_info(event.entity_info)
 
     def _event_handler_entity_attack_start_event(self, event: events.EntityAttackStartEvent):
         self.events.append(GameProtoProjector.attack_start(event))
 
     def _event_handler_entity_hurt_event(self, event: events.EntityHurtEvent):
-        pass
+        self.events.append(GameProtoProjector.damage_event(event))
 
     def _event_handler_entity_removed_event(self, event: events.EntityRemovedEvent):
         self.removed_entities.add(event.entity_id)
@@ -89,7 +91,8 @@ class WorldFrameBuilder:
     def _event_handler_entity_atk_rotate_event(self, event: events.EntityAtkRotateEvent):
         self.aims[event.entity_id] = GameProtoProjector.aim_state(event)
 
-
+    def _event_handler_entity_attack_hit_event(self, event: events.EntityAttackHitEvent):
+        self.events.append(GameProtoProjector.attack_hit(event))
 
 
 

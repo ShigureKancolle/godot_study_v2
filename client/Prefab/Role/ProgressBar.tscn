@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://vdrmdp0ec2f7"]
 
-[ext_resource type="Script" uid="uid://bn5n5gqbua2go" path="res://Script/role/progressBar.gd" id="1_c3de4"]
+[ext_resource type="Script" uid="uid://c1xycfqjwt3bt" path="res://Scirpt/game/view/ProgressBar.gd" id="1_acvux"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c3de4"]
 bg_color = Color(0.115162335, 0.115162335, 0.115162335, 0.5019608)
@@ -22,7 +22,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [node name="HpBar" type="Node2D" unique_id=2036777738]
-script = ExtResource("1_c3de4")
+script = ExtResource("1_acvux")
 
 [node name="ProgressBar" type="ProgressBar" parent="." unique_id=1247145707]
 offset_left = -24.0

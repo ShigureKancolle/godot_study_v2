@@ -11,6 +11,7 @@ import game.systems.combat_compsystem as combat_comp_system
 import game.model.components as comps
 import game.model.combat_component as combat_component
 import game.model.config_loader as config_loader
+from typing import Tuple
 import typing
 if typing.TYPE_CHECKING:
     import game.command_router as command_router
@@ -90,6 +91,7 @@ class GameWorld:
     def register_command_handlers(self):
         import game.command_router as command_router
         import game.tick_pipeline as tick_pipeline
+        
         self._command_router = command_router.CommandRouter()
         self._tick_pipeline = tick_pipeline.TickPipeline()
         self._tick_pipeline.set_command_router(self._command_router)
@@ -118,6 +120,12 @@ class GameWorld:
         _combat_comp_system = combat_comp_system.CombatCompSystem()
         self._command_router.register(command.AtkRotateCommand, _combat_comp_system.apply_command)
         self._tick_pipeline.add_system(_combat_comp_system)
+
+        # spawn enemy
+        import game.systems.spawn_compsystem as spawn_compsystem
+        spawn_enemy_comp_system = spawn_compsystem.SpawnEnemySystem()
+        self._command_router.register(command.SpawnEnemyCommand, spawn_enemy_comp_system.apply_command)
+        self._tick_pipeline.add_system(spawn_enemy_comp_system)
         
 
     # endregion command
@@ -142,22 +150,51 @@ class GameWorld:
     # endregion entity
 
     # region player
-    def create_player(self, account: str, player_name: str = "") -> "entity.Entity":
+    def create_player(self, account: str, player_name: str = "", player_type="player") -> "entity.Entity":
         entity_id = f"player: {account}_{self.get_next_entity_idx()}"
         speed = config_loader.get_speed("player")
-        player = entity.Entity(entity_id=entity_id)
+        player = entity.Entity(entity_id=entity_id, entity_config_key=player_type)
         player.entity_type = entity.EntityType.PLAYER
+
+        capability = config_loader.get_capability(player_type)
+        # 暂时只支持圆的
+        assert capability.body_shape == config_loader.ShapeType.CIRCLE
+        player.hit_box.shape_type = config_loader.ShapeType.CIRCLE
+        player.hit_box.radius = getattr(capability.body_params, "radius", 0.0)
+
         player.add_component(comps.PlayerComponent(account_id=account, player_name=player_name))
         player.add_component(comps.TransformComponent(x=0.0, y=0.0))
         player.add_component(comps.MovementComponent(speed=speed))
         player.add_component(comps.FacingComponent(facing=(0.0, 0.0)))
         combat_comp = combat_component.CombatComponent()
-        combat_comp.load_combat_config(1)
+        combat_comp.load_combat_config("player")
         player.add_component(combat_comp)
         self.add_entity(player)
         return player
 
     # endregion player
+
+    # region enemy
+    def create_enemy(self, enemy_type: str, x: float | Tuple[float, float], y: float=None) -> "entity.Entity":
+        if isinstance(x, Tuple):
+            x, y = x
+        enemy = entity.Entity(entity_id=f"enemy: {enemy_type}_{self.get_next_entity_idx()}", entity_config_key=enemy_type)
+        enemy.entity_type = entity.EntityType.ENEMY
+
+        capability = config_loader.get_capability(enemy_type)
+        # 暂时只支持圆的
+        assert capability.body_shape == config_loader.ShapeType.CIRCLE
+        enemy.hit_box.shape_type = config_loader.ShapeType.CIRCLE
+        enemy.hit_box.radius = getattr(capability.body_params, "radius", 0.0)
+
+        enemy.add_component(comps.TransformComponent(x=x, y=y))
+        combat_comp = combat_component.CombatComponent()
+        combat_comp.load_combat_config(enemy_type)
+        enemy.add_component(combat_comp)
+        self.add_entity(enemy)
+        return enemy
+
+    # endregion enemy
 
     
     

@@ -3,7 +3,6 @@
     "_shape_type_values": "sector|rect|circle|ring(和服务端 ShapeType enum 的 value 对齐)",
     "_angle_unit": "角度(degree),loader 读取时转弧度。理由:人读角度比弧度直观",
     "_hit_mask_removed": "原 hit_mask 字段已移除。命中层级改由实体类型的 attack_mask 决定(见 entity_config.json),玩家和敌人复用同一 atk_id 时各自打各自阵营,避免攻击配置耦合阵营",
-    "_time_unit": "毫秒, 动画是一秒12帧， 83ms代表一帧",
     "1001": {
         "_desc": "扇形一刀(唯一一段=最后一段,命中击退 80px)",
         "shape_list": [
@@ -57,9 +56,9 @@
         "shape_list": [
             {
                 "shape": "rect",
-                "params": {"width": 20.0, "height": 184.0},
-                "duration": 664,
-                "hit_time": 33,
+                "params": {"width": 20.0, "length": 184.0, "distance": 17.0},
+                "duration": 400,
+                "hit_time": 66,
                 "damage_multiplier": 1.1,
                 "knockback_distance": 0.0
             }

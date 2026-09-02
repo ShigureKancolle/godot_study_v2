@@ -24,16 +24,20 @@ async def main():
     app_runtime = AppRuntime(game_world)
     build_client_router()
     socket = websocket_server.WebSocketServer(app_runtime)
+
+    test_server(game_world)
+
     await asyncio.gather(
         socket.start(),
         game_runtime.run()
     )
 
-def test_server():
-    import proto.generated.game_pb2 as game_pb2
-    import protocol.router as router
-    import transport.connection_registry as connection_registry
+def test_server(game_world):
+    import game.commands as commands
     logger.debug("test_server() function is running")
+    game_world.enqueue_command(
+        commands.SpawnEnemyCommand(enemy_type="stake", x=122.0, y=122.0)
+    )
 
 
    

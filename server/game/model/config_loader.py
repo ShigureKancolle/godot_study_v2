@@ -92,8 +92,9 @@ class CircleParams(ShapeParams):
 @dataclass
 class RectParams(ShapeParams):
     """矩形参数(未来扩展用,如矩形墙)"""
-    width: float = 0.0
-    height: float = 0.0
+    distance: float = 0.0 # 近边距旋转中心的距离
+    width: float = 0.0  # 垂直攻击朝向的宽度
+    length: float = 0.0 # 沿攻击朝向的长度
 
 
 # ===========================================================================
@@ -251,7 +252,8 @@ def _build_shape_params(shape_type: str, params_dict: dict) -> Optional[ShapePar
     elif shape_type == ShapeType.RECT:
         return RectParams(
             width=float(params_dict.get("width", 0.0)),
-            height=float(params_dict.get("height", 0.0)),
+            length=float(params_dict.get("length", 0.0)),
+            distance=float(params_dict.get("distance", 0.0)),
         )
     else:
         return None

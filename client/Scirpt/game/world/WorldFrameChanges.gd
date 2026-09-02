@@ -9,5 +9,3 @@ var aims_changed: Array[EntityState] = []
 var health_changed: Array[EntityState] = []
 var events: Array[GameProto.WorldEvent] = []
 var removed: Array[String] = []
-
-

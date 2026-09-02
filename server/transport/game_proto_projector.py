@@ -4,6 +4,13 @@
 import game.events as events
 import proto.generated.game_pb2 as game_pb2
 
+event_id = 0
+
+def get_event_id():
+    global event_id
+    event_id += 1
+    return event_id
+
 class GameProtoProjector:
 
     @staticmethod
@@ -54,10 +61,34 @@ class GameProtoProjector:
     @staticmethod
     def attack_start(event: events.EntityAttackStartEvent) -> game_pb2.WorldEvent:
         return game_pb2.WorldEvent(
-            event_id = 1,
+            event_id = get_event_id(),
             attack_start = game_pb2.AttackStart(
                 attacker_id=event.entity_id,
                 attack_id=event.attack_id,
                 atk_facing=event.atk_facing,
+            ),
+        )
+
+    @staticmethod
+    def attack_hit(event: events.EntityAttackHitEvent) -> game_pb2.WorldEvent:
+        return game_pb2.WorldEvent(
+            event_id = get_event_id(),
+            attack_hit = game_pb2.AttackHit(
+                attacker_id=event.entity_id,
+                attack_id=event.attack_id,  
+                hit_entity_ids=event.hit_entity_ids,
+            ),
+        )
+
+    @staticmethod
+    def damage_event(event: events.EntityHurtEvent) -> game_pb2.WorldEvent:
+        return game_pb2.WorldEvent(
+            event_id = get_event_id(),
+            damage = game_pb2.DamageEvent(
+                target_id=event.entity_id,
+                attack_id=event.attack_id,
+                damage=event.damage,
+                attacker_id=event.attacker_id,
+                critical=event.is_critical,
             ),
         )

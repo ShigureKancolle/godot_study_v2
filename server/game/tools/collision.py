@@ -65,6 +65,25 @@ class Sector(Shape):
     angle: float = 0.0
     direction: float = 0.0
 
+
+@dataclass 
+class Rect(Shape):
+    """
+    矩形。pos 是旋转中心。
+
+    - width:     矩形宽度(垂直攻击朝向)
+    - length:    矩形长度(沿攻击朝向)
+    - distance:  近边距旋转中心的距离
+    - direction: 矩形朝向(弧度),0=右,逆时针正
+                 和 Godot Vector2.angle() / 服务端 PlayerInfo.facing 一致
+
+                 
+    """
+    width: float = 0.0
+    length: float = 0.0
+    distance: float = 0.0
+    direction: float = 0.0
+
 # 搞个简单点的向量 如果不够用 再改成Numpy
 @dataclass
 class Vector2:
@@ -412,3 +431,67 @@ def intersect_sector_sector(sector1: Sector, sector2: Sector) -> bool:
             return True
 
     return False
+
+
+def intersect_rect_circle(rect: Rect, circle: Circle) -> bool:
+    """
+    判断定向矩形和圆形是否相交(含相切)。
+
+    这里的 Rect 不是“以 pos 为中心”的普通矩形。pos 是攻击者的旋转中心，
+    矩形从距离 pos 为 distance 的近边开始，向 direction 延伸 length。
+    因此 direction=0 时，矩形局部坐标范围正好是：
+
+        x ∈ [distance, distance + length]
+        y ∈ [-width / 2, width / 2]
+
+    先把圆心转换到该局部坐标，便可将“旋转矩形 vs 圆”化为“轴对齐矩形 vs 圆”。
+    对轴对齐矩形，圆与矩形相交，当且仅当圆心到矩形最近点的距离不大于圆半径。
+    该最近点既能处理圆心正对边的情形，也能处理圆心正对角落的情形。
+    """
+    # 1. 构造攻击朝向的两条局部坐标轴。
+    # forward 指向矩形长度方向；right 是其逆时针 90° 方向，指向矩形宽度方向。
+    # direction=0 时：forward=(1, 0)，right=(0, 1)，和配置中的四个顶点约定一致。
+    # 以矩形旋转中心为新原点， 矩形垂直的俩边为方向做新坐标系
+    forward_x = math.cos(rect.direction)
+    forward_y = math.sin(rect.direction)
+    right_x = -forward_y
+    right_y = forward_x
+
+    # 2. 取得“从旋转中心指向圆心”的世界坐标向量。  原坐标系下圆心的向量
+    offset_x = circle.pos[0] - rect.pos[0]
+    offset_y = circle.pos[1] - rect.pos[1]
+
+    # 3. 用点积把该向量投影到两条局部坐标轴。
+    # local_forward 是圆心沿攻击方向的距离；local_right 是圆心相对攻击中线的横向距离。
+    # 将原坐标系下圆心的位置转化到新坐标系下
+    local_forward = offset_x * forward_x + offset_y * forward_y
+    local_right = offset_x * right_x + offset_y * right_y
+
+    # 4. 写出局部坐标里的矩形边界。
+    # 近边为 distance，远边为 distance + length；宽度以攻击中线为中心对称。
+    min_forward = rect.distance
+    max_forward = rect.distance + rect.length
+    half_width = rect.width / 2.0
+
+    # 5. 将圆心局部坐标钳制到矩形范围内，得到矩形上离圆心最近的点。
+    # 例如圆心在远边之外时 nearest_forward=远边；圆心在右上角之外时，
+    # 两个坐标都会被钳到角点，从而自然得到“圆碰角”的最短距离。
+    nearest_forward = max(min_forward, min(max_forward, local_forward))
+    nearest_right = max(-half_width, min(half_width, local_right))
+
+    # 6. 圆心到最近点的平方距离 <= 半径平方，即相交或相切。
+    # 使用平方距离无需开根号，且避免额外的浮点误差。
+    delta_forward = local_forward - nearest_forward
+    delta_right = local_right - nearest_right
+    return delta_forward * delta_forward + delta_right * delta_right <= circle.radius * circle.radius
+
+
+def create_collision_shape(shape):
+    """根据攻击形状创建碰撞形状"""
+    if shape.shape == "rect":
+        return Rect(**shape.shape_params.__dict__)
+    elif shape.shape == "sector":
+        return Sector(**shape.shape_params.__dict__)
+    else:
+        raise ValueError(f"unknown shape shape: {shape.shape}")
+    return None

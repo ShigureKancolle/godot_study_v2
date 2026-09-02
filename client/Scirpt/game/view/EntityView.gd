@@ -28,6 +28,7 @@ func setup(entity_state: EntityState):
 	get_presenter(MotionPresenter.presenter_name).set_position(entity_state.server_position)
 	get_presenter(AnimationPresenter.presenter_name).update_facing(entity_state.facing_dir)
 	get_presenter(NameplatePresenter.presenter_name).set_view_name(entity_state.player_name, entity_state.is_local_player)
+	get_presenter(HpBarPresenter.presenter_name).update_hp_bar(entity_state.combat_entity_state.hp, entity_state.combat_entity_state.max_hp)
 	var combat_state = entity_state.combat_entity_state
 	if combat_state:
 		get_presenter(CombatPresenter.presenter_name).setup(combat_state)
@@ -62,3 +63,9 @@ func apply_combat(state: CombatEntityState) -> void:
 	if not state:
 		return
 	apply_atk_rotate(state.atk_facing)
+
+func apply_hp_changed(state: EntityState) -> void:
+	get_presenter(HpBarPresenter.presenter_name).update_hp_bar(state.combat_entity_state.hp, state.combat_entity_state.max_hp)
+
+func apply_damage_received(damage: int):
+	get_presenter(CombatPresenter.presenter_name).apply_damage_received(damage)

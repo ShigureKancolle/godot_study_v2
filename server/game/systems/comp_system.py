@@ -254,19 +254,23 @@ class AttackCompSystem(CompSystem):
                 hit_entity_ids = self._get_attack_hits(world, atk_pending.attacker_id, atk_pending.atk_facing, shape)
 
                 if hit_entity_ids:
-                    events.append(event.EntityAttackHitEvent(
-                        atk_pending.attacker_id,
-                        atk_pending.attack_id,
-                        hit_entity_ids,
-                    ))
+                    pass
+                    # 这个事件目前的功能完全被EntityHurt囊括了 先不发了
+                    # events.append(event.EntityAttackHitEvent(
+                    #     atk_pending.attacker_id,
+                    #     atk_pending.attack_id,
+                    #     hit_entity_ids,
+                    # ))
 
                 for target_id in hit_entity_ids:
                     damage = self._calculate_damage(world, atk_pending.attacker_id, target_id, atk_pending.attack_id, shape)
                     self._apply_damage(world, target_id, damage)
                     events.append(event.EntityHurtEvent(
-                        target_id,
-                        atk_pending.attacker_id,
-                        damage,
+                        entity_id=target_id,
+                        attack_id=atk_pending.attack_id,
+                        damage=damage,
+                        attacker_id=atk_pending.attacker_id,
+                        is_critical=False,
                     ))
 
             if finish:
@@ -278,10 +282,55 @@ class AttackCompSystem(CompSystem):
         return events
 
     def _get_attack_hits(self, world: "game_world.GameWorld", attacker_id: str, atk_facing: float, shape: "config_loader.AttackShape") -> list[str]:
-        return []
+        ids: list[str] = []
+        atk_coll_shape = collision.create_collision_shape(shape)
+        # 客户端 atk_facing 由 dir.angle_to(Vector2.RIGHT) 得到，和标准向量角度
+        # (cos θ, sin θ) 的符号相反。客户端渲染攻击特效时也使用 -atk_facing；
+        # 碰撞模块采用标准向量角度，必须在此统一转换，否则上下方向会镜像。
+        atk_coll_shape.direction = -atk_facing
+        attacker_trans = world.get_entity(attacker_id).get_component(comps.TransformComponent)
+        if not attacker_trans:
+            return ids
+        attacker_trans: comps.TransformComponent
+        atk_coll_shape.pos = (attacker_trans.x, attacker_trans.y)
+
+        entites = world.get_entities()
+        for entity in entites:
+            if entity.entity_id == attacker_id:
+                continue
+
+            combat = entity.get_component(combat_component.CombatComponent)
+            if not combat:
+                continue
+
+            transform = entity.get_component(comps.TransformComponent)
+            if not transform:
+                continue
+            transform: comps.TransformComponent
+            pos = (transform.x, transform.y)
+            hit_box = entity.hit_box
+            shape = collision.Circle(
+                radius=hit_box.radius,
+                pos=(pos[0] + hit_box.local_offset[0], pos[1] + hit_box.local_offset[1]),
+            )
+            if collision.intersect_rect_circle(atk_coll_shape, shape):
+                ids.append(entity.entity_id)
+        return ids
+
+    def _apply_damage(self, world: "game_world.GameWorld", target_id: str, damage: int):
+        target_combat: combat_component.CombatComponent = world.get_entity(target_id).get_component(combat_component.CombatComponent)
+        target_combat.hp -= damage
+        target_combat.hp = target_combat.hp - damage
+        target_combat.hp = max(target_combat.hp, 0)
+        target_combat.is_dead = target_combat.hp <= 0
 
     def _calculate_damage(self, world: "game_world.GameWorld", attacker_id: str, target_id: str, attack_id: int, shape: "config_loader.AttackShape") -> int:
-        return 0
+        """计算伤害"""
+        attacker_combat: combat_component.CombatComponent = world.get_entity(attacker_id).get_component(combat_component.CombatComponent)
+        target_combat: combat_component.CombatComponent = world.get_entity(target_id).get_component(combat_component.CombatComponent)
+        damage = max(attacker_combat.attack - target_combat.defense, 0) * shape.damage_multiplier
+        damage = max(int(damage), 1) # 至少打1血
+        return damage
 
 
 class LeaveCompSystem(CompSystem):

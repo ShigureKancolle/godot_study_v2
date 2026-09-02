@@ -3,48 +3,77 @@
 from game.model.entity import Entity
 from game.events import EntitySnapshot, CombatSnapshot
 from game.model import components, combat_component
+from typing import Any
 
 
 def project_entity_snapshot(entity: Entity) -> EntitySnapshot:
+    return EntitySnapshot(
+        **project_identity_snapshot(entity),
+        **project_transform_snapshots(entity),
+        **project_movement_snapshots(entity),
+        **project_ai_state_snapshot(entity),
+        combat_snapshot=project_combat_snapshot(entity),
+    )
+
+def project_identity_snapshot(entity: Entity) -> dict[str, Any]:
     name = ""
-    x = 0.0
-    y = 0.0
-    facing = (0, 0)
-    moving = False
-    ai_state = ""
-    atk_facing = 0.0
     if player_component := entity.get_component(components.PlayerComponent):
         player_component: components.PlayerComponent
         name = player_component.player_name
 
-    if transform_component := entity.get_component(components.TransformComponent):
-        transform_component: components.TransformComponent
-        x = transform_component.x
-        y = transform_component.y
+    return {
+        "entity_id": entity.entity_id,
+        "player_name": name,
+        "entity_type": entity.entity_type.value,
+    }
 
-    if _combat_component := entity.get_component(combat_component.CombatComponent):
-        _combat_component: combat_component.CombatComponent
-        atk_facing = _combat_component.atk_facing
+def project_ai_state_snapshot(entity: Entity) -> dict[str, Any]:
+    ai_state = ""
+    # if ai_component := entity.get_component(components.AIComponent):
+    #     ai_component: components.AIComponent
+    #     ai_state = ai_component.state
 
-    if facing_component := entity.get_component(components.FacingComponent):
-        facing_component: components.FacingComponent
-        facing = facing_component.facing
+    return {
+        # "entity_id": entity.entity_id,
+        "ai_state": ai_state,
+    }
 
-    if movement_component := entity.get_component(components.MovementComponent):
-        movement_component: components.MovementComponent
-        moving = movement_component.moving
+def project_transform_snapshots(entity: Entity) -> dict[str, Any]:
+    transform_component: components.TransformComponent = entity.get_component(components.TransformComponent)
+    if not transform_component:
+        raise ValueError("entity must have TransformComponentComponent")
 
-    combat_snapshot = CombatSnapshot(entity_id=entity.entity_id, atk_facing=atk_facing)
+    res = {
+        # "entity_id": entity.entity_id,
+        "x": transform_component.x,
+        "y": transform_component.y,
+    }
+    return res
 
-    return EntitySnapshot(
+def project_movement_snapshots(entity: Entity) -> dict[str, Any]:
+    movement_component: components.MovementComponent = entity.get_component(components.MovementComponent)
+    if not movement_component:
+        return {}
+
+    res = {
+        # "entity_id": entity.entity_id,
+        "moving": movement_component.moving,
+        "anim_state": "move" if movement_component.moving else "idle",
+        "facing": (movement_component.dir_x, movement_component.dir_y),
+    }
+    return res
+
+def project_combat_snapshot(entity: Entity) -> CombatSnapshot:
+    combat: combat_component.CombatComponent = entity.get_component(combat_component.CombatComponent)
+    if not combat:
+        return CombatSnapshot(entity_id=entity.entity_id)
+
+    return CombatSnapshot(
         entity_id=entity.entity_id,
-        player_name=name,
-        entity_type=entity.entity_type.value,
-        x=x,
-        y=y,
-        facing=facing,
-        anim_state="move" if moving else "idle",
-        moving=moving,
-        ai_state=ai_state,
-        combat_snapshot=combat_snapshot,
+        atk_facing=combat.atk_facing,
+        hp=combat.hp,
+        max_hp=combat.max_hp,
+        dead=combat.is_dead,
+        defense=combat.defense,
+        attack=combat.attack,
     )

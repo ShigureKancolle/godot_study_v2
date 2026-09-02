@@ -14,8 +14,8 @@ var atk_facing: float = 0.0 # 这个与节点的rotation互为相反数
 static func from_entity_info(entity_info: GameProto.CombatEntityInfo) -> CombatEntityState:
 	var state = CombatEntityState.new()
 	state.entity_id = entity_info.get_entity_id()
-	# state.hp = entity_info.get_hp()
-	# state.max_hp = entity_info.get_max_hp()
-	# state.dead = entity_info.get_dead()
+	state.hp = entity_info.get_hp()
+	state.max_hp = entity_info.get_max_hp()
+	state.dead = entity_info.get_dead()
 	state.atk_facing = entity_info.get_atk_facing()
 	return state

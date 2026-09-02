@@ -17,3 +17,6 @@ func apply_attack_start(attack_id: int, atk_facing: float):
 
 	_entity_view.entity_visual.play_atk_effect(atk_effect)
 	atk_effect.rotation = -atk_facing
+
+func apply_damage_received(damage: int):
+	pass

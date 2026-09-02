@@ -121,6 +121,7 @@ message AttackStart {
 message AttackHit {
   string attacker_id = 1;
   int32 attack_id = 2;
+  repeated string hit_entity_ids = 3;
 }
 
 // 服务端 -> 客户端。说明客户端命令被拒绝的原因；
