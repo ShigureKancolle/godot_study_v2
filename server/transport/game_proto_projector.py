@@ -92,3 +92,12 @@ class GameProtoProjector:
                 critical=event.is_critical,
             ),
         )
+
+    @staticmethod
+    def health_state(event: events.EntityHealthChangedEvent) -> game_pb2.HealthStateDelta:
+        return game_pb2.HealthStateDelta(
+            entity_id=event.entity_id,
+            hp=event.hp,
+            max_hp=event.max_hp,
+            dead=event.dead,
+        )

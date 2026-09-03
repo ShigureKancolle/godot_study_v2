@@ -272,6 +272,14 @@ class AttackCompSystem(CompSystem):
                         attacker_id=atk_pending.attacker_id,
                         is_critical=False,
                     ))
+                    target_combat: combat_component.CombatComponent = world.get_entity(target_id).get_component(combat_component.CombatComponent)
+                    if target_combat:
+                        events.append(event.EntityHealthChangedEvent(
+                            entity_id=target_id,
+                            hp=target_combat.hp,
+                            max_hp=target_combat.max_hp,
+                            dead=target_combat.is_dead,
+                        ))
 
             if finish:
                 finished.append(atk_pending)

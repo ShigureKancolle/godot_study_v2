@@ -86,7 +86,7 @@ class WorldFrameBuilder:
         self.removed_entities.add(event.entity_id)
 
     def _event_handler_entity_health_changed_event(self, event: events.EntityHealthChangedEvent):
-        pass
+        self.health_states[event.entity_id] = GameProtoProjector.health_state(event)
 
     def _event_handler_entity_atk_rotate_event(self, event: events.EntityAtkRotateEvent):
         self.aims[event.entity_id] = GameProtoProjector.aim_state(event)
