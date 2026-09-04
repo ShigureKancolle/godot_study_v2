@@ -54,6 +54,7 @@ static func create_enemy_view(entity_state: EntityState):
 	view.add_presenter(AnimationPresenter.presenter_name, animation_presenter)
 	view.add_presenter(NameplatePresenter.presenter_name, nameplate_presenter)
 	view.add_presenter(HpBarPresenter.presenter_name, hp_bar_presenter)
+
 	view.entity_visual = view_visual
 	if entity_state.combat_entity_state:
 		var combat_presenter = CombatPresenter.new(view)

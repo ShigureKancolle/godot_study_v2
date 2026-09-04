@@ -30,6 +30,7 @@ func _ready():
 	SignalMgr.Get().snl_entities_health_changed.connect(hdl_entities_health_changed)
 	# SignalMgr.Get().snl_entities_mp_changed.connect(hdl_entities_mp_changed)
 	SignalMgr.Get().snl_damage_received.connect(hdl_damage_received)
+	SignalMgr.Get().snl_entity_dead.connect(hdl_entity_dead)
 
 
 func spawn_entity(entity_state: EntityState):
@@ -100,6 +101,11 @@ func hdl_damage_received(attacker_id: String, target_id: String, attack_id: int,
 		var pos = target_view.position + Vector2((randf() - 0.5) * 50, (randf() - 0.5) * 50)
 		damage_num.position = pos
 		damage_num_parent.add_child(damage_num)
+
+func hdl_entity_dead(entity_id: String):
+	var entity_view = entity_views.get(entity_id, null)
+	if entity_view:
+		entity_view.play_dead_animation()
 
 
 func clear_entity_views():

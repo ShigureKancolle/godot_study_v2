@@ -69,3 +69,10 @@ func apply_hp_changed(state: EntityState) -> void:
 
 func apply_damage_received(damage: int):
 	get_presenter(CombatPresenter.presenter_name).apply_damage_received(damage)
+
+func play_dead_animation():
+	get_presenter(AnimationPresenter.presenter_name).play_anim("die")
+	# entity_visual._body.animation_finished.connect(play_dead_animation_finished)
+
+# func play_dead_animation_finished():
+# 	queue_free()

@@ -19,4 +19,6 @@ static func _apply_health_state_delta(store: GameStore, health_state: GameProto.
     if combat_state == null:
         return null
     combat_state.hp = health_state.get_hp()
+    combat_state.max_hp = health_state.get_max_hp()
+    combat_state.dead = health_state.get_dead()
     return state

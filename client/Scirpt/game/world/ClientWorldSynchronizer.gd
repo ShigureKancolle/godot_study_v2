@@ -56,7 +56,10 @@ func _emit_world_event(env: GameProto.WorldEvent):
 		GameProto.WorldEvent.PayloadCase.DAMAGE:
 			var damage_event: GameProto.DamageEvent = env.get_damage()
 			apply_damage_event(damage_event)
-
+		GameProto.WorldEvent.PayloadCase.ENTITY_DEAD:
+			var entity_dead: GameProto.EntityDead = env.get_entity_dead()
+			apply_entity_dead(entity_dead)
+		
 func apply_world_snapshot(snapshot: GameProto.WorldSnapshot):
 	WorldSnapshotReducer.apply(store, snapshot)
 	_last_world_tick = snapshot.get_server_tick()
@@ -76,6 +79,10 @@ func apply_damage_event(damage_event: GameProto.DamageEvent):
 	var critical := damage_event.get_critical()
 
 	SignalMgr.Get().snl_damage_received.emit(attacker_id, target_id, attack_id, damage, critical)
+
+func apply_entity_dead(entity_dead: GameProto.EntityDead):
+	var entity_id := entity_dead.get_entity_id()
+	SignalMgr.Get().snl_entity_dead.emit(entity_id)
 
 func reset_world():
 	WorldResetReducer.apply(store)

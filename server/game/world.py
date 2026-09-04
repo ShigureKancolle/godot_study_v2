@@ -121,6 +121,10 @@ class GameWorld:
         self._command_router.register(command.AtkRotateCommand, _combat_comp_system.apply_command)
         self._tick_pipeline.add_system(_combat_comp_system)
 
+        # death
+        import game.systems.death_system as death_system
+        self._tick_pipeline.add_system(death_system.DeathSystem())
+
         # spawn enemy
         import game.systems.spawn_compsystem as spawn_compsystem
         spawn_enemy_comp_system = spawn_compsystem.SpawnEnemySystem()

@@ -35,6 +35,7 @@ class WorldFrameBuilder:
             events.EntityAtkRotateEvent: self._event_handler_entity_atk_rotate_event,
             events.EntitySpawnedEvent: self._event_handler_entity_joined_event,
             events.EntityAttackHitEvent: self._event_handler_entity_attack_hit_event,
+            events.EntityDiedEvent: self._event_handler_entity_died_event,
         }
 
 
@@ -93,6 +94,9 @@ class WorldFrameBuilder:
 
     def _event_handler_entity_attack_hit_event(self, event: events.EntityAttackHitEvent):
         self.events.append(GameProtoProjector.attack_hit(event))
+
+    def _event_handler_entity_died_event(self, event: events.EntityDiedEvent):
+        self.events.append(GameProtoProjector.entity_died(event))
 
 
 

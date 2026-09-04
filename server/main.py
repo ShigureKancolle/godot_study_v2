@@ -36,8 +36,20 @@ def test_server(game_world):
     import game.commands as commands
     logger.debug("test_server() function is running")
     game_world.enqueue_command(
-        commands.SpawnEnemyCommand(enemy_type="stake", x=122.0, y=122.0)
+        commands.SpawnEnemyCommand(enemy_type="enemy_slime", x=122.0, y=122.0)
     )
+    game_world.enqueue_command(
+        commands.SpawnEnemyCommand(enemy_type="enemy_slime", x=182.0, y=122.0)
+    )
+
+    game_world.enqueue_command(
+        commands.SpawnEnemyCommand(enemy_type="enemy_slime", x=122.0, y=182.0)
+    )
+    
+    game_world.enqueue_command(
+        commands.SpawnEnemyCommand(enemy_type="enemy_slime", x=182.0, y=182.0)
+    )
+
 
 
    

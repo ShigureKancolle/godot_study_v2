@@ -101,3 +101,12 @@ class GameProtoProjector:
             max_hp=event.max_hp,
             dead=event.dead,
         )
+
+    @staticmethod
+    def entity_died(event: events.EntityDiedEvent) -> game_pb2.WorldEvent:
+        return game_pb2.WorldEvent(
+            event_id = get_event_id(),
+            entity_dead = game_pb2.EntityDead(
+                entity_id=event.entity_id,
+            ),
+        )

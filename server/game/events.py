@@ -81,6 +81,7 @@ class WorldSnapshot(Event):
 
 @dataclass(frozen=True)
 class EntityRemovedEvent(Event):
+    '''断线'''
     entity_id: str = ""
     account: str = ""
 
@@ -95,6 +96,11 @@ class EntityHealthChangedEvent(Event):
 class EntityAtkRotateEvent(Event):
     entity_id: str = ""
     atk_facing: float = 0.0
+
+@dataclass(frozen=True)
+class EntityDiedEvent(Event):
+    '''死亡'''
+    entity_id: str = ""
 
 @dataclass(frozen=True)
 class CommandRejectedEvent(Event):

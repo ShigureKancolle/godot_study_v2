@@ -124,6 +124,10 @@ message AttackHit {
   repeated string hit_entity_ids = 3;
 }
 
+message EntityDead {
+  string entity_id = 1;
+}
+
 // 服务端 -> 客户端。说明客户端命令被拒绝的原因；
 // 这是单次请求的响应，不属于权威世界状态。
 message CommandRejected {
@@ -140,6 +144,7 @@ message WorldEvent {
     AttackStart attack_start = 2;
     AttackHit attack_hit = 3;
     DamageEvent damage = 4;
+    EntityDead entity_dead = 5;
   }
 }
 

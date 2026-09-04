@@ -307,8 +307,8 @@ class AttackCompSystem(CompSystem):
             if entity.entity_id == attacker_id:
                 continue
 
-            combat = entity.get_component(combat_component.CombatComponent)
-            if not combat:
+            combat: combat_component.CombatComponent = entity.get_component(combat_component.CombatComponent)
+            if not combat or combat.is_dead:
                 continue
 
             transform = entity.get_component(comps.TransformComponent)
@@ -328,7 +328,6 @@ class AttackCompSystem(CompSystem):
     def _apply_damage(self, world: "game_world.GameWorld", target_id: str, damage: int):
         target_combat: combat_component.CombatComponent = world.get_entity(target_id).get_component(combat_component.CombatComponent)
         target_combat.hp -= damage
-        target_combat.hp = target_combat.hp - damage
         target_combat.hp = max(target_combat.hp, 0)
         target_combat.is_dead = target_combat.hp <= 0
 

@@ -30,6 +30,7 @@ signal snl_attack_start(attacker_id: String, attack_id: int, atk_facing: float)
 signal snl_entities_aims_changed(change_states: Array[EntityState])
 signal snl_entities_health_changed(change_states: Array[EntityState])
 signal snl_damage_received(attacker_id: String, target_id: String, attack_id: int, damage: int, critical: bool)
+signal snl_entity_dead(entity_id: String)
 
 
 # Bootstrap

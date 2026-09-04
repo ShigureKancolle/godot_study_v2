@@ -43,3 +43,10 @@ class PlayerComponent(Component):
 @dataclass
 class CollisionComponent(Component):
     body_radius: float = 0.0
+
+
+@dataclass
+class DeathTimerComponent(Component):
+    """记录实体死亡后等待移除的权威计时状态。"""
+    elapsed_ms: float = 0.0
+    remove_after_ms: int = 0

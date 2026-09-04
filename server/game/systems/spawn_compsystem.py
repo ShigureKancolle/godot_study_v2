@@ -31,5 +31,6 @@ class SpawnEnemySystem(CompSystem):
         return [env]
     
     def update(self, world: "game_world.GameWorld", dt: float) -> list[events.Event]:
+        """更新敌人系统。"""
         return []
     

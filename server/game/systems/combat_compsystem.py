@@ -36,4 +36,5 @@ class CombatCompSystem(CompSystem):
         return [env]
         
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
+        """战斗转向只在命令阶段更新，死亡生命周期由 DeathSystem 处理。"""
         return []

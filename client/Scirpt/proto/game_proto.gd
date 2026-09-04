@@ -2136,6 +2136,12 @@ class AttackHit:
 		service.field = __attack_id
 		data[__attack_id.tag] = service
 		
+		var __hit_entity_ids_default: Array[String] = []
+		__hit_entity_ids = PBField.new("hit_entity_ids", PB_DATA_TYPE.STRING, PB_RULE.REPEATED, 3, true, __hit_entity_ids_default)
+		service = PBServiceField.new()
+		service.field = __hit_entity_ids
+		data[__hit_entity_ids.tag] = service
+		
 	var data = {}
 	
 	var __attacker_id: PBField
@@ -2163,6 +2169,61 @@ class AttackHit:
 		__attack_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT32]
 	func set_attack_id(value : int) -> void:
 		__attack_id.value = value
+	
+	var __hit_entity_ids: PBField
+	func get_hit_entity_ids() -> Array[String]:
+		return __hit_entity_ids.value
+	func clear_hit_entity_ids() -> void:
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__hit_entity_ids.value.clear()
+	func add_hit_entity_ids(value : String) -> void:
+		__hit_entity_ids.value.append(value)
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
+class EntityDead:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__entity_id = PBField.new("entity_id", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __entity_id
+		data[__entity_id.tag] = service
+		
+	var data = {}
+	
+	var __entity_id: PBField
+	func has_entity_id() -> bool:
+		if __entity_id.value != null:
+			return true
+		return false
+	func get_entity_id() -> String:
+		return __entity_id.value
+	func clear_entity_id() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__entity_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_entity_id(value : String) -> void:
+		__entity_id.value = value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
@@ -2295,6 +2356,12 @@ class WorldEvent:
 		service.func_ref = Callable(self, "new_damage")
 		data[__damage.tag] = service
 		
+		__entity_dead = PBField.new("entity_dead", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 5, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __entity_dead
+		service.func_ref = Callable(self, "new_entity_dead")
+		data[__entity_dead.tag] = service
+		
 	var data = {}
 	
 	enum PayloadCase {
@@ -2302,6 +2369,7 @@ class WorldEvent:
 		ATTACK_START = 2,
 		ATTACK_HIT = 3,
 		DAMAGE = 4,
+		ENTITY_DEAD = 5,
 	}
 	var _payload_case: int = 0
 
@@ -2333,6 +2401,8 @@ class WorldEvent:
 		data[3].state = PB_SERVICE_STATE.UNFILLED
 		__damage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__entity_dead.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
 		__attack_start.value = AttackStart.new()
 		return __attack_start.value
 	
@@ -2351,6 +2421,8 @@ class WorldEvent:
 		_payload_case = 3
 		__damage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__entity_dead.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
 		__attack_hit.value = AttackHit.new()
 		return __attack_hit.value
 	
@@ -2369,8 +2441,30 @@ class WorldEvent:
 		data[3].state = PB_SERVICE_STATE.UNFILLED
 		data[4].state = PB_SERVICE_STATE.FILLED
 		_payload_case = 4
+		__entity_dead.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
 		__damage.value = DamageEvent.new()
 		return __damage.value
+	
+	var __entity_dead: PBField
+	func has_entity_dead() -> bool:
+		return data[5].state == PB_SERVICE_STATE.FILLED
+	func get_entity_dead() -> EntityDead:
+		return __entity_dead.value
+	func clear_entity_dead() -> void:
+		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__entity_dead.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_entity_dead() -> EntityDead:
+		__attack_start.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__attack_hit.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__damage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		data[5].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 5
+		__entity_dead.value = EntityDead.new()
+		return __entity_dead.value
 	
 	func get_payload_case() -> int:
 		return _payload_case
