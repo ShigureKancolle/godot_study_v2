@@ -14,7 +14,8 @@
                 "damage_multiplier": 1.1,
                 "knockback_distance": 80.0
             }
-        ]
+        ],
+        "colldown_ms": 600
     },
 
     "1003": {
@@ -28,7 +29,8 @@
                 "damage_multiplier": 2,
                 "knockback_distance": 80.0
             }
-        ]
+        ],
+        "colldown_ms": 600
     },
 
     "1002": {
@@ -49,7 +51,8 @@
                 "damage_multiplier": 0.9,
                 "knockback_distance": 80.0
             }
-        ]
+        ],
+        "colldown_ms": 1500
     },
     "1004": {
         "_desc": "一条直线的一刀， 细且远， 命中先不要击退了",
@@ -62,6 +65,7 @@
                 "damage_multiplier": 1.1,
                 "knockback_distance": 0.0
             }
-        ]
+        ],
+        "colldown_ms": 500
     }
 }

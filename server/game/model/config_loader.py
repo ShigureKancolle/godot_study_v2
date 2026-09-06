@@ -142,6 +142,7 @@ class AttackShape:
 class AttackConfig:
     """攻击配置:一个 atk_id 对应一组形状列表"""
     shape_list: List[AttackShape] = field(default_factory=list)
+    colldown_ms: int = 500
 
     def get_attack_time(self) -> int:
         """返回攻击占用的时间(毫秒) = 所有形状的 duration 最大值""" 
@@ -278,7 +279,7 @@ def _build_attack_config(entry_dict: dict) -> AttackConfig:
     shape_list = []
     for shape_dict in entry_dict.get("shape_list", []):
         shape_list.append(_build_attack_shape(shape_dict))
-    return AttackConfig(shape_list=shape_list)
+    return AttackConfig(shape_list=shape_list, colldown_ms=int(entry_dict.get("colldown_ms", 500)))
 
 
 def _build_combat_stats(stats_dict: dict) -> CombatStats:

@@ -37,4 +37,11 @@ class CombatCompSystem(CompSystem):
         
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         """战斗转向只在命令阶段更新，死亡生命周期由 DeathSystem 处理。"""
+        for entity in world.entities_with(combat_comp.CombatComponent):
+            _combat_comp: combat_comp.CombatComponent = entity.get_component(combat_comp.CombatComponent)
+            if _combat_comp.atk_countdown_ms > 0:
+                _combat_comp.atk_countdown_ms -= int(dt * 1000)
+            else:
+                _combat_comp.atk_countdown_ms = 0
+
         return []

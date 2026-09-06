@@ -35,6 +35,8 @@ class CombatComponent(Component):
 
     atk_facing_locking: bool = False
 
+    atk_countdown_ms: int = 0
+
     def load_combat_config(self, combat_type: str):
         logger.debug("加载战斗配置：combat_type=%s", combat_type)
         combat_stats = config_loader.get_combat_stats(combat_type)

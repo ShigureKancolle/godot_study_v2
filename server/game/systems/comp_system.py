@@ -214,6 +214,11 @@ class AttackCompSystem(CompSystem):
         attack_config = config_loader.get_attack_config(command.attack_id)
         if attack_config is None:
             return self.reject(command, "ATTACK_CONFIG_NOT_FOUND", "请求的攻击没有对应配置")
+
+        if _combat_comp.atk_countdown_ms > 0:
+            return self.reject(command, "COOLDOWN", "攻击冷却中")
+
+        _combat_comp.atk_countdown_ms = attack_config.colldown_ms
      
         pending_attack = combat_component.PendingAttack(
             attacker_id=command.entity_id,

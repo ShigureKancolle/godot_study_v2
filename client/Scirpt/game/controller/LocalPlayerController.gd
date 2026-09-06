@@ -35,13 +35,11 @@ func _move_intent(_delta: float):
 
 
 func _attack_intent(_delta: float):
-	var attack := Input.is_action_just_pressed("atk_left")
+	var attack_id := AttackInputController.get_attack_id(_delta)
 
-	if not attack:
+	if attack_id == 0:
 		return
 
-	# 其实不应该在这里发送请求？ 因为攻击id肯定不在这里
-	var attack_id = 1004
 	WebSocketMgr.Get().send("attack_intent", {
 		"attacker_id": entity_id,
 		"attack_id": attack_id

@@ -145,6 +145,8 @@ class GameWorld:
         return list(self._entites.values())
 
     def entities_with(self, component_type: list[type]) -> list["entity.Entity"]:
+        if type(component_type) == type:
+            component_type = [component_type]
         res = [entity for entity in self.get_entities() if all(comp_type in entity.get_comp_types() for comp_type in component_type)]
         return res
 
