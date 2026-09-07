@@ -35,6 +35,7 @@ class CombatComponent(Component):
 
     atk_facing_locking: bool = False
 
+    '''攻击还有多久冷却，单位毫秒'''
     atk_countdown_ms: int = 0
 
     def load_combat_config(self, combat_type: str):
@@ -42,5 +43,6 @@ class CombatComponent(Component):
         combat_stats = config_loader.get_combat_stats(combat_type)
         self.max_hp = combat_stats.max_hp
         self.hp = self.max_hp
+        self.attack = combat_stats.attack_power
         self.defense = combat_stats.defense
 

@@ -12,7 +12,7 @@ def atk_rotate_intent_handler(context: ConnectionContext, proto: game_pb2.EnterG
     atk_facing, entity_id = validate_atk_rotate_intent(proto)
     return commands.AtkRotateCommand(
         connection_id=context.connection_id,
-        entity_id=entity_id,
+        entity_id=context.player_entity_id,
         atk_facing=atk_facing,
     )
 

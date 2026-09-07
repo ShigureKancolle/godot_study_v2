@@ -1,0 +1,18 @@
+{
+    "_desc": "敌人 AI 配置",
+    "_attack_distance": "攻击距离",
+    "_check_distance": "索敌检查距离",
+    "_out_combat_distance": "脱战距离",
+    "_attack_interval_ms": "攻击间隔",
+    "_attack_id": "攻击 ID",
+    "slime_ai_001": {
+        "params": {
+            "attack_distance": 150.0,
+            "check_distance": 500,
+            "out_combat_distance": 600,
+            "attack_interval_ms": 1000,
+            "attack_id": 1001
+        }
+    }
+
+}

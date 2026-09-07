@@ -207,6 +207,7 @@ class EntityCapability:
     # DeadTimer 到期后 remove_entity + 广播 EntityRemove,让客户端有时间播死亡动画。
     # 服务端"立即判定死亡"但"延迟移除实体",和 hurt 的"立即设 state + 定时器到期恢复"是同一模式。
     dead_duration_ms: int = 0
+    move_mask: int = 0x00000000  # 移动判定掩码(按位与,决定该实体是否哪些 tile 可通行) 。 0x00000000 表示所有 tile 都不可通行
 
 
 # ===========================================================================
@@ -224,6 +225,18 @@ class VisionParams:
     """
     half_angle: float = math.radians(30.0)
     radius: float = 750.0
+
+# ===========================================================================
+# 电脑 AI 配置
+# ===========================================================================
+@dataclass
+class EntityAiConfig:
+    """电脑 AI 配置。"""
+    attack_distance: float = 150.0
+    check_distance: float = 500
+    out_combat_distance: float = 600
+    attack_interval_ms: int = 1000
+    attack_id: int = 1001
 
 
 # ===========================================================================
@@ -281,6 +294,17 @@ def _build_attack_config(entry_dict: dict) -> AttackConfig:
         shape_list.append(_build_attack_shape(shape_dict))
     return AttackConfig(shape_list=shape_list, colldown_ms=int(entry_dict.get("colldown_ms", 500)))
 
+def _build_entity_ai_config(entry_dict: dict) -> EntityAiConfig:
+    """从 dict 构造 EntityAiConfig 对象"""
+    params_dict = entry_dict.get("params", {})
+    return EntityAiConfig(
+        attack_distance=float(params_dict.get("attack_distance", 150.0)),
+        check_distance=float(params_dict.get("check_distance", 500)),
+        out_combat_distance=float(params_dict.get("out_combat_distance", 600)),
+        attack_interval_ms=int(params_dict.get("attack_interval_ms", 1000)),
+        attack_id=int(params_dict.get("attack_id", 1001)),
+    )
+
 
 def _build_combat_stats(stats_dict: dict) -> CombatStats:
     """从 dict 构造 CombatStats 对象(未配 combat_stats 时返回零值默认)"""
@@ -310,6 +334,7 @@ def _build_entity_capability(entry_dict: dict) -> EntityCapability:
         attack_mask=int(entry_dict.get("attack_mask", 0x00000000)),
         speed=float(entry_dict.get("speed", 0.0)),
         dead_duration_ms=int(entry_dict.get("dead_duration_ms", 0)),
+        move_mask=int(entry_dict.get("move_mask", 0x00000000)),
     )
 
 
@@ -351,6 +376,15 @@ def _build_attack_config_map(raw: dict) -> Dict[int, AttackConfig]:
         except ValueError:
             continue  # 跳过非数字 key(理论上不会有,防御性)
         result[atk_id] = _build_attack_config(value)
+    return result
+
+def _build_entity_ai_config_map(raw: dict) -> Dict[str, EntityAiConfig]:
+    """从 ai_config.json 原始数据构造 {config_name: EntityAiConfig} 表"""
+    result = {}
+    for key, value in raw.items():
+        if _is_comment_key(key):
+            continue
+        result[key] = _build_entity_ai_config(value)
     return result
 
 
@@ -409,7 +443,9 @@ _ENTITY_CONFIG_RAW = _load_json("entity_config.json")
 _CONSTANTS_RAW = _load_json("constants.json")
 _TERRAIN_CONFIG_RAW = _load_json("terrain_config.json")
 _VISION_CONFIG_RAW = _load_json("vision_config.json")
+_AI_CONFIG_RAW = _load_json("ai_config.json")
 
+_ENTITY_AI_CONFIG_MAP: Dict[str, EntityAiConfig] = _build_entity_ai_config_map(_AI_CONFIG_RAW)
 _ATTACK_CONFIG_MAP: Dict[int, AttackConfig] = _build_attack_config_map(_ATTACK_CONFIG_RAW)
 _ENTITY_CAPABILITY_MAP: Dict[str, EntityCapability] = _build_entity_capability_map(_ENTITY_CONFIG_RAW)
 _CONSTANTS: dict = _build_constants(_CONSTANTS_RAW)
@@ -551,3 +587,15 @@ def is_walkable(terrain_id: int) -> bool:
         )
         return True
     return _TERRAIN_CAPABILITY_MAP.get(terrain_name, TerrainCapability()).walkable
+
+# ===========================================================================
+# 电脑 AI 配置
+# ===========================================================================
+def get_entity_ai_config(ai_config_name: str) -> EntityAiConfig:
+    """
+    取某个类型的电脑 AI 配置。
+
+    Args:
+        entity_type: 实体类型字符串,如 "slime_ai_001"。
+    """
+    return _ENTITY_AI_CONFIG_MAP.get(ai_config_name, EntityAiConfig())

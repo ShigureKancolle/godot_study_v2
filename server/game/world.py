@@ -174,6 +174,7 @@ class GameWorld:
         player.add_component(comps.FacingComponent(facing=(0.0, 0.0)))
         combat_comp = combat_component.CombatComponent()
         combat_comp.load_combat_config("player")
+        
         player.add_component(combat_comp)
         self.add_entity(player)
         return player
