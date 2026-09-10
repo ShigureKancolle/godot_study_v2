@@ -58,7 +58,7 @@ def project_movement_snapshots(entity: Entity) -> dict[str, Any]:
     res = {
         # "entity_id": entity.entity_id,
         "moving": movement_component.moving,
-        "anim_state": "move" if movement_component.moving else "idle",
+        "anim_state": "run" if movement_component.moving else "idle",
         "facing": (movement_component.dir_x, movement_component.dir_y),
     }
     return res

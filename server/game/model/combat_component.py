@@ -14,6 +14,7 @@ class HitBox:
     shape_type: config_loader.ShapeType = config_loader.ShapeType.CIRCLE
     local_offset: tuple[float, float] = (0.0, 0.0) # 相对Entity.position的偏移量
     radius: float = 0.0 # shape_type为CIRCLE时的半径
+    hit_layer: int = 0 # 攻击目标的层，默认0
 
 @dataclass
 class PendingAttack:
@@ -32,7 +33,8 @@ class CombatComponent(Component):
     defense: int = 10
     is_dead: bool = False
     atk_facing: float = 0.0
-
+    '''攻击目标的层，默认0'''
+    attack_mask: int = 0 
     atk_facing_locking: bool = False
 
     '''攻击还有多久冷却，单位毫秒'''
@@ -45,4 +47,5 @@ class CombatComponent(Component):
         self.hp = self.max_hp
         self.attack = combat_stats.attack_power
         self.defense = combat_stats.defense
+
 

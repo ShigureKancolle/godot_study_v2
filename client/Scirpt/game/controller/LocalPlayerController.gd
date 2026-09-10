@@ -11,8 +11,8 @@ func setup(target_entity_id: String):
 
 func _process(delta: float):
 	_move_intent(delta)
-	_attack_intent(delta)
 	_atk_rotate_intent(delta)
+	_attack_intent(delta)
 	
 func _move_intent(_delta: float):
 	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")

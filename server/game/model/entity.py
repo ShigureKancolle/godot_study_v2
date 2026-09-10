@@ -41,3 +41,10 @@ class Entity:
 
     def get_comp_types(self) -> list[type]:
         return list(self._components.keys())
+
+    def is_dead(self) -> bool:
+        """判断是否死亡。"""
+        combat_component: combat_comp.CombatComponent = self.get_component(combat_comp.CombatComponent)
+        if combat_component is None:
+            return False
+        return combat_component.is_dead

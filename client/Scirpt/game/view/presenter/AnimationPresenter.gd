@@ -9,6 +9,9 @@ var _current_state: String = "idle"
 
 
 func update_facing(dir: Vector2):
+	# 死亡后固定倒地方向，避免残余位置插值切换并重播另一方向的死亡动画。
+	if _current_state == "die":
+		return
 	# print("[AnimationPresenter]  update_facing: %f %f" % [dir.x, dir.y])
 	if dir.is_equal_approx(Vector2.ZERO):
 		return
@@ -17,27 +20,30 @@ func update_facing(dir: Vector2):
 	_play_current()
 
 func _move_dir_to_facing(dir: Vector2) -> String:
-	# 根据移动方向判断 facing 方向
-	var a: float = dir.angle()
-	# 四象限判定(以 ±45° 为分界):
-	#   [-45°, 45°)               → Right
-	#   [45°, 135°)               → Down
-	#   [135°, 180°) ∪ [-180°, -135°) → Left
-	#   [-135°, -45°)             → Up
-	var dir_str := "None"
-	if a >= -PI / 4 and a < PI / 4:
-		dir_str = "Right"
-	elif a >= PI / 4 and a < 3 * PI / 4:
-		dir_str = "Down"
-	elif a >= 3 * PI / 4 or a < -3 * PI / 4:
-		dir_str = "Left"
+	# 水平方向略微优先
+	var horizontal_strength := absf(dir.x)
+	var vertical_strength := absf(dir.y)
+	var facing_dir := ""
+	if horizontal_strength * 1.1 > vertical_strength:
+		if dir.x > 0:
+			facing_dir = "Right"
+		else:
+			facing_dir = "Left"
 	else:
-		dir_str = "Up"
+		if dir.y < 0:
+			facing_dir = "Up"
+		else:
+			facing_dir = "Down"
 
-	# print("[AnimationPresenter]  dir: " + dir_str)
-	return dir_str
+	# print("[AnimationPresenter]  dir: " + facing_dir)
+	return facing_dir
+
+	
 
 func play_anim(anim_name: String = "idle") -> void:
+	# 死亡动画保持到视图移除，后续移动状态和重复死亡通知不能覆盖它。
+	if _current_state == "die":
+		return
 	# 缓存当前状态名,facing 变化时要用它拼新方向动画
 	_current_state = anim_name
 	_play_current()

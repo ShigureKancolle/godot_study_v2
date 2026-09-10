@@ -41,7 +41,7 @@ class EntityMovedEvent(Event):
     y: float = 0.0
     moving: bool = False
     anim_state: str = ""
-    facing: tuple[float, float] = field(default_factory=tuple)
+    facing: tuple[float, float] = (0.0, 0.0)
 
 @dataclass(frozen=True)
 class EntityJoinedEvent(Event):

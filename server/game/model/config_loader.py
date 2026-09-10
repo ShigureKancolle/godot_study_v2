@@ -208,6 +208,22 @@ class EntityCapability:
     # 服务端"立即判定死亡"但"延迟移除实体",和 hurt 的"立即设 state + 定时器到期恢复"是同一模式。
     dead_duration_ms: int = 0
     move_mask: int = 0x00000000  # 移动判定掩码(按位与,决定该实体是否哪些 tile 可通行) 。 0x00000000 表示所有 tile 都不可通行
+    ai_id: str = ""  # 电脑 AI 配置 ID(空字符串表示无 AI)
+
+# ===========================================================================
+# 导航地图 格子地图
+# ===========================================================================
+@dataclass
+class NavigationMap:
+    '''导航地图 格子地图'''
+    terrain_ids: List[int] = field(default_factory=list)
+    map_id: str = ""
+    tile_size_px: tuple[int, int] = field(default_factory=lambda: (16, 16))
+    # block是2*2的cell 这个字段表示block的长宽个数
+    block_bounds_start: tuple[int, int] = (-34, -22)
+    block_bounds_end: tuple[int, int] = (34, 22)
+    block_size: tuple[int, int] = (2, 2)
+
 
 
 # ===========================================================================
@@ -237,6 +253,15 @@ class EntityAiConfig:
     out_combat_distance: float = 600
     attack_interval_ms: int = 1000
     attack_id: int = 1001
+
+
+@dataclass
+class NavigationAiConfig:
+    """所有 AI 共用的寻路调度配置。"""
+    min_path_hold_ms: int = 500
+    target_repath_distance_blocks: int = 2
+    unreachable_retry_ms: int = 1000
+    repath_jitter_ms: int = 150
 
 
 # ===========================================================================
@@ -306,6 +331,16 @@ def _build_entity_ai_config(entry_dict: dict) -> EntityAiConfig:
     )
 
 
+def _build_navigation_ai_config(entry_dict: dict) -> NavigationAiConfig:
+    """从 ai_config.json 的 navigation 区构造寻路调度配置。"""
+    return NavigationAiConfig(
+        min_path_hold_ms=int(entry_dict.get("min_path_hold_ms", 500)),
+        target_repath_distance_blocks=int(entry_dict.get("target_repath_distance_blocks", 2)),
+        unreachable_retry_ms=int(entry_dict.get("unreachable_retry_ms", 1000)),
+        repath_jitter_ms=int(entry_dict.get("repath_jitter_ms", 150)),
+    )
+
+
 def _build_combat_stats(stats_dict: dict) -> CombatStats:
     """从 dict 构造 CombatStats 对象(未配 combat_stats 时返回零值默认)"""
     if not stats_dict:
@@ -335,6 +370,18 @@ def _build_entity_capability(entry_dict: dict) -> EntityCapability:
         speed=float(entry_dict.get("speed", 0.0)),
         dead_duration_ms=int(entry_dict.get("dead_duration_ms", 0)),
         move_mask=int(entry_dict.get("move_mask", 0x00000000)),
+        ai_id=entry_dict.get("ai_id", ""),  # 电脑 AI 配置 ID(空字符串表示无 AI)
+    )
+
+def _build_navigation_map(entry_dict: dict) -> NavigationMap:
+    """从 dict 构造 NavigationMap 对象"""
+    return NavigationMap(
+        terrain_ids=entry_dict.get("terrain_ids", []),
+        map_id=entry_dict.get("map_id", ""),
+        tile_size_px=entry_dict.get("tile_size_px", (16, 16)),
+        block_bounds_start=entry_dict.get("min_inclusive", (-34, -22)),
+        block_bounds_end=entry_dict.get("max_exclusive", (34, 22)),
+        block_size=entry_dict.get("block_size", (2, 2)),
     )
 
 
@@ -384,6 +431,9 @@ def _build_entity_ai_config_map(raw: dict) -> Dict[str, EntityAiConfig]:
     for key, value in raw.items():
         if _is_comment_key(key):
             continue
+        # navigation 是所有 AI 共用的调度配置，不是一种实体 AI。
+        if key == "navigation":
+            continue
         result[key] = _build_entity_ai_config(value)
     return result
 
@@ -395,6 +445,11 @@ def _build_entity_capability_map(raw: dict) -> Dict[str, EntityCapability]:
         if _is_comment_key(key):
             continue
         result[key] = _build_entity_capability(value)
+    return result
+
+def _build_navigation_map_map(raw: dict) -> NavigationMap:
+    """从 navigation_map.json 原始数据: NavigationMap}: NavigationMap} 表"""
+    result = _build_navigation_map(raw)
     return result
 
 
@@ -445,6 +500,10 @@ _TERRAIN_CONFIG_RAW = _load_json("terrain_config.json")
 _VISION_CONFIG_RAW = _load_json("vision_config.json")
 _AI_CONFIG_RAW = _load_json("ai_config.json")
 
+_NAVIGATION_MAP_MAP: Dict[str, NavigationMap] = {}
+_NAVIGATION_AI_CONFIG: NavigationAiConfig = _build_navigation_ai_config(
+    _AI_CONFIG_RAW.get("navigation", {})
+)
 _ENTITY_AI_CONFIG_MAP: Dict[str, EntityAiConfig] = _build_entity_ai_config_map(_AI_CONFIG_RAW)
 _ATTACK_CONFIG_MAP: Dict[int, AttackConfig] = _build_attack_config_map(_ATTACK_CONFIG_RAW)
 _ENTITY_CAPABILITY_MAP: Dict[str, EntityCapability] = _build_entity_capability_map(_ENTITY_CONFIG_RAW)
@@ -599,3 +658,31 @@ def get_entity_ai_config(ai_config_name: str) -> EntityAiConfig:
         entity_type: 实体类型字符串,如 "slime_ai_001"。
     """
     return _ENTITY_AI_CONFIG_MAP.get(ai_config_name, EntityAiConfig())
+
+
+def get_navigation_ai_config() -> NavigationAiConfig:
+    """取得所有 AI 共用的寻路调度配置。"""
+    return _NAVIGATION_AI_CONFIG
+
+
+# ===========================================================================
+# 导航地图 API(寻路用)
+# ===========================================================================
+def get_navigation_map(map_id: str) -> NavigationMap:
+    """
+    取某个导航地图的配置。
+
+    Args:
+        map_id: 导航地图 ID字符串,如 "map_001"。
+    """
+    # map_id = "navigation_test_map"
+    tile_map = _NAVIGATION_MAP_MAP.get(map_id, None)
+    if tile_map is None:
+        raw = _load_json(map_id + ".json")
+        result = _build_navigation_map_map(raw)
+        _NAVIGATION_MAP_MAP[result.map_id] = result
+
+    tile_map = _NAVIGATION_MAP_MAP.get(map_id, None)
+    if tile_map is None:
+        raise ValueError(f"导航地图 {map_id} 未配置")
+    return tile_map

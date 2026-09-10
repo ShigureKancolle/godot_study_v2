@@ -37,7 +37,7 @@ class LeaveCommand(WorldCommand):
 
 @dataclass 
 class AtkRotateCommand(WorldCommand):
-    ''' 客户端旋转请求 '''
+    ''' 旋转请求 '''
     atk_facing: float = 0.0
 
 @dataclass

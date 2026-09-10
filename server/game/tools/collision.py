@@ -38,6 +38,7 @@ class Shape:
     pos 是形状在世界坐标中的锚点,具体含义由子类决定:
         - Circle:  pos = 圆心
         - Sector:  pos = 扇形圆心(两条翅膀的交汇点)
+        - Rect:    pos = 旋转中心(矩形的中心点,用于被攻击目标的体积)
     """
     pos: tuple[float, float] = (0.0, 0.0)
 
@@ -495,3 +496,24 @@ def create_collision_shape(shape):
     else:
         raise ValueError(f"unknown shape shape: {shape.shape}")
     return None
+
+SHAPE_COLLISION_DISPATCHER = {
+    (Circle, Circle): intersect_circle_circle,
+    (Circle, Sector): intersect_circle_sector,
+    (Sector, Circle): lambda a, b: intersect_circle_sector(b, a),
+    (Sector, Sector): intersect_sector_sector,
+    (Rect, Circle): intersect_rect_circle,
+    (Circle, Rect): lambda a, b: intersect_rect_circle(b, a),
+
+}
+
+def intersect_shape_collision(shape1: Shape, shape2: Shape):
+    """判断两个形状是否相交"""
+    global SHAPE_COLLISION_DISPATCHER
+    func_key = (type(shape1), type(shape2))
+    if func_key in SHAPE_COLLISION_DISPATCHER:
+        return SHAPE_COLLISION_DISPATCHER[func_key](shape1, shape2)
+    else:
+        raise ValueError(f"unknown shape shape: {shape1.__name__} {shape2.__name__}")
+
+    

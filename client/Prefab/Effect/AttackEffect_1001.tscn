@@ -1,0 +1,89 @@
+[gd_scene format=3 uid="uid://duj7bi5bg4ba0"]
+
+[ext_resource type="Texture2D" uid="uid://cklgx0rtm5lym" path="res://Prefab/CommonTexture/VFX/Player_Attack_SectorSlashFX_1001.png" id="1_sector"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_0"]
+atlas = ExtResource("1_sector")
+region = Rect2(0, 0, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_1"]
+atlas = ExtResource("1_sector")
+region = Rect2(444, 0, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_2"]
+atlas = ExtResource("1_sector")
+region = Rect2(887, 0, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_3"]
+atlas = ExtResource("1_sector")
+region = Rect2(1331, 0, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_4"]
+atlas = ExtResource("1_sector")
+region = Rect2(0, 444, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_5"]
+atlas = ExtResource("1_sector")
+region = Rect2(444, 444, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_6"]
+atlas = ExtResource("1_sector")
+region = Rect2(887, 444, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_7"]
+atlas = ExtResource("1_sector")
+region = Rect2(1331, 444, 443, 443)
+filter_clip = true
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_attack"]
+animations = [{
+"frames": [{
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_0")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_1")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_2")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_3")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_4")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_frame_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_frame_7")
+}],
+"loop": false,
+"name": &"Attack",
+"speed": 24.0
+}]
+
+[node name="AttackEffect_1001" type="Node2D" unique_id=1732546864]
+z_index = 1
+texture_filter = 1
+
+[node name="Scale" type="Node2D" parent="." unique_id=435725012]
+position = Vector2(16.56, 0)
+scale = Vector2(0.097, 0.097)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Scale" unique_id=1332272077]
+sprite_frames = SubResource("SpriteFrames_attack")
+animation = &"Attack"
+frame = 7
+frame_progress = 1.0

@@ -190,6 +190,18 @@ class EntityCapability:
 	func _init():
 		combat_stats = CombatStats.new()
 
+# ===========================================================================
+# 导航地图 格子地图
+# ===========================================================================
+class NavigationMap:
+	var terrain_ids: Array[int] = []
+	var map_id: String = ""
+	var tile_size_px: Vector2i = Vector2i(16, 16)
+	# block是2*2的cell 这个字段表示block的长宽个数
+	var block_bounds_start: Vector2i = Vector2i(-34, -22)
+	var block_bounds_end: Vector2i = Vector2i(34, 22)
+	var block_size: Vector2i = Vector2i(2, 2)
+
 
 # ===========================================================================
 # 内部辅助:从 dict 构造对象
@@ -280,6 +292,23 @@ static func _build_terrain_capability(entry_dict: Dictionary) -> TerrainCapabili
 	cap.move_cost = int(entry_dict.get("move_cost", 1))
 	return cap
 
+## 从 dict 构造 NavigationMap 对象
+static func _build_navigation_map(entry_dict: Dictionary) -> NavigationMap:
+	var map = NavigationMap.new()
+	map.map_id = entry_dict.get("map_id", "")
+	map.terrain_ids.append_array(entry_dict.get("terrain_ids", []))
+	map.tile_size_px = Vector2i(entry_dict.get("tile_size_px", [16, 16])[0], entry_dict.get("tile_size_px", [16, 16])[1])
+	map.block_bounds_start = Vector2i(
+		entry_dict.get("block_bounds", {}).get("min_inclusive", [0, 0])[0], 
+		entry_dict.get("block_bounds", {}).get("min_inclusive", [0, 0])[1]
+	)
+	map.block_bounds_end = Vector2i(
+		entry_dict.get("block_bounds", {}).get("max_exclusive", [10, 10])[0], 
+		entry_dict.get("block_bounds", {}).get("max_exclusive", [10, 10])[1]
+	)
+	map.block_size = Vector2i(entry_dict.get("block_size", [2, 2])[0], entry_dict.get("block_size", [2, 2])[1])
+	return map
+
 
 ## 读取 res://config/ 下的 JSON 文件
 static func _load_json(filename: String) -> Dictionary:
@@ -295,7 +324,6 @@ static func _load_json(filename: String) -> Dictionary:
 		return {}
 	return json.data
 
-
 # ===========================================================================
 # 配置缓存(首次访问时懒加载,因为 GDScript const 不能 new 对象)
 # ===========================================================================
@@ -305,6 +333,8 @@ static var _terrain_capability_cache: Dictionary = {} # {terrain_name: TerrainCa
 static var _vision_cache: Dictionary = {}            # {mode: VisionInfo}(normal/chase)
 static var _constants_cache: Dictionary = {}
 static var _cache_loaded: bool = false
+static var _navigation_map_cache: Dictionary = {} # {map_id: NavigationMap}
+
 
 
 ## 懒加载所有配置(只在首次访问时调一次)
@@ -360,6 +390,13 @@ static func _ensure_cache() -> void:
 
 	_cache_loaded = true
 
+
+static func _load_navigation_map():
+	var filenames := ["navigation_test_map.json"]
+	for filename in filenames:
+		var raw: Dictionary = _load_json(filename)
+		var map = _build_navigation_map(raw)
+		_navigation_map_cache[map.map_id] = map
 
 # ===========================================================================
 # 对外 API(和服务端 config_loader.py 对齐)
@@ -469,3 +506,17 @@ static func get_vision(mode: String = "normal") -> VisionInfo:
 static func is_vision_enabled() -> bool:
 	_ensure_cache()
 	return bool(_constants_cache.get("VISION_ENABLED", true))
+
+
+static func get_navigation_map(map_id: String) -> NavigationMap:
+	var map: NavigationMap = _navigation_map_cache.get(map_id, null)
+	if not map:
+		_load_navigation_map()
+	map = _navigation_map_cache.get(map_id, null)
+	if not map:
+		push_error("get_navigation_map 未找到 map_id=%s" % map_id)
+	return map
+
+
+		
+		

@@ -10,10 +10,13 @@ import typing
 
 if typing.TYPE_CHECKING:
     import game.world as game_world
+    import game.commands as commands
 
 
 class DeathSystem(CompSystem):
     """将已死亡实体保留至死亡动画时长结束，再从权威世界移除。"""
+    def apply_command(self, world: "game_world.GameWorld", command: "commands.WorldCommand") -> None:
+        pass
 
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         events: list[event.Event] = []

@@ -6,7 +6,6 @@ const LOCAL_PLAYER_CONTROLLER_SCRIPT := preload("res://Scirpt/game/controller/Lo
 var entity_visual: PlayerVisual = null
 var local_player_controller: LocalPlayerController = null
 var entity_id: String = ""
-
 var _presenter: Dictionary[StringName, EntityViewPresenter] = {}
 
 func add_presenter(presenter_name: StringName, presenter: EntityViewPresenter):
@@ -20,8 +19,8 @@ func _process(delta: float):
 	for presenter in _presenter.values():
 		presenter.process(delta)
 
-	var move_dir = get_presenter(MotionPresenter.presenter_name).get_visual_move_direction()
-	get_presenter(AnimationPresenter.presenter_name).update_facing(move_dir)
+	# var move_dir = get_presenter(MotionPresenter.presenter_name).get_visual_move_direction()
+	# get_presenter(AnimationPresenter.presenter_name).update_facing(entity_state.facing_dir)
 
 func setup(entity_state: EntityState):
 	entity_id = entity_state.entity_id
@@ -52,6 +51,7 @@ func apply_atk_rotate(facing: float):
 func apply_movement(state: EntityState) -> void:
 	get_presenter(MotionPresenter.presenter_name).set_target_position(state.server_position)
 	get_presenter(AnimationPresenter.presenter_name).play_anim(state.anim_state)
+	get_presenter(AnimationPresenter.presenter_name).update_facing(state.facing_dir)
 
 func apply_animation(state: EntityState) -> void:
 	get_presenter(AnimationPresenter.presenter_name).play_anim(state.anim_state)

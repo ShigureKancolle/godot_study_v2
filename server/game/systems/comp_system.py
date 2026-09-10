@@ -14,6 +14,7 @@ import typing
 if typing.TYPE_CHECKING:
     import game.commands as command
     import game.world as game_world
+    import game.model.entity as entity
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class CompSystem:
     def init(self, *args, **kwargs):
         pass
 
-    def apply_command(self, world: "game_world.GameWorld", command: "command.Command") -> list[event.Event]:
+    def apply_command(self, world: "game_world.GameWorld", command: "command.WorldCommand") -> list[event.Event]:
         raise NotImplementedError("apply_command must be implemented in subclasses")
 
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
@@ -87,26 +88,31 @@ class MovementCompSystem(CompSystem):
         move_comp.dir_y = 0.0
         move_comp.moving = False
         move_comp.input_changed = True
-        move_comp.anim_state = "idle"
+        # move_comp.anim_state = "idle"
 
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         events: list[event.Event] = []
         for entity in world.entities_with([comps.MovementComponent, comps.TransformComponent]):
-            move_comp = entity.get_component(comps.MovementComponent)
-            transform_comp = entity.get_component(comps.TransformComponent)
-            combat_comp = entity.get_component(combat_component.CombatComponent)
+            move_comp: comps.MovementComponent = entity.get_component(comps.MovementComponent)
+            transform_comp: comps.TransformComponent = entity.get_component(comps.TransformComponent)
+            combat_comp: combat_component.CombatComponent = entity.get_component(combat_component.CombatComponent)
 
             if move_comp.is_locked or combat_comp is not None and combat_comp.is_dead:
-                # 被限制了不能移动的entity 通知客户端停止移动了
-                was_active = move_comp.moving or move_comp.dir_x != 0.0 or move_comp.dir_y != 0.0
+                # 命令校验可能已经停止移动，尚未同步的变化仍需通知客户端。
+                needs_stop_event = move_comp.input_changed or move_comp.moving or move_comp.dir_x != 0.0 or move_comp.dir_y != 0.0
+                facing = (move_comp.dir_x, move_comp.dir_y)
+                facing_comp = entity.get_component(comps.FacingComponent)
+                if facing_comp is not None:
+                    facing = facing_comp.facing
                 self._stop(move_comp)
-                if was_active:
+                if needs_stop_event:
                     events.append(event.EntityMovedEvent(
-                        entity.entity_id,
-                        transform_comp.x,
-                        transform_comp.y,
-                        False,
-                        "idle",
+                        entity_id=entity.entity_id,
+                        x=transform_comp.x,
+                        y=transform_comp.y,
+                        moving=False,
+                        anim_state="idle",
+                        facing=facing,
                     ))
                 move_comp.input_changed = False
                 continue
@@ -123,13 +129,23 @@ class MovementCompSystem(CompSystem):
             new_y = old_y + dir_vec.y * move_comp.speed * dt
 
             # 验证目标点是否可行 
-            if not self.check_can_move(new_x, new_y):
-                continue
+            # 目标点能走
+            new_pos_walkable = self.check_can_move(world, new_x, new_y)
+            # y方向能走
+            new_y_walkable = self.check_can_move(world, old_x, new_y)               
+            # x方向能走
+            new_x_walkable = self.check_can_move(world, new_x, old_y)
 
-            transform_comp.x = new_x
-            transform_comp.y = new_y
-
-            
+            if new_pos_walkable:
+                transform_comp.x = new_x
+                transform_comp.y = new_y
+            elif new_y_walkable:
+                transform_comp.y = new_y
+            elif new_x_walkable:
+                transform_comp.x = new_x
+            else:
+                # 完全走不了 保持原地
+                continue      
 
             position_changed = transform_comp.x != old_x or transform_comp.y != old_y
 
@@ -151,8 +167,9 @@ class MovementCompSystem(CompSystem):
 
         return events
 
-    def check_can_move(self, x: float, y: float):
-        return True
+    def check_can_move(self, world: "game_world.GameWorld", x: float, y: float):
+        """检查是否可以移动到指定位置"""
+        return world.pathfinder.is_walkable(x, y)
 
 
 class JoinCompSystem(CompSystem):
@@ -246,6 +263,7 @@ class AttackCompSystem(CompSystem):
             if atk_config is None:
                 continue
 
+            attacker = world.get_entity(atk_pending.attacker_id)
             finish = False
             for idx, shape in enumerate(atk_config.shape_list):
                 if idx in atk_pending.fired_shape_indexes:
@@ -255,6 +273,12 @@ class AttackCompSystem(CompSystem):
 
                 if idx == len(atk_config.shape_list) - 1:
                     finish = True
+
+                if attacker is None or attacker.is_dead():
+                    # 近战的才需要检查是否死亡
+                    # logger.info("攻击实体 %s 已死亡，跳过攻击", atk_pending.attacker_id)
+                    continue
+
                 atk_pending.fired_shape_indexes.add(idx)
                 hit_entity_ids = self._get_attack_hits(world, atk_pending.attacker_id, atk_pending.atk_facing, shape)
 
@@ -301,7 +325,8 @@ class AttackCompSystem(CompSystem):
         # (cos θ, sin θ) 的符号相反。客户端渲染攻击特效时也使用 -atk_facing；
         # 碰撞模块采用标准向量角度，必须在此统一转换，否则上下方向会镜像。
         atk_coll_shape.direction = -atk_facing
-        attacker_trans = world.get_entity(attacker_id).get_component(comps.TransformComponent)
+        attacker = world.get_entity(attacker_id)
+        attacker_trans = attacker.get_component(comps.TransformComponent)
         if not attacker_trans:
             return ids
         attacker_trans: comps.TransformComponent
@@ -316,6 +341,9 @@ class AttackCompSystem(CompSystem):
             if not combat or combat.is_dead:
                 continue
 
+            if not self._can_attack(attacker, entity):
+                continue
+
             transform = entity.get_component(comps.TransformComponent)
             if not transform:
                 continue
@@ -326,7 +354,7 @@ class AttackCompSystem(CompSystem):
                 radius=hit_box.radius,
                 pos=(pos[0] + hit_box.local_offset[0], pos[1] + hit_box.local_offset[1]),
             )
-            if collision.intersect_rect_circle(atk_coll_shape, shape):
+            if collision.intersect_shape_collision(atk_coll_shape, shape):
                 ids.append(entity.entity_id)
         return ids
 
@@ -343,6 +371,11 @@ class AttackCompSystem(CompSystem):
         damage = max(attacker_combat.attack - target_combat.defense, 0) * shape.damage_multiplier
         damage = max(int(damage), 1) # 至少打1血
         return damage
+
+    def _can_attack(self, attacker: "entity.Entity", target: "entity.Entity") -> bool:
+        """判断是否可以攻击"""
+        attacker_combat: combat_component.CombatComponent = attacker.get_component(combat_component.CombatComponent)
+        return attacker_combat.attack_mask & target.hit_box.hit_layer != 0
 
 
 class LeaveCompSystem(CompSystem):

@@ -23,6 +23,7 @@
         "body_color": "#ffffff",
         "hit_layer": 1,
         "attack_mask": 2,
+        "move_mask": 1,
         "speed": 300.0,
         "dead_duration_ms": 0,
         "combat_stats": {
@@ -47,8 +48,10 @@
         "body_color": "#aaaaaa",
         "hit_layer": 2,
         "attack_mask": 0,
+        "move_mask": 1,
         "speed": 0.0,
         "dead_duration_ms": 0,
+        "ai_id": "",
         "combat_stats": {
             "max_hp": 9999,
             "attack_power": 0,
@@ -71,8 +74,10 @@
         "body_params": {"radius": 20.0},
         "hit_layer": 2,
         "attack_mask": 1,
-        "speed": 235.0,
+        "move_mask": 1,
+        "speed": 200.0,
         "dead_duration_ms": 666,
+        "ai_id": "slime_ai_001",
         "combat_stats": {
             "max_hp": 50,
             "attack_power": 10,
@@ -95,12 +100,14 @@
         "body_params": {"radius": 20.0},
         "hit_layer": 2,
         "attack_mask": 1,
-        "speed": 245.0,
+        "move_mask": 1,
+        "speed": 220.0,
         "dead_duration_ms": 666,
+        "ai_id": "skeleton_ai_001",
         "combat_stats": {
-            "max_hp": 50,
-            "attack_power": 10,
-            "defense": 2,
+            "max_hp": 100,
+            "attack_power": 20,
+            "defense": 5,
             "look_around_fact_speed": 1
         }
     },

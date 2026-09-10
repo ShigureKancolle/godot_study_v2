@@ -9,6 +9,7 @@ const LEVEL_SCENE := preload("res://Prefab/Level/TestLevel.tscn")
 @onready var effect_parent: Node2D = $Effect
 @onready var damage_num_parent: Node2D = $DamageNum
 
+var tile_map_layer: TileMapLayer = null
 var entity_views: Dictionary[String, EntityView] = {}
 # 现在只有一个关卡 先不搞mgr 用静态方法
 static func create_level():
@@ -31,6 +32,10 @@ func _ready():
 	# SignalMgr.Get().snl_entities_mp_changed.connect(hdl_entities_mp_changed)
 	SignalMgr.Get().snl_damage_received.connect(hdl_damage_received)
 	SignalMgr.Get().snl_entity_dead.connect(hdl_entity_dead)
+
+	# 初始化地图
+	tile_map_layer = NavigationMapView.new()
+	map.add_child(tile_map_layer)
 
 
 func spawn_entity(entity_state: EntityState):

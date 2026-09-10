@@ -1,228 +1,244 @@
-# 阶段 7 工作内容与文件职责设计
+# 阶段 7 工作内容、完成进度与文件职责
 
-本文是待实施方案，不代表代码已完成。对应 [重建清单阶段 7](../V2_REBUILD_TODO.md#阶段-7实现最小-ai-和寻路)。本次只编写工作表和文件设计，不创建代码骨架、不修复阶段 6 BUG。
+本文区分当前实现与待实施方案，对应 [重建清单阶段 7](../V2_REBUILD_TODO.md#阶段-7实现最小-ai-和寻路)。进度依据为 2026-09-08 的工作区代码、现有自动测试及纯服务端探测；未进行 Godot 双客户端现场验收。
 
-## 1. 本阶段要做到什么
+## 1. 当前结论与接下来的顺序
 
-一种敌人在服务端发现玩家，追逐玩家，进入攻击距离后停下并攻击；玩家离开、死亡或断线后，敌人能够停止或重新选择目标。客户端通过已有权威同步显示移动和战斗。
+7A 的索敌、直线追逐、停止、转向和攻击主链路已实现。目标时序、状态标签、快照等已知问题记录在 [阶段 7 BUG](PHASE7_BUGS.md)，按用户取舍暂缓处理，不作为接摄像头或推进 7B 的阻碍。基础能力验收和联调仍需单独记录结果。7B 的障碍网格与寻路尚未接入。
 
-分成两个可单独验收的小阶段：
-
-| 子阶段 | 内容 | 完成标志 |
+| 顺序 | 工作 | 完成标志 |
 | --- | --- | --- |
-| 7A：最小 AI | 空地图、直线追踪、`idle/chase/attack`、目标失效处理 | 单个敌人能够发现、追逐和攻击玩家，多玩家时目标选择稳定 |
-| 7B：最小寻路 | 固定障碍网格、A* 查询、路径跟随、预算和失效处理 | 敌人能够绕过障碍；无路或预算不足时安全等待；关闭寻路后仍能测试 7A |
+| 当前基础：7A 最小 AI | 空地图、直线追踪、`idle/chase/attack`、目标失效处理 | 主链路已有，剩余项见第 2 节 |
+| 下一步：7A.5 摄像头 | 本地玩家跟随、绑定与清理、鼠标朝向验收 | 画面跟随本地角色，双客户端各自跟随 |
+| 然后：7A 验收 | Codex 编写用例并执行专项测试和联调，按已接受的行为验收 | 记录通过项、实际失败项及已接受的暂缓问题 |
+| 后续：7B 最小寻路 | 固定障碍网格、A*、路径跟随、预算和失效处理 | 敌人能绕墙，无路或预算不足时安全等待 |
 
-先完成 7A，再创建 7B 文件。第一版不加入巡逻、视锥、行为树、群体避让、返巢、远距离瞬移、无限地图生成或生存刷怪。受击硬直不是本阶段要求。
+摄像头接入不依赖寻路或地图碰撞，可以现在手写。具体文件、挂接顺序和验收见 [7A.5 摄像头工作方案](PHASE7_CAMERA_WORK_PLAN.md)。
 
-## 2. 当前实现可以复用什么
+7B 使用一张固定、有限的障碍测试地图，让绕墙和不可达场景可以重复验证。服务端执行可行走、移动碰撞和寻路查询；客户端读取同一配置显示障碍，联调时玩家应当看得见墙。它不是只在服务端存在的隐形地图，也不要求先恢复完整无限随机地图。
 
-| 当前模块 | 当前事实 | 阶段 7 怎么用 |
-| --- | --- | --- |
-| `GameWorld.create_enemy()` | 敌人已有位置、战斗组件和碰撞体；没有移动和 AI 组件 | 补充 `MovementComponent`、`FacingComponent`、`AIComponent` |
-| `MoveCommand` / `MovementCompSystem` | 移动命令、归一化、死亡和锁定检查已存在 | AI 复用同一路径，不自行修改坐标 |
-| `AtkRotateCommand` / `CombatCompSystem` | 攻击朝向与冷却已有实现 | AI 先提交转向，再提交攻击 |
-| `AttackCommand` / `AttackCompSystem` | 攻击开始、判定帧、扣血已有实现 | AI 只提出攻击请求，不绕过死亡和冷却校验 |
-| `DeathSystem` | 死亡事件与延迟移除已实现 | AI 排除死亡目标，自身死亡后停止决策 |
-| `WorldFrame` 和客户端表现 | 已能同步移动、朝向、攻击、伤害与死亡 | 7A 原则上不需要新增协议或客户端 AI |
-| `EntityInfo.ai_state` | 快照协议已有字段，服务端投影仍返回空字符串 | 可补充快照投影；实时 AI 状态不作为首版客户端依赖 |
-| `tools/sync_config.py` | 实际读取 `json_config/`，复制到两端 `config/` | 所有新增数值在 `json_config/` 修改；旧说明中的 `shared_config/` 不作为新路径 |
+本阶段继续保持简单状态，不扩展巡逻、视锥、行为树、群体避让、返巢、远距离瞬移或生存刷怪。
 
-## 3. 工作内容表
+### 1.1 验收与联调由谁执行
 
-所有任务初始为待办；顺序表示推荐实施顺序，不是已经完成的记录。
+验收和联调统一由 **Codex 负责编写用例、准备必要测试脚本、执行并记录结果**，包括纯服务端规则、Godot 表现、双客户端与断线联调。业务代码继续由用户手写；验收任务不默认交给用户手测。
 
-| 编号 | 工作内容 | 主要文件 | 前置条件 | 验收方式 |
-| --- | --- | --- | --- | --- |
-| 7A-01 | 定义一种敌人的 AI 参数：索敌距离、脱离距离、攻击距离、攻击 ID | `json_config/ai_config.json`、`config_loader.py` | 无 | 配置能加载；未知类型不自动获得 AI |
-| 7A-02 | 定义 `AIState` 与 `AIComponent`；只保存状态和目标 ID | `model/ai_component.py` | 7A-01 | 新敌人初始为 `idle`，没有目标 |
-| 7A-03 | 为配置启用 AI 的敌人装配移动、朝向、AI 组件 | `world.py` | 7A-02 | 能通过已有移动命令移动敌人；速度来自实体配置 |
-| 7A-04 | 实现索敌和目标保留规则 | `systems/ai_system.py` | 7A-03 | 只选活着的玩家；等距离选择确定；不每帧来回切目标 |
-| 7A-05 | 实现直线追踪和无目标停止命令 | `systems/ai_system.py` | 7A-04 | 方向正确、不产生零向量归一化错误；目标失效后不沿旧方向继续跑 |
-| 7A-06 | 在 tick 中加入 AI 决策及命令应用阶段 | `tick_pipeline.py`、`world.py`、`command_router.py` | 7A-05 | AI 命令在当前 tick 的移动前应用；不混进网络发送逻辑 |
-| 7A-07 | 实现攻击距离切换、停止、朝向与攻击命令 | `systems/ai_system.py` | 7A-06 | 进入攻击范围停下；先转向再攻击；冷却期间不持续制造拒绝事件 |
-| 7A-08 | 处理目标死亡、移除、断线、超出脱离距离及自身死亡 | `systems/ai_system.py` | 7A-07 | 同次决策清理失效目标、停止或重选；死亡敌人不产生新命令 |
-| 7A-09 | 补齐快照移动动画和 AI 状态投影 | `entity_projector.py` | 7A-08 | 新进入客户端能看到当前实体位置与有效动画名；移动状态使用现有 `run/idle` 命名 |
-| 7A-10 | 编写纯服务端 AI 和 pipeline 回归测试 | `tests/test_ai_system.py`、`tests/test_ai_pipeline.py` | 7A-09 | 固定世界与固定 `dt` 得到相同结果，不启动 WebSocket |
-| 7A-11 | 单敌人单玩家、单敌人双玩家联调 | 现有客户端、`SpawnEnemyCommand` | 7A-10 | 双端观察一致，断线重选正常；不引入阶段 8 刷怪器 |
-| 7B-01 | 定义有限障碍网格和统一可行走查询 | `model/navigation_grid.py` | 7A 验收 | 移动与寻路使用同一份障碍数据及实体尺寸约束 |
-| 7B-02 | 实现有节点展开上限的纯 A* 查询 | `tools/pathfinding.py` | 7B-01 | 绕墙、有路、无路、非法起终点结果明确 |
-| 7B-03 | 增加路径状态及跟随逻辑 | `model/navigation_component.py`、`systems/ai_system.py`、`world.py` | 7B-02 | 跟随下一路径点，仍通过 `MoveCommand` 移动，不直接设置坐标 |
-| 7B-04 | 加入单 tick 查询次数和节点展开总预算、公平轮转 | `model/navigation_component.py`、`systems/ai_system.py`、`world.py` | 7B-03 | 多敌人不会突破预算，排在后面的敌人不会长期得不到查询机会 |
-| 7B-05 | 加入路径失效、重算间隔、无路重试和开关 | 同上、`json_config/ai_config.json` | 7B-04 | 目标移动、地图变化、路径阻塞后可恢复；预算不足不被误判为无路 |
-| 7B-06 | 将移动合法性接入统一网格查询 | `systems/comp_system.py` | 7B-01、7B-05 | 检查移动线段与实体体积，不能靠大步长跨墙 |
-| 7B-07 | 补齐寻路单测与固定障碍场景联调 | `tests/test_pathfinding.py`、`tests/test_ai_navigation.py`、测试地图文件 | 7B-06 | 绕障碍、无路等待、预算耗尽、关闭寻路均通过 |
-| 7-收尾 | 更新职责文档、tick 顺序和总清单 | `docs/MODULE_RESPONSIBILITIES.md`、`V2_REBUILD_TODO.md` | 实现与测试完成 | 文档只把实际完成并验证的内容标为完成 |
+每项记录用例、运行方式、环境、预期结果、实际结果及必要证据，区分通过、失败、未执行、环境受限。受工具或环境限制无法验证的项目如实说明，不能用服务端单测通过代替客户端联调通过。当前请求是记录分工与暂缓项，不代表整套未执行联调已完成。
 
-## 4. 文件存放位置与职责
+## 2. 7A 完成进度
 
-下列路径均相对于仓库根目录。标注“新增”的文件现在只做设计，实施对应任务时再创建。
+“已实现”表示相应基础行为已有代码；已接受的暂缓问题单独引用 BUG，不等于当前基础能力失败。测试与联调状态按实际执行结果填写。文件名沿用当前实现，不要求为了匹配早期方案而改名。
 
-### 4.1 7A 新增文件
+| 编号 | 工作 | 状态 | 当前证据与剩余项 |
+| --- | --- | --- | --- |
+| 7A-01 | AI 参数与配置加载 | 基础已实现 | `json_config/ai_config.json`、`EntityAiConfig`、`get_entity_ai_config()` 已接入；语义校验记为 BUG-7-05，暂缓 |
+| 7A-02 | AI 状态和目标组件 | 已实现 | `AIComponent` 保存字符串状态、配置名、目标 ID 和攻击意图间隔；当前不需要强行为状态加枚举 |
+| 7A-03 | 装配敌人组件 | 已实现 | `create_enemy()` 根据 `ai_id` 添加 AI，移动速度来自实体配置；攻击朝向走已有 `CombatComponent.atk_facing` |
+| 7A-04 | 索敌和目标保留 | 基础已实现 | 选择范围内最近活玩家，保留有效旧目标；等距离按插入顺序，BUG-7-02 暂缓 |
+| 7A-05 | 直线追踪和无目标停止 | 已实现 | 产生 `MoveCommand`，由移动系统归一化；目标死亡或移除且无替代目标时能停止 |
+| 7A-06 | 同 tick 应用 AI 命令 | 已实现 | `GameWorld.step()` 在 pipeline 更新前调用 `AICompSystem.decide()` 并逐条 dispatch |
+| 7A-07 | 攻击距离、停止、转向、攻击 | 基础已实现 | 停止 → 转向 → 攻击链路有效；攻击等待状态标签记为 BUG-7-03，暂缓；进入/退出距离分离保留为可选设计 |
+| 7A-08 | 目标失效与自身死亡 | 基础已实现 | 死亡/移除目标可当次停止或重选，自身死亡不产生新 AI 命令；超距重选时序记为 BUG-7-01，接受现状 |
+| 7A-09 | 快照动画与 AI 状态 | 动画已实现，AI 投影暂缓 | 移动动画为 `run/idle`；客户端当前不消费 `ai_state`，空值记为 BUG-7-04 |
+| 7A-10 | AI 和 pipeline 专项测试 | Codex 待补齐并执行 | 已有死亡追逐敌人停止同步测试；后续覆盖当前接受的基础行为，暂缓问题不要求先修复 |
+| 7A-11 | 单玩家、双玩家联调 | Codex 待编写并执行 | 服务端基础行为探测通过；双客户端画面、朝向、真实断线重选尚未现场验收 |
 
-| 文件 | 职责 | 不承担的事情 |
-| --- | --- | --- |
-| `json_config/ai_config.json` | 按实体配置键保存 AI 行为参数，首版只配置一种敌人 | 不重复保存血量、速度、攻击伤害和冷却 |
-| `server/game/model/ai_component.py` | 定义 `AIState`、`AIComponent`，保存实体的 AI 状态和目标 ID | 不搜索目标、不持有目标 Entity 引用、不发网络消息 |
-| `server/game/systems/ai_system.py` | 定义 `AISystem`，读取权威状态，更新 AI 自身状态，产生移动、转向、攻击命令 | 不修改位置、血量、冷却；不直接调用其他 System |
-| `server/tests/test_ai_system.py` | 验证状态切换、目标选择、方向和命令输出 | 不依赖客户端或 WebSocket |
-| `server/tests/test_ai_pipeline.py` | 验证 AI 命令顺序、同 tick 应用以及移动和战斗约束 | 不复制一份伤害或移动规则 |
+### 2.1 已执行的核对
 
-### 4.2 7A 调整现有文件
+在 `server/` 运行：
 
-| 文件 | 要调整的内容 |
+```powershell
+python -B -m unittest discover -s tests -v
+```
+
+结果：15 个现有测试全部通过，包括矩形碰撞、命令校验、死亡延迟移除、死亡和锁定后的停止事件。它们不是 15 个 AI 专项测试。
+
+另外通过临时内存脚本直接推进 `GameWorld`，未启动 WebSocket、未新增测试源文件：
+
+- 敌人当 tick 获得目标并推进移动；已有目标有效时不因另一名玩家更近而切换。
+- 目标死亡或移除后，有其他玩家则当次重选，无其他玩家则停止。
+- 单史莱姆使用当前配置攻击 1001，在玩家位于上下左右各 40 像素的独立场景中，推进 60 个 `1/30s` tick，均产生攻击，玩家血量由 100 降至 95。
+- 超出脱战距离、攻击等待状态、等距离选择和快照 AI 状态的缺口均可复现。
+
+临时探测只确认这些具体场景，不能代替持续回归测试或客户端联调。真实断线还需要验证网络清理最终确实移除了玩家。
+
+### 2.2 暂缓问题与当前验收边界
+
+具体复现条件、实际影响及未来可选修复见 [阶段 7 BUG 记录](PHASE7_BUGS.md)。普通超距重选晚一个 tick，当前约 33ms，接受现状。冷却期间保留超距目标的探测通过脚本直接移远目标触发；按当前参数，普通跑动不会在 600ms 内从 50px 攻击范围内跑出 600px 脱战范围。
+
+攻击等待时的 `chase/idle` 标签与空 AI 快照目前不影响已有客户端移动和攻击显示。等距离选人依插入顺序可复现，不等于随机或每帧切换。上述事项以及配置语义校验都不列入当前必须修复的清单。
+
+Codex 后续补齐当前基础行为的自动验收并执行联调，在结果中明确标注已接受的暂缓问题；用户决定修复后，再编写并执行对应修复回归。当前已为史莱姆和骷髅配置简单 AI，基础联调先保留一只敌人，减少干扰。
+
+## 3. 7A 当前文件与职责
+
+| 文件 | 当前职责 |
 | --- | --- |
-| `server/game/model/config_loader.py` | 加载 `ai_config.json`，增加 `AIConfig` 与 `get_ai_config(entity_config_key)`；校验距离关系、攻击 ID 等配置 |
-| `server/game/world.py` | 装配敌人组件、AI 系统和 tick 阶段；实体上的 AI 状态仍由 World 持有 |
-| `server/game/tick_pipeline.py` | 明确 AI 决策阶段，收集 AI 命令，通过路由器按序执行，再推进移动和战斗 |
-| `server/game/command_router.py` | 复用已有命令到处理系统的映射；必要时补充顺序分发辅助方法，不塞入 AI 规则 |
-| `server/game/commands.py` | 更新命令职责说明：移动和攻击命令也可由服务端 AI 产生，字段原则上复用 |
-| `server/game/entity_projector.py` | 从 `AIComponent` 投影快照状态；统一移动动画名，当前快照的 `move` 与已有表现的 `run` 需要对齐 |
-| `server/transport/game_protocol_adapter.py` | 如现有拒绝事件会发往连接 0，明确仅投递给真实客户端连接；服务端内部命令拒绝保留为领域结果 |
-| `docs/MODULE_RESPONSIBILITIES.md` | 在实现后补充 AI 文件职责、状态归属与 tick 调用关系 |
+| `json_config/entity_config.json` | 保存实体能力、速度以及 `ai_id` |
+| `json_config/ai_config.json` | 按 AI 配置名保存索敌、脱战、攻击距离、攻击间隔及攻击 ID |
+| `server/game/model/config_loader.py` | 加载配置并构造 `EntityAiConfig`；语义校验改进暂缓，见 BUG-7-05 |
+| `server/game/model/ai_component.py` | 保存 `state`、`config_name`、`state_target_id`、`atk_interval_ms` |
+| `server/game/systems/ai_compsystem.py` | 读取 World，更新 AI 自身状态与计时，返回移动、转向和攻击命令 |
+| `server/game/world.py` | 装配敌人及系统，在当前 tick 分发外部命令和 AI 命令 |
+| `server/game/tick_pipeline.py` | 提供命令分发入口，依注册顺序更新系统 |
+| `server/game/systems/comp_system.py` | 执行移动和攻击规则、更新坐标与血量、产生领域事件 |
+| `server/game/systems/combat_compsystem.py` | 应用攻击朝向，推进攻击冷却 |
+| `server/game/systems/death_system.py` | 产生死亡事件，按配置延迟移除 |
+| `server/game/entity_projector.py` | 生成实体快照；AI 状态投影暂缓，见 BUG-7-04 |
+| `server/tests/test_movement_stop_events.py` | 包含死亡追逐敌人停止、无新 AI 命令及协议停止事件的回归测试 |
 
-`server/game/systems/comp_system.py` 中现有移动与攻击系统继续复用，先不为接入 AI 大规模搬文件。`CombatCompSystem` 的冷却每 tick 只推进一次，不能因为 AI 接入重复更新。
+当前没有独立 `AIState` 枚举，敌人也没有装配独立 `FacingComponent`。这些与早期方案的结构差异本身不等于功能缺失：移动事件可从移动方向取朝向，攻击使用 `CombatComponent.atk_facing`。以实际行为和边界测试决定是否需要补组件。
 
-### 4.3 7B 再新增的文件
+后续由 Codex 新增并执行 `server/tests/test_ai_system.py` 验证命令输出与当前约定行为，新增并执行 `server/tests/test_ai_pipeline.py` 验证同 tick 顺序、确定性及移动和战斗约束。不要复制一份伤害或移动规则到测试中。
 
-| 文件 | 职责 |
-| --- | --- |
-| `server/game/model/navigation_grid.py` | 有限网格的数据类型与查询；提供坐标和网格转换、地图版本、按实体半径检查可行走区域与移动线段的能力 |
-| `server/game/model/navigation_component.py` | 定义 `NavigationComponent`，保存路径点、当前索引、目标格、地图版本、重算计时；定义 World 持有的 `NavigationBudgetState`，保存公平轮转游标 |
-| `server/game/tools/pathfinding.py` | 纯函数 A*：输入只读网格、起终点、实体尺寸和展开上限，输出 `PathResult`；不写 World |
-| `server/tests/test_pathfinding.py` | 验证路径正确性、边界、不可达与展开上限 |
-| `server/tests/test_ai_navigation.py` | 验证跟随、停止、失效重算、总预算、公平性以及移动不穿墙 |
-| `json_config/navigation_test_map.json` | 一张有限测试地图，保存格子尺寸、范围和障碍格；作为两端测试显示的同一数据源 |
-| `client/Scirpt/game/level/NavigationDebugView.gd` | 在 7B 联调时绘制测试障碍，只负责显示服务端采用的地图布局，不参与 AI 或路径判定 |
-
-接入 7B 时再调整 `world.py`、`ai_system.py`、`config_loader.py` 和 `MovementCompSystem.check_can_move()`，让移动与寻路读取同一张网格。测试地图查询无需与现有无限地形功能绑定。
-
-配置副本 `server/config/ai_config.json`、`client/config/ai_config.json` 以及测试地图副本由 `tools/sync_config.py` 同步产生，不直接编辑。所有新增 Python 文件保留首行 `# coding=utf-8`，注释和文档字符串使用中文。
-
-## 5. AI 状态和数据怎么设计
-
-### 5.1 `AIComponent` 最小字段
-
-| 字段 | 含义 | 写入者 |
-| --- | --- | --- |
-| `state: AIState` | `idle/chase/attack`，初始 `idle` | `AISystem` |
-| `target_entity_id: str` | 当前玩家目标；无目标为空字符串 | `AISystem` |
-
-先不缓存位置、血量、速度或冷却。通过目标 ID 从 World 查询最新状态；AI 参数使用实体已有的 `entity_config_key` 查配置。
-
-### 5.2 状态切换
-
-| 条件 | 状态与动作 |
-| --- | --- |
-| 没有有效目标，索敌范围内也没有活玩家 | `idle`；发停止意图，清空目标 |
-| 找到目标，距离大于攻击进入距离 | `chase`；朝目标移动 |
-| 距离进入攻击距离 | `attack`；停止移动，面向目标，冷却可用时请求攻击 |
-| `attack` 中目标离开攻击退出距离 | `chase`；恢复追踪 |
-| 目标死亡、移除或超出脱离距离 | 清空目标，当次重新索敌；没有替代目标则停止 |
-| 敌人自身死亡 | 不再产生 AI 命令，由现有移动和死亡系统处理停止与移除 |
-
-已有目标仍然有效时继续追踪，避免两名玩家距离接近时来回换目标。新选目标按“距离平方、实体 ID”排序，等距离时结果固定。
-
-攻击进入距离与退出距离留少量间隔，避免边缘反复切换。攻击距离只是 AI 决定何时尝试攻击的参数，真正命中仍由战斗几何判定；应结合敌人与玩家碰撞体、攻击近边和远边调试。首版先用当前可工作的矩形攻击 1004。
-
-### 5.3 配置字段
-
-| 字段 | 用途 | 单位或约束 |
-| --- | --- | --- |
-| `enabled` | 是否给此类敌人启用 AI | 布尔值 |
-| `acquire_radius` | 无目标时索敌距离 | 像素，正数 |
-| `lose_radius` | 已有目标的脱离距离 | 像素，不小于索敌距离 |
-| `attack_enter_distance` | 从追逐进入攻击状态的距离 | 像素，按选定攻击范围调试 |
-| `attack_exit_distance` | 离开攻击状态的距离 | 像素，大于进入距离且小于脱离距离 |
-| `attack_id` | AI 使用的攻击配置 ID | 初期 1004；伤害和冷却仍取攻击、实体配置 |
-| `navigation_enabled` | 7B 寻路开关 | 7A 关闭 |
-| `repath_interval_ms` | 路径重算最短间隔 | 7B，毫秒 |
-| `waypoint_reach_distance` | 到达路径点的容差 | 7B，像素 |
-| `max_queries_per_tick` | 整个 World 每 tick 最多寻路次数 | 7B，全局参数，不按敌人数叠加 |
-| `max_expanded_nodes_per_query` | 单次查询展开上限 | 7B，正整数 |
-| `max_expanded_nodes_per_tick` | 整个 World 每 tick 展开总上限 | 7B，正整数 |
-
-在同一个 `ai_config.json` 中区分 `entities` 参数和 `navigation` 全局预算。现有 `constants.json` 里有旧寻路常量，7B 应选择并记录唯一参数来源，不同时读取两套同义参数；本次不迁移旧配置。
-
-## 6. AI 怎样接入现有 tick
-
-建议保留现有游戏系统的规则入口，只在命令应用与移动之间加入明确的 AI 决策阶段：
+## 4. 当前 tick 顺序
 
 ```text
 GameWorld.step(dt)
-  → 按现有队列顺序处理外部命令（加入、离开、输入、测试生成敌人等）
-  → AISystem.decide(world, dt) 产生本 tick 的 AI 命令列表
-  → TickPipeline 通过 CommandRouter 按顺序应用这些命令
-  → MovementCompSystem.update：更新坐标、生成移动事件
-  → AttackCompSystem.update：推进判定帧、命中与伤害
-  → CombatCompSystem.update：推进冷却，保持每 tick 一次
-  → DeathSystem.update：死亡事件、延迟移除
-  → 汇总 TickResult，由现有网络适配器发送
+  → 按队列顺序 dispatch 外部命令
+  → AICompSystem.decide(world, dt)
+  → 按返回顺序 dispatch AI 命令
+  → MovementCompSystem.update
+  → JoinCompSystem.update（当前为空）
+  → AttackCompSystem.update
+  → LeaveCompSystem.update（当前为空）
+  → CombatCompSystem.update
+  → DeathSystem.update
+  → SpawnEnemySystem.update
+  → 生成 TickResult，交给现有适配器发送
 ```
 
-`AISystem.decide()` 是本阶段新增的明确入口，返回领域命令列表；不把命令伪装成 `CompSystem.update()` 返回的 Event，也不让 `AISystem` 持有其他系统实例。
+AI 的位置、血量和战斗冷却仍由原系统修改。AI 攻击命令顺序为停止移动 → `AtkRotateCommand` → `AttackCommand`；当前角度契约使用 `-atan2(dy, dx)`。重合位置的朝向保留规则还应补测试。
 
-AI 命令由 pipeline 在当前 tick 内执行，不重新放入下一 tick 的外部命令队列。AI 可以更新自己的状态和目标字段，但位置、血量、攻击冷却始终交给对应系统修改。
+AI 命令不入下一 tick 的外部队列；`CombatCompSystem` 每 tick 只推进一次冷却。`AIComponent.atk_interval_ms` 是 AI 产生攻击意图的间隔，`CombatComponent.atk_countdown_ms` 是战斗系统执行攻击的冷却，二者职责不同。
 
-攻击决策的命令顺序固定为：停止移动 → `AtkRotateCommand` → `AttackCommand`。当前角度契约与标准 `atan2` 符号相反，因此 AI 朝向使用 `-atan2(dy, dx)`；目标重合时保留原朝向，避免无意义转向。
+内部命令沿用 `connection_id=0`，仍经过移动与战斗校验。当前适配器会将拒绝事件交给 `send_to(connection_id)`；后续应明确内部拒绝结果的记录方式，不向不存在的客户端连接投递。
 
-服务端 AI 命令采用内部调用身份（沿用 `connection_id=0`，网络连接不得使用该值），`entity_id` 来自被遍历的敌人。AI 不经过 WebSocket Handler；网络消息仍必须由连接身份推导受控实体。内部身份不意味着可以跳过移动、死亡、冷却和战斗能力校验。
+## 5. 7B 工作表（全部待办）
 
-AI 可以读取冷却避免每 tick 发送注定被拒绝的攻击，但 `AttackCompSystem` 仍是最终校验者。保留当前冷却更新时序，不在此次 AI 接入中顺带重定义冷却算法；用 pipeline 测试固定行为。
+7B 前置条件为按当前接受的行为完成 7A 基础验收；暂缓 BUG 不作为阻碍。7B 的查询单测与两端联调用例均由 Codex 编写和执行。摄像头便于观察绕行，但不进入寻路算法的依赖。
 
-## 7. 寻路的最小设计
+| 编号 | 工作 | 主要文件 | 验收方式 |
+| --- | --- | --- | --- |
+| 7B-01 | 有限障碍网格和统一可行走查询 | `model/navigation_grid.py`、测试地图配置 | 移动与寻路使用同一障碍数据和实体尺寸规则 |
+| 7B-02 | 有节点展开上限的纯 A* | `tools/pathfinding.py` | 有路、无路、非法起终点和预算耗尽结果明确 |
+| 7B-03 | 路径状态与跟随 | `model/navigation_component.py`、`systems/ai_compsystem.py` | 通过移动命令跟随路径点，不直接设置坐标 |
+| 7B-04 | 单 tick 总预算与公平轮转 | `navigation_component.py`、`ai_compsystem.py`、`world.py` | 多敌人不突破预算，后面的敌人不会一直得不到查询 |
+| 7B-05 | 路径失效、重算间隔、无路重试与开关 | 同上、`json_config/ai_config.json` | 目标移动或路径阻塞可恢复，预算不足不误判为无路 |
+| 7B-06 | 移动合法性接入网格 | `systems/comp_system.py` | 检查整段移动与实体体积，大步长不能跨墙 |
+| 7B-07 | 纯查询测试及两端可见的障碍联调 | 寻路测试、AI 导航测试、`NavigationDebugView.gd` | 绕行、无路、预算耗尽、关闭寻路均通过 |
 
-### 7.1 查询与执行分开
+### 5.1 待新增文件与职责
 
-建议接口语义：`find_path(grid, start_cell, goal_cell, agent_radius, max_expansions) -> PathResult`。
+下列服务端路径以 `server/game/` 为基准；标出完整前缀的路径以仓库根目录为基准。
 
-`PathResult` 包含状态、路径点和实际展开节点数。状态至少区分 `FOUND`、`UNREACHABLE`、`INVALID_ENDPOINT`、`BUDGET_EXHAUSTED`。起点等于终点是合法结果。使用固定邻居顺序和确定的平局规则，保证测试可复现。
+| 文件 | 职责 |
+| --- | --- |
+| `model/navigation_grid.py` | 有限网格、坐标转换、地图版本、按实体半径查询可行走区域及移动线段 |
+| `model/navigation_component.py` | 每实体的路径点、索引、目标格、地图版本、重算计时；World 的全局轮转状态 |
+| `tools/pathfinding.py` | 纯 A* 查询；不写 World，不发送命令或消息 |
+| `server/tests/test_pathfinding.py` | 路径正确性、边界、不可达、展开上限 |
+| `server/tests/test_ai_navigation.py` | 跟随、停止、失效重算、总预算、公平性和不穿墙 |
+| `json_config/navigation_test_map.json` | 一张有限测试地图：格子尺寸、范围、障碍格；两端同一数据源 |
+| `client/Scirpt/game/level/NavigationDebugView.gd` | 在 `TestLevel/Map` 下画测试障碍，与实体使用同一世界坐标；不计算权威路径或碰撞 |
 
-首版使用四邻接网格，避免斜向穿墙角。返回路径需要按实体半径留出空间；移动也使用相同尺寸规则。不开路径平滑和跨帧搜索缓存，先用有界、同步的纯查询。
+接入时再调整 `world.py`、`ai_compsystem.py`、`config_loader.py` 和 `MovementCompSystem.check_can_move()`。测试网格无需依赖无限地形生成器。
 
-### 7.2 状态存在哪里
+手写配置只修改 `json_config/`，再通过 `tools/sync_config.py` 同步到两端 `config/`。地图也可由编辑器导出为该目录下的公共数据；若采用导出方案，该地图 JSON 是生成物，只修改制图源，不再同时手改 JSON。制作方式见第 5.5 节。首次固定地图联调可以使用同一发布包中的配置副本；未来有多地图或运行时地图变更时，再约定地图身份、版本及同步，不能让运行中的客户端提交地图覆盖服务端规则。
 
-- 地图、地图版本与全局轮转状态归 `GameWorld` 持有。
-- 每个敌人的路径、路径索引、目标格和重算计时归其 `NavigationComponent` 持有。
-- 搜索堆、已访问集合只存在于一次查询内部，查询结束后释放。
-- 当前 tick 的查询数、节点消耗是局部预算；所有查询共享同一个剩余预算。
-- `AISystem` 取得路径后只计算移动方向；靠近路径点时限制本次步长，避免低帧率越过节点反复折返，具体位移仍由移动系统执行。
+### 5.2 查询与执行分开
 
-如果现有 `MoveCommand` 只有方向而没有限制本次移动距离的字段，7B 再设计领域级的停止距离或目标点约束供移动系统使用；不允许 AI 直接“吸附”坐标到路径点，也不向客户端开放提交权威坐标的能力。
+建议查询语义：
 
-### 7.3 路径何时失效
+```text
+find_path(grid, start_cell, goal_cell, agent_radius, max_expansions) -> PathResult
+```
 
-目标换人或死亡、目标进入其他格子、地图版本变化、下一段不可行走、实体偏离路径或到达路径末端，都应重新评估路径。目标轻微移动但仍处于同格时不必立即重算。
+结果包含状态、路径点、实际展开节点数，至少区分 `FOUND`、`UNREACHABLE`、`INVALID_ENDPOINT`、`BUDGET_EXHAUSTED`。起终点相同是合法结果。使用固定邻居顺序和平局规则，保证复现。
 
-预算不足时，继续使用仍安全有效的旧路径；没有安全路径则发停止意图，下次轮到再尝试。无路时等待重试间隔或目标、地图变化，不每 tick 全量搜索。查询按稳定实体顺序配合轮转游标分配，避免总是优先同几个敌人。
+首版四邻接，按实体半径预留空间，不做路径平滑或跨帧搜索缓存。移动检查使用相同尺寸规则，并检查移动线段，不能只查终点。
 
-关闭寻路后走直线追踪策略；在障碍地图上移动合法性检查仍然生效，敌人遇墙停止，不能通过关闭寻路穿墙。
+AI 取得路径后只计算移动意图。接近路径点时需要限制本次移动距离，避免越过节点反复折返；7B 再给领域移动命令设计停止距离或目标点约束，位移仍由移动系统执行，客户端仍不能提交权威坐标。
 
-## 8. 阶段 6 问题如何影响本阶段
+### 5.3 状态与预算
 
-用户已要求 [阶段 6 BUG](PHASE6_BUGS.md) 暂缓修复。本方案不自动扩大为修复任务；若问题仍存在，在联调报告中明确记录影响，不能把 AI 自己的过滤当作底层战斗规则已完善。
+- 地图、地图版本、公平轮转游标归 `GameWorld` 持有。
+- 每个敌人的路径、当前索引、目标格与重算计时归其 `NavigationComponent` 持有。
+- 搜索堆与已访问集合只存在于一次查询内部。
+- 当前 tick 查询次数与节点消耗使用所有敌人共享的局部预算。
 
-| 问题 | 对阶段 7 的影响 | 本阶段安排 |
-| --- | --- | --- |
-| BUG-6-01：死亡或移除攻击者的残留攻击 | AI 死亡后不再发新命令，但此前攻击仍可能结算 | 分别测试“AI 停止决策”和“战斗取消攻击”；后者保留已知问题 |
-| BUG-6-02：转向越权 | 客户端可能改敌人朝向 | AI 内部正确取实体 ID；网络越权仍留在 BUG 文档 |
-| BUG-6-03：能力与阵营过滤缺失 | 多敌人可能互相伤害，不能宣称完整战斗规则验收通过 | 先用单敌人验证决策；多敌人联调单独标注现象 |
-| BUG-6-04：扇形判定错误 | 扇形攻击不能正常用于 AI | 首版配置 1004；不在 AI 中另写命中逻辑绕过问题 |
-| BUG-6-05：请求去重不足 | 外部玩家攻击请求仍有重放缺口 | 内部 AI 每次冷却可用时产生新的攻击意图，不假装解决网络请求去重 |
+在 `ai_config.json` 新增明确的 `navigation` 全局配置区，与现有按名称保存的 AI 参数分开。需要的字段为 `navigation_enabled`、`repath_interval_ms`、`waypoint_reach_distance`、`max_queries_per_tick`、`max_expanded_nodes_per_query`、`max_expanded_nodes_per_tick`。原有加载器会遍历顶层非注释键，增加全局区时必须一起调整解析，避免被当成一种 AI 配置。
 
-新客户端在约 666ms 死亡动画窗口内加入时未恢复尸体动画，按当前取舍接受，不作为阶段 7 阻碍。
+旧 `constants.json` 含寻路常量，接入时选择并记录唯一参数来源，不同时读取两套同义参数。
 
-## 9. 完成检查
+### 5.4 失效与失败策略
 
-- [ ] 空世界、无玩家时 AI 不报错、不移动。
-- [ ] 敌人发现、追逐并攻击玩家，伤害由现有战斗系统产生。
-- [ ] 攻击前先停止并转向，四个方向均正确，重合位置不出错。
-- [ ] 冷却、锁定、死亡约束仍由原系统生效；目标失效后无旧移动意图残留。
-- [ ] 两名玩家时目标选择稳定，断线或死亡后能重选。
-- [ ] 固定输入和固定 `dt` 的纯服务端测试可重复。
-- [ ] 固定障碍地图能够绕行，无路和预算不足时正确等待。
-- [ ] 寻路总预算受控，多个敌人不会长期饿死；关闭寻路后其他系统仍可测试。
-- [ ] 客户端复用权威帧显示结果，不计算 AI 或命中。
-- [ ] 阶段 6 已知问题与阶段 7 新问题分开记录，联调未通过的条件不勾选。
+目标换人或死亡、目标进入其他格、地图版本变化、下一段不可走、偏离路径或到达末端，都要重新评估。目标仍在同格时不必因轻微移动立即重算。
 
-推荐第一批只实施 7A-01 至 7A-06：让一只敌人能稳定找到玩家并追上来。确认移动链路后再接攻击、失效处理与寻路。
+预算不足时继续使用安全有效的旧路径；没有安全路径就停止，下次轮到再查。无路时等待重试间隔或目标、地图变化。稳定实体顺序配合轮转游标分配查询机会。
+
+关闭寻路后恢复直线追踪；障碍碰撞仍生效，遇墙停止，不能通过关寻路穿墙。
+
+### 5.5 固定测试地图如何制作
+
+V1 在 `client/Script/tiledmap/ChunkGenerator.gd` 和 `server/game/map_generator.py` 中分别实现区块生成器，用同一 seed 和算法生成逻辑地形。7B 可以先把输入换成固定地图数据；地图来源与可行走查询分开，未来再用生成器提供地形。
+
+以下两种制作方式都可行。当前只记录方案，尚未选定或实现地图导出工具；建议希望可视化画地图时采用编辑器导出方式。
+
+| 方式 | 制作入口 | 双端运行时输入 | 适用情形 |
+| --- | --- | --- | --- |
+| 手写配置 | 在 `json_config/navigation_test_map.json` 写格子与地形 | 同一 JSON 的两端副本 | 快速构造几堵墙、无路区域和寻路回归样本 |
+| Godot 编辑器制作并导出 | 用 `TileMapLayer` 画地形，运行导出脚本 | 导出的同一 JSON 的两端副本 | 希望直观看见地图并反复调整布局 |
+
+推荐的数据流：
+
+```text
+Godot 编辑器中的地图场景与 TileSet（制图源）
+  → 编辑器导出脚本
+  → json_config/navigation_test_map.json（运行时公共数据）
+  → tools/sync_config.py
+  ├── server/config/... → NavigationGrid → 移动与 A*
+  └── client/config/... → TileMapLayer 或调试绘制
+```
+
+Godot 可使用 TileSet 自定义数据标记逻辑地形；同一种 tile 的所有放置实例共享其自定义数据，可通过替代 tile 表达变体。[Godot TileSet 自定义数据说明](https://docs.godotengine.org/en/4.6/tutorials/2d/using_tilesets.html#assigning-custom-metadata-to-the-tileset-s-tiles)
+
+建议首版只导出一个方格地形层，装饰单独放层；地形 tile 携带 `terrain_id`，通行规则继续读取项目已有 `json_config/terrain_config.json`。例如 BRICK 和 WATER 不可走，GRASS 可走。不要同时维护独立的 `blocked` 与地形通行规则作为两套可写事实。
+
+导出脚本遍历 `TileMapLayer.get_used_cells()`，通过 `get_cell_tile_data()` 读取 TileData 自定义数据；首版使用普通 atlas tile，对空格或非 atlas tile 明确校验，不静默漏掉障碍。[Godot TileMapLayer API](https://docs.godotengine.org/en/4.6/classes/class_tilemaplayer.html)
+
+可以先用 `EditorScript` 提供一次手动导出入口，不需要先做完整插件。[Godot 编辑器脚本说明](https://docs.godotengine.org/en/4.6/tutorials/plugins/running_code_in_the_editor.html#one-off-scripts-using-editorscript)
+
+公共数据至少约定：地图 ID/版本、格子尺寸、有限范围、坐标原点、格子坐标与 `terrain_id`。客户端另用固定映射将地形 ID 转成贴图；服务端不需要贴图资源。首版约定范围外和未声明地形的格子不可走，明确格心/格角坐标关系；可通过 Godot 的 `map_to_local()` 取得格心再转换到世界坐标进行双端比对。首版不支持旋转、缩放的逻辑地形层，导出时检查并提示。
+
+**可以在客户端编辑器制作地图，但当前 Python 服务端不能直接把 Godot `.tscn`、TileSet 和 TileMapLayer 当作自己的地图模型加载。** 用 Godot 负责读取场景并导出公共 JSON，Python 读取 JSON 即可。制作场景是开发工具输入；实际客户端和服务端统一读取导出版本，可减少“场景已改、服务端配置未更新”的分歧。
+
+由 Codex 编写并执行导出与双端一致性用例：同一制图源重复导出内容稳定；图中每个地形格与公共数据相符；Python 与 Godot 对相同格子给出相同地形和通行结果；格心、负坐标、边界一致；移动按实体半径检查整段位移而非只查格心。导出工具和这些用例都在实施地图步骤时再创建，摄像头仍先做。
+
+## 6. 阶段 6 与验收边界
+
+[阶段 6 BUG 记录](PHASE6_BUGS.md) 是早期记录，不能直接当作当前代码事实。当前工作区已增加死亡攻击者跳过结算、攻击层过滤，并修改扇形几何；当前 1001 在本次四方向探测中能扣血。这些证据不足以宣布对应 BUG 的所有边界已关闭，需另行做阶段 6 回归。
+
+7A 重点验证 AI 决策不能绕过原移动与战斗入口；不在 AI 里另写命中或伤害算法。摄像头与地图显示同样不承担权威规则。
+
+## 7. 完成检查（用例编写与执行负责人：Codex）
+
+### 7A
+
+- [ ] 补齐空世界、无玩家、重合位置、四向朝向的 AI 专项回归。
+- [ ] 固定输入与固定 `dt` 得到相同结果；同 tick 命令顺序有测试。
+- [ ] 验证超距后停止并在后续 tick 重选，接受 BUG-7-01 的时序，不要求先修复。
+- [ ] 验证等待期间停止、间隔结束后攻击；状态标签和 AI 快照按 BUG-7-03、BUG-7-04 暂缓。
+- [ ] 验证按当前插入顺序选人且保留有效目标；玩家死亡或移除后可当次停止或重选。不同插入顺序的平局规则按 BUG-7-02 暂缓。
+- [1] 死亡追逐敌人停止移动，不再产生 AI 命令，并同步停止事件（现有测试通过）。
+- [ ] 接回摄像头后完成单敌人单玩家、单敌人双玩家及真实断线联调。
+- [ ] 实现后更新 `docs/MODULE_RESPONSIBILITIES.md` 的 AI 职责与 tick 顺序。
+
+### 7A.5 与 7B
+
+- [ ] 完成 [摄像头工作方案](PHASE7_CAMERA_WORK_PLAN.md) 的跟随与生命周期验收。
+- [ ] 客户端能看见服务端采用的固定障碍布局。
+- [ ] 绕行、无路、非法端点与预算耗尽结果正确。
+- [ ] 总预算受控且分配公平，实体不能跨墙或斜穿墙角。
+- [ ] 关闭寻路后仍可独立测试 7A，障碍地图上的碰撞仍生效。
+- [ ] 只把实际完成并验证的内容同步到总清单。

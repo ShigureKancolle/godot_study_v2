@@ -3,14 +3,19 @@
 
 import asyncio
 import logging
+from game.model.ai_component import AIComponent
 import game.model.entity as entity
 import game.commands as command
 import game.events as event
+from game.model.navigation_component import NavigationComponent
+from game.systems.ai_compsystem import AICompSystem
 import game.systems.comp_system as comp_system
 import game.systems.combat_compsystem as combat_comp_system
 import game.model.components as comps
 import game.model.combat_component as combat_component
 import game.model.config_loader as config_loader
+import game.model.navigation_grid as navigation_grid
+import game.tools.pathfinder as pathfinder
 from typing import Tuple
 import typing
 if typing.TYPE_CHECKING:
@@ -51,6 +56,9 @@ class GameWorld:
         self._entity_idx: int = 0
         self._command_router: "command_router.CommandRouter" = None
         self._tick_pipeline: "tick_pipeline.TickPipeline" = None
+        self._ai_comp_system: AICompSystem = None
+        self.map_id: str = navigation_grid.TEST_MAP_ID
+        self.pathfinder = pathfinder.PathFinder(self.map_id)
         self.register_command_handlers()
 
     async def start(self):
@@ -75,6 +83,16 @@ class GameWorld:
             except Exception:
                 logger.exception(
                     f"执行Command失败： server_tick={self._tick}, command={type(cur_command).__name__}, {cur_command}"
+                )
+
+        # ai 操作要在pipline的update之前 不然会导致ai命令永远慢一帧
+        ai_commands = self._ai_comp_system.decide(self, dt)
+        for ai_command in ai_commands:
+            try:
+                events.extend(self._tick_pipeline.dispatch(self, ai_command))
+            except Exception:
+                logger.exception(
+                    f"执行Command失败： server_tick={self._tick}, command={type(ai_command).__name__}, {ai_command}"
                 )
         
         events.extend(list(self._tick_pipeline.update(self, dt)))
@@ -123,14 +141,37 @@ class GameWorld:
 
         # death
         import game.systems.death_system as death_system
-        self._tick_pipeline.add_system(death_system.DeathSystem())
+        _death_system = death_system.DeathSystem()
+        # self._command_router.register(command.DeathCommand, _death_system.apply_command)
+        self._tick_pipeline.add_system(_death_system)
 
         # spawn enemy
         import game.systems.spawn_compsystem as spawn_compsystem
         spawn_enemy_comp_system = spawn_compsystem.SpawnEnemySystem()
         self._command_router.register(command.SpawnEnemyCommand, spawn_enemy_comp_system.apply_command)
         self._tick_pipeline.add_system(spawn_enemy_comp_system)
+
+        # ai 操作要在pipline的update之前 不然会导致ai命令永远慢一帧
+        self._ai_comp_system = AICompSystem()
+        # # self._command_router.register(command.AICommand, ai_comp_system.apply_command)
+        # self._tick_pipeline.add_system(ai_comp_system)
+
+    # def register_system(self, system_type: type[comp_system.CompSystem]):
+    #     system = system_type()
+    #     self._tick_pipeline.add_system(system)
+    #     self._command_router.register(system_type, system.apply_command)
         
+    def cur_tick(self) -> int:
+        return self._tick
+
+    def milliseconds_to_ticks(self, milliseconds: int, tick_rate: int = 0) -> int:
+        '''将毫秒向上取整为tick数。tick_rate为每秒tick数'''
+        if tick_rate <= 0:
+            # 这个tickrate也许要放在config里？
+            import app.game_runtime as game_runtime
+            tick_rate = game_runtime.TICK_RATE
+
+        return (milliseconds * tick_rate + 999) // 1000
 
     # endregion command
 
@@ -167,6 +208,7 @@ class GameWorld:
         assert capability.body_shape == config_loader.ShapeType.CIRCLE
         player.hit_box.shape_type = config_loader.ShapeType.CIRCLE
         player.hit_box.radius = getattr(capability.body_params, "radius", 0.0)
+        player.hit_box.hit_layer = capability.hit_layer
 
         player.add_component(comps.PlayerComponent(account_id=account, player_name=player_name))
         player.add_component(comps.TransformComponent(x=0.0, y=0.0))
@@ -174,6 +216,7 @@ class GameWorld:
         player.add_component(comps.FacingComponent(facing=(0.0, 0.0)))
         combat_comp = combat_component.CombatComponent()
         combat_comp.load_combat_config("player")
+        combat_comp.attack_mask = capability.attack_mask
         
         player.add_component(combat_comp)
         self.add_entity(player)
@@ -193,10 +236,17 @@ class GameWorld:
         assert capability.body_shape == config_loader.ShapeType.CIRCLE
         enemy.hit_box.shape_type = config_loader.ShapeType.CIRCLE
         enemy.hit_box.radius = getattr(capability.body_params, "radius", 0.0)
+        enemy.hit_box.hit_layer = capability.hit_layer
 
+        if capability.ai_id:
+            enemy.add_component(AIComponent(config_name=capability.ai_id))
+            enemy.add_component(NavigationComponent())
+        speed = config_loader.get_speed(enemy_type)
+        enemy.add_component(comps.MovementComponent(speed=speed))
         enemy.add_component(comps.TransformComponent(x=x, y=y))
         combat_comp = combat_component.CombatComponent()
         combat_comp.load_combat_config(enemy_type)
+        combat_comp.attack_mask = capability.attack_mask
         enemy.add_component(combat_comp)
         self.add_entity(enemy)
         return enemy

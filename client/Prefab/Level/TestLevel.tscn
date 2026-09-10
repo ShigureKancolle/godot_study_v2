@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cwi56253vlye7"]
 
 [ext_resource type="Script" uid="uid://bo8rt2672eijc" path="res://Scirpt/game/level/TestLevel.gd" id="1_fsj4o"]
+[ext_resource type="Script" uid="uid://drxu751wm77ys" path="res://Scirpt/game/level/CameraFollow.gd" id="2_8ngca"]
 
 [node name="TestLevel" type="Node2D" unique_id=1951370242]
 script = ExtResource("1_fsj4o")
@@ -12,6 +13,9 @@ script = ExtResource("1_fsj4o")
 [node name="Effect" type="Node2D" parent="." unique_id=1638257952]
 
 [node name="DamageNum" type="Node2D" parent="." unique_id=1361740435]
+
+[node name="PlayerCamera" type="Camera2D" parent="." unique_id=1512881538]
+script = ExtResource("2_8ngca")
 
 [node name="Hud" type="Node2D" parent="." unique_id=457178477]
 
