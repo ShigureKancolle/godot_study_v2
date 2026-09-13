@@ -87,7 +87,7 @@ class PathFinder:
         while(todo_list):
             f, x, y = heapq.heappop(todo_list)
             if (x, y) == end_block:
-                return self._reconstruct_path(parent_map, (x, y))
+                return self._reconstruct_path(parent_map, (x, y), start_pos, end_pos)
 
             for dx, dy, is_diagonal in _DIRECTIONS:
                 new_x = x + dx
@@ -124,7 +124,7 @@ class PathFinder:
         return float(max(dx, dy)) + (DIAGONAL_COST - 1.0) * float(min(dx, dy))
             
 
-    def _reconstruct_path(self, parent_map: dict[tuple[int, int], tuple[int, int]], end_pos: tuple[int, int]) -> list[tuple[int, int]]:
+    def _reconstruct_path(self, parent_map: dict[tuple[int, int], tuple[int, int]], end_pos: tuple[float, float] | None = None) -> list[tuple[int, int]]:
         '''重建路径'''
         path = []
         current = end_pos
@@ -133,7 +133,12 @@ class PathFinder:
             world_pos = self._block_center_to_world_pos(current[0], current[1])
             path.append(world_pos)
             current = parent_map[current]
-        path.reverse()
+
+        path.reverse()  
+
+        if end_pos is not None:
+            path.append(end_pos)
+            
         return path
 
 

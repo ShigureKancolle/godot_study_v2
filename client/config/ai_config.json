@@ -1,5 +1,6 @@
 {
-    "_desc": "敌人 AI 配置",
+    "_desc": "敌人 AI 配置，唯一源文件为 json_config/ai_config.json；新增实体的 ai_id 必须引用本表条目",
+    "_timing_desc": "attack_interval_ms 是两次攻击意图的间隔，attack_config 的 colldown_ms 是攻击冷却；两者都从攻击开始计算，不相加",
     "_attack_distance": "攻击距离",
     "_check_distance": "索敌检查距离",
     "_out_combat_distance": "脱战距离",
@@ -28,6 +29,36 @@
             "out_combat_distance": 600,
             "attack_interval_ms": 800,
             "attack_id": 1001
+        }
+    },
+    "runner_ai_001": {
+        "_desc": "疾行怪：近身后短前摇攻击，索敌范围延续现有基线",
+        "params": {
+            "attack_distance": 46.0,
+            "check_distance": 500,
+            "out_combat_distance": 600,
+            "attack_interval_ms": 1000,
+            "attack_id": 2001
+        }
+    },
+    "elite_ai_001": {
+        "_desc": "精英：攻击意图间隔覆盖前摇与恢复时间，依赖客户端提供可见预警",
+        "params": {
+            "attack_distance": 80.0,
+            "check_distance": 500,
+            "out_combat_distance": 600,
+            "attack_interval_ms": 1800,
+            "attack_id": 2002
+        }
+    },
+    "boss_ai_001": {
+        "_desc": "首领：单招近战起点；索敌与地图外刷怪的适配留给刷怪接入阶段",
+        "params": {
+            "attack_distance": 140.0,
+            "check_distance": 500,
+            "out_combat_distance": 600,
+            "attack_interval_ms": 2600,
+            "attack_id": 2003
         }
     }
 }

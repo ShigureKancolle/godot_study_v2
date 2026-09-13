@@ -1,0 +1,116 @@
+{
+    "_comment": "局内经验与奖励配置；唯一源文件在 json_config，修改后运行 tools/sync_config.py；双端加载器提供读取接口，奖励结算逻辑待接入",
+    "_units": "比例使用小数，例如 0.12 表示 12%；同类基础百分比加算，最终属性统一计算，生命和攻击最后向下取整",
+    "schema_version": 1,
+    "progression": {
+        "_desc": "数组下标 L-1 对应从 L 级升到 L+1 级；总需求 600，初始 1 级，最多 15 次选择",
+        "initial_level": 1,
+        "max_level": 16,
+        "next_level_xp": [12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68],
+        "base_pickup_radius_px": 120.0,
+        "collect_dropped_xp_on_stage_end": true,
+        "overflow_policy": "statistics_only"
+    },
+    "choice": {
+        "_desc": "服务端保存候选；先过滤达到次数上限的奖励，再按权重无放回抽取；保证项已全满时取消该限制",
+        "option_count": 3,
+        "timeout_ms": 8000,
+        "pause_single_player": true,
+        "pause_multiplayer": false,
+        "pool": ["attack_up", "attack_frequency_up", "attack_range_up", "max_hp_up", "move_speed_up", "pickup_radius_up"],
+        "guaranteed_any_of": ["attack_up", "attack_frequency_up"],
+        "auto_choice_priority": ["attack_up", "attack_frequency_up", "max_hp_up", "attack_range_up", "move_speed_up", "pickup_radius_up", "heal_once"],
+        "fallback_reward_id": "heal_once",
+        "fallback_max_per_choice": 1,
+        "allow_fewer_options": true,
+        "empty_choice_policy": "complete_without_reward"
+    },
+    "effect_rules": {
+        "_desc": "以下是后续奖励执行器的操作契约，当前尚无执行器；持续强化结束于本局结束",
+        "add_base_ratio": "按初始模板值计算，同属性比例相加；攻击频率作用于冷却、各段命中时间与持续时间的同一时间缩放",
+        "add_flat": "在基础百分比运算之后加入固定值；精英攻击加成不再被攻击卡放大",
+        "heal_flat": "增加当前生命并限制在最大生命内；最大生命强化先增加上限，再回复同等数值",
+        "heal_max_hp_ratio": "按当前最大生命乘比例向下取整后回复，结果不超过最大生命；满血时该一次性选项无效",
+        "attack_range": "缩放判定半径、宽度、长度；角度、矩形起点偏移、命中次数和击退距离保持不变"
+    },
+    "rewards": {
+        "attack_up": {
+            "name": "攻击强化",
+            "description": "基础攻击力提高 12%",
+            "weight": 1,
+            "max_stacks": 5,
+            "effects": [{"stat": "attack", "operation": "add_base_ratio", "value": 0.12}]
+        },
+        "attack_frequency_up": {
+            "name": "攻速强化",
+            "description": "攻击频率提高 8%，攻击时序同步缩短",
+            "weight": 1,
+            "max_stacks": 4,
+            "effects": [{"stat": "attack_frequency", "operation": "add_base_ratio", "value": 0.08}]
+        },
+        "attack_range_up": {
+            "name": "范围强化",
+            "description": "基础攻击判定的线性尺寸提高 10%",
+            "weight": 1,
+            "max_stacks": 3,
+            "effects": [{"stat": "attack_range", "operation": "add_base_ratio", "value": 0.10}]
+        },
+        "max_hp_up": {
+            "name": "生命强化",
+            "description": "最大生命增加 20，并立即回复 20 生命",
+            "weight": 1,
+            "max_stacks": 4,
+            "effects": [
+                {"stat": "max_hp", "operation": "add_flat", "value": 20},
+                {"stat": "hp", "operation": "heal_flat", "value": 20}
+            ]
+        },
+        "move_speed_up": {
+            "name": "移速强化",
+            "description": "基础移动速度提高 5%",
+            "weight": 1,
+            "max_stacks": 3,
+            "effects": [{"stat": "move_speed", "operation": "add_base_ratio", "value": 0.05}]
+        },
+        "pickup_radius_up": {
+            "name": "拾取强化",
+            "description": "基础经验吸收半径提高 25%",
+            "weight": 1,
+            "max_stacks": 2,
+            "effects": [{"stat": "pickup_radius", "operation": "add_base_ratio", "value": 0.25}]
+        },
+        "heal_once": {
+            "_desc": "仅在常规候选不足时使用；每次立即生效，不保存属性叠层",
+            "name": "急救",
+            "description": "立即回复最大生命的 25%",
+            "weight": 1,
+            "max_stacks": null,
+            "effects": [{"stat": "hp", "operation": "heal_max_hp_ratio", "value": 0.25}]
+        }
+    },
+    "kill_rewards": {
+        "_desc": "仅真实击杀触发；普通经验由任意队友拾取后按开局人数平分给各存活玩家，小数保留；精英按每位存活玩家完整发放，不再生成普通经验球",
+        "enemy_slime": {"xp": 1, "delivery": "orb_shared", "bundle_id": ""},
+        "enemy_skeleton": {"xp": 2, "delivery": "orb_shared", "bundle_id": ""},
+        "enemy_runner": {"xp": 2, "delivery": "orb_shared", "bundle_id": ""},
+        "enemy_elite": {"xp": 12, "delivery": "direct_each_alive", "bundle_id": "elite_kill"},
+        "enemy_boss": {"xp": 0, "delivery": "none", "bundle_id": ""}
+    },
+    "bundles": {
+        "elite_kill": {
+            "_desc": "每个精英事件只授予一次，每位存活玩家每局最多获得三次，不弹出额外选择",
+            "max_grants_per_run": 3,
+            "effects": [
+                {"stat": "attack", "operation": "add_flat", "value": 4},
+                {"stat": "hp", "operation": "heal_max_hp_ratio", "value": 0.15}
+            ]
+        }
+    },
+    "settlement": {
+        "_desc": "积分只用于成绩展示，不能购买局外属性；重开清除全部局内成长",
+        "completed_normal_stage_score": 100,
+        "elite_kill_score": 200,
+        "boss_kill_score": 1000,
+        "reset_progression_on_restart": true
+    }
+}

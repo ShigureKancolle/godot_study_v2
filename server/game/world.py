@@ -11,11 +11,13 @@ from game.model.navigation_component import NavigationComponent
 from game.systems.ai_compsystem import AICompSystem
 import game.systems.comp_system as comp_system
 import game.systems.combat_compsystem as combat_comp_system
+import game.systems.game_mode.game_mode as game_mode_module
 import game.model.components as comps
 import game.model.combat_component as combat_component
 import game.model.config_loader as config_loader
 import game.model.navigation_grid as navigation_grid
 import game.tools.pathfinder as pathfinder
+import game.systems.game_mode.survival_mode as survival_mode_module
 from typing import Tuple
 import typing
 if typing.TYPE_CHECKING:
@@ -36,7 +38,8 @@ def get_room():
 
 def create_room():
     global game_room
-    game_room = GameWorld()
+    current_game_mode = survival_mode_module.SurvivalMode()
+    game_room = GameWorld(current_game_mode)
 
 # endregion
 
@@ -48,20 +51,29 @@ def get_room_id():
     return f"room_{room_id:04d}"
 
 class GameWorld:
-    def __init__(self):
+    def __init__(self, current_game_mode: game_mode_module.GameMode | None = None):
         self.room_id: str = get_room_id()
         self._entites: dict[str, entity.Entity] = {}
+        self._enemys: dict[str, dict[str, entity.Entity]] = {}
         self._pending_commands: list[command.Command] = []
         self._tick: int = 0
         self._entity_idx: int = 0
         self._command_router: "command_router.CommandRouter" = None
         self._tick_pipeline: "tick_pipeline.TickPipeline" = None
         self._ai_comp_system: AICompSystem = None
+        self._game_mode = current_game_mode if current_game_mode is not None else game_mode_module.GameMode()
+        self._system_instances: dict[type[comp_system.CompSystem], comp_system.CompSystem] = {}
         self.map_id: str = navigation_grid.TEST_MAP_ID
         self.pathfinder = pathfinder.PathFinder(self.map_id)
-        self.register_command_handlers()
+
+        self.init_pipeline()
+        self.register_common_command_handlers()
+        self.register_game_mode_command_handlers()
+        self.register_update_system()
+        self.register_always_update_system()
 
     async def start(self):
+        # 在这里初始化gamemode
         pass
 
     def get_next_entity_idx(self):
@@ -74,6 +86,7 @@ class GameWorld:
             raise ValueError("dt must be greater than 0")
 
         events: list[event.Event] = []
+        events.extend(self(self._game_mode.before_step(self, dt)))
         commands = self._pending_commands
         self._pending_commands = []
 
@@ -85,17 +98,19 @@ class GameWorld:
                     f"执行Command失败： server_tick={self._tick}, command={type(cur_command).__name__}, {cur_command}"
                 )
 
-        # ai 操作要在pipline的update之前 不然会导致ai命令永远慢一帧
-        ai_commands = self._ai_comp_system.decide(self, dt)
-        for ai_command in ai_commands:
-            try:
-                events.extend(self._tick_pipeline.dispatch(self, ai_command))
-            except Exception:
-                logger.exception(
-                    f"执行Command失败： server_tick={self._tick}, command={type(ai_command).__name__}, {ai_command}"
-                )
+        if self._game_mode.can_update_system(game_mode_module.SystemScope.GAMEPLAY):
+            # AI 操作要在 pipeline 的 update 之前，否则 AI 命令会慢一帧。
+            ai_commands = self._ai_comp_system.decide(self, dt)
+            for ai_command in ai_commands:
+                try:
+                    events.extend(self._tick_pipeline.dispatch(self, ai_command))
+                except Exception:
+                    logger.exception(
+                        f"执行Command失败： server_tick={self._tick}, command={type(ai_command).__name__}, {ai_command}"
+                    )
         
         events.extend(list(self._tick_pipeline.update(self, dt)))
+        events.extend(self._game_mode.after_step(self, dt))
 
         self._tick += 1
         return event.TickResult(
@@ -106,61 +121,78 @@ class GameWorld:
     def enqueue_command(self, command: command.WorldCommand):
         self._pending_commands.append(command)
 
-    def register_command_handlers(self):
+    def init_pipeline(self):
+        """初始化tick pipeline。"""
         import game.command_router as command_router
         import game.tick_pipeline as tick_pipeline
-        
         self._command_router = command_router.CommandRouter()
         self._tick_pipeline = tick_pipeline.TickPipeline()
         self._tick_pipeline.set_command_router(self._command_router)
 
-        # move 
-        movement_comp_system = comp_system.MovementCompSystem()
-        self._command_router.register(command.MoveCommand, movement_comp_system.apply_command)
-        self._tick_pipeline.add_system(movement_comp_system)   
+    @property
+    def game_mode(self) -> game_mode_module.GameMode:
+        """返回当前世界独占的游戏模式实例。"""
+        return self._game_mode
 
-        # join
-        join_comp_system = comp_system.JoinCompSystem()
-        self._command_router.register(command.JoinCommand, join_comp_system.apply_command)
-        self._tick_pipeline.add_system(join_comp_system)
+    def register_system(
+        self,
+        system_type: type[comp_system.CompSystem],
+        command_type: type[command.WorldCommand] | None = None,
+        command_scope: game_mode_module.CommandScope = game_mode_module.CommandScope.GAMEPLAY,
+        update_scope: game_mode_module.SystemScope | None = None,
+    ) -> comp_system.CompSystem:
+        """复用同一个系统实例注册命令处理和周期更新。"""
+        system = self._system_instances.get(system_type)
+        if system is None:
+            system = system_type()
+            self._system_instances[system_type] = system
 
-        # attack
-        attack_comp_system = comp_system.AttackCompSystem()
-        self._command_router.register(command.AttackCommand, attack_comp_system.apply_command)
-        self._tick_pipeline.add_system(attack_comp_system)
+        if command_type is not None:
+            self._command_router.register(command_type, system.apply_command, command_scope)
+        if update_scope is not None:
+            self._tick_pipeline.add_system(system, update_scope)
+        return system
 
-        # leave
-        leave_comp_system = comp_system.LeaveCompSystem()
-        self._command_router.register(command.LeaveCommand, leave_comp_system.apply_command)
-        self._tick_pipeline.add_system(leave_comp_system)
-
-        # combat
-        _combat_comp_system = combat_comp_system.CombatCompSystem()
-        self._command_router.register(command.AtkRotateCommand, _combat_comp_system.apply_command)
-        self._tick_pipeline.add_system(_combat_comp_system)
-
-        # death
-        import game.systems.death_system as death_system
-        _death_system = death_system.DeathSystem()
-        # self._command_router.register(command.DeathCommand, _death_system.apply_command)
-        self._tick_pipeline.add_system(_death_system)
-
-        # spawn enemy
+    def register_common_command_handlers(self):
+        """注册通用命令处理函数。"""
         import game.systems.spawn_compsystem as spawn_compsystem
-        spawn_enemy_comp_system = spawn_compsystem.SpawnEnemySystem()
-        self._command_router.register(command.SpawnEnemyCommand, spawn_enemy_comp_system.apply_command)
-        self._tick_pipeline.add_system(spawn_enemy_comp_system)
 
-        # ai 操作要在pipline的update之前 不然会导致ai命令永远慢一帧
-        self._ai_comp_system = AICompSystem()
-        # # self._command_router.register(command.AICommand, ai_comp_system.apply_command)
-        # self._tick_pipeline.add_system(ai_comp_system)
+        self.register_system(comp_system.MovementCompSystem, command.MoveCommand)
+        self.register_system(
+            comp_system.JoinCompSystem,
+            command.JoinCommand,
+            game_mode_module.CommandScope.LIFECYCLE,
+        )
+        self.register_system(comp_system.AttackCompSystem, command.AttackCommand)
+        self.register_system(
+            comp_system.LeaveCompSystem,
+            command.LeaveCommand,
+            game_mode_module.CommandScope.LIFECYCLE,
+        )
+        self.register_system(combat_comp_system.CombatCompSystem, command.AtkRotateCommand)
+        self.register_system(spawn_compsystem.SpawnEnemySystem, command.SpawnEnemyCommand)
 
-    # def register_system(self, system_type: type[comp_system.CompSystem]):
-    #     system = system_type()
-    #     self._tick_pipeline.add_system(system)
-    #     self._command_router.register(system_type, system.apply_command)
-        
+
+    def register_game_mode_command_handlers(self):
+        """注册游戏模式命令处理函数。"""
+        self._game_mode.register_command_handlers(self._command_router)
+
+    def register_update_system(self):
+        """注册更新系统。"""
+        import game.systems.death_system as death_system
+
+        self.register_system(comp_system.MovementCompSystem, update_scope=game_mode_module.SystemScope.GAMEPLAY)
+        self.register_system(comp_system.AttackCompSystem, update_scope=game_mode_module.SystemScope.GAMEPLAY)
+        self.register_system(combat_comp_system.CombatCompSystem, update_scope=game_mode_module.SystemScope.GAMEPLAY)
+        self.register_system(death_system.DeathSystem, update_scope=game_mode_module.SystemScope.GAMEPLAY)
+
+        self._ai_comp_system = self.register_system(AICompSystem)
+
+    def register_always_update_system(self):
+        """注册始终更新系统。"""
+        # 当前没有需要在玩法暂停期间按 dt 推进的通用系统。
+        pass
+
     def cur_tick(self) -> int:
         return self._tick
 
@@ -249,7 +281,23 @@ class GameWorld:
         combat_comp.attack_mask = capability.attack_mask
         enemy.add_component(combat_comp)
         self.add_entity(enemy)
+
+        if enemy_type not in self._enemys:
+            self._enemys[enemy_type] = {}
+        self._enemys[enemy_type][enemy.entity_id] = enemy
         return enemy
+
+    def get_enemies(self, enemy_type: str = None) -> list["entity.Entity"]:
+        if enemy_type is None:
+            return list(self._enemys.values())
+        return list(self._enemys[enemy_type].values())
+
+    def enemy_count(self, enemy_type: str | list[str] = None) -> int:
+        if enemy_type is None:
+            return len(self._enemys)
+        elif isinstance(enemy_type, str):
+            enemy_type = [enemy_type]
+        return sum([len(self._enemys[_enemy_type]) for _enemy_type in enemy_type if _enemy_type in self._enemys])
 
     # endregion enemy
 

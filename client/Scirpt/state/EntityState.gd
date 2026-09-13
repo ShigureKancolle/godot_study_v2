@@ -15,6 +15,7 @@ enum EntityType {
 var entity_id: String = ""
 var player_name: String = ""
 var entity_type: int = 0
+var entity_config_key: String = ""
 
 var server_position: Vector2 = Vector2.ZERO
 var facing_dir: Vector2 = Vector2.ZERO
@@ -31,6 +32,7 @@ static func from_entity_info(entity_info: GameProto.EntityInfo) -> EntityState:
 	state.entity_id = entity_info.get_entity_id()
 	state.player_name = entity_info.get_player_name()
 	state.entity_type = entity_info.get_entity_type()
+	state.entity_config_key = entity_info.get_entity_config_key()
 	state.server_position = Vector2(entity_info.get_x(), entity_info.get_y())
 	state.facing_dir = Vector2(entity_info.get_facing_x(), entity_info.get_facing_y())
 	state.anim_state = entity_info.get_anim_state()

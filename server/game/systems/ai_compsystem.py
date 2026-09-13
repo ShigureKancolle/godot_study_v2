@@ -226,8 +226,9 @@ class AICompSystem(CompSystem):
 
             dx = _p_transform_comp.x - _transform_comp.x
             dy = _p_transform_comp.y - _transform_comp.y
-            if dx ** 2 + dy ** 2 > _ai_params.check_distance ** 2:
-                continue
+            # 不论多远 都去追
+            # if dx ** 2 + dy ** 2 > _ai_params.check_distance ** 2:
+            #     continue
 
            
             if min_distance > dx ** 2 + dy ** 2:
@@ -349,6 +350,9 @@ class AICompSystem(CompSystem):
             _navigation_comp.planned_target_block = target_block
             unreachable_retry_ms = config_loader.get_navigation_ai_config().unreachable_retry_ms
             _navigation_comp.unreachable_retry_tick = world.cur_tick() + world.milliseconds_to_ticks(unreachable_retry_ms)
+
+            # 寻路失败了 就直接把路径设置到玩家
+            _navigation_comp.path = [(_transform_comp.x, _transform_comp.y)]
             return False
 
     def move_by_path(self, attacker:"Entity", dt: float):

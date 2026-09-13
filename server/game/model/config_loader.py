@@ -1,34 +1,9 @@
 # coding=utf-8
-"""
-文件: server/config/config_loader.py
-作用: 从 JSON 配置文件构造 Python 对象(单数据源在 shared_config/,由 sync_config.py 同步过来)
+"""读取 server/config 中的 JSON，并构造攻击、实体、AI、生存与奖励配置。
 
-============================================================================
- 为什么需要 config_loader
-============================================================================
-之前配置(ATTACK_CONFIG / ENTITY_CAPABILITIES / HURT_DURATION_MS)硬编码在代码里,
-双端各写一份,易漏改。改成 JSON 单数据源后,需要 loader 读取 JSON 并构造对象。
-
-config_loader 是配置访问的唯一入口:
-    - 读取 server/config/*.json(sync_config.py 从 shared_config/ 复制过来)
-    - 构造 dataclass 对象返回(保持类型安全,IDE 可补全)
-    - JSON 里下划线开头的字段(_comment / _desc / _shape_type_values 等)是注释,
-      loader 读取时跳过
-
-============================================================================
- 和 game_room / entity_config 的关系
-============================================================================
-config_loader 只负责"读 JSON + 构造对象",不包含业务逻辑。
-game_room 和 entity_config 通过调 config_loader 获取配置,然后做自己的事:
-    - game_room.get_attack_hits 用 config_loader 构造的 AttackShape 做碰撞判定
-    - entity_config.get_capability 用 config_loader 构造的 EntityCapability 做能力校验
-
-============================================================================
- 热更影响
-============================================================================
-config_loader 在模块加载时一次性读取 JSON 缓存到模块级变量。
-热更 reload config_loader 模块时会重新读 JSON,但引用旧对象的代码还是用旧配置。
-如需运行时热更配置,要手动调 reload(),且 game_room/entity_config 也要一起 reload。
+唯一源表位于 json_config，使用 tools/sync_config.py 同步到双端。
+服务端启动时读取字段并缓存，不做配置内容校验；修改配置后重启双端。
+生存与奖励入口返回隔离副本，属性计算与发奖由玩法系统负责。
 """
 
 '''
@@ -49,12 +24,18 @@ attack_mask 挂在实体类型上(玩家=2 打敌人层,敌人=1 打玩家层),
 import json
 import math
 import os
+from copy import deepcopy
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
+from game.model.balance_config import (
+    RewardConfig, RewardDefinition, SurvivalConfig, SurvivalStage,
+    build_reward_config, build_survival_config, strip_comments,
+)
 
-# config 目录:server/config/(本文件就在这个目录下)
-_SERVER_DIR = os.path.dirname("")
-_CONFIG_DIR = os.path.join(_SERVER_DIR, "config/")
+# 根据模块位置定位配置，不依赖启动进程时的工作目录。
+_SERVER_DIR = Path(__file__).resolve().parents[2]
+_CONFIG_DIR = _SERVER_DIR / "config"
 
 # ===========================================================================
 # 形状类型枚举(共用,实体和攻击都用这个)
@@ -406,10 +387,13 @@ def _build_vision(entry_dict: dict) -> VisionParams:
 # ===========================================================================
 
 def _load_json(filename: str) -> dict:
-    """读取 server/config/ 下的 JSON 文件"""
-    filepath = os.path.join(_CONFIG_DIR, filename)
-    with open(filepath, "r", encoding="utf-8") as f:
-        return json.load(f)
+    """读取 JSON，解析失败时报告文件和行列位置。"""
+    filepath = _CONFIG_DIR / filename
+    with filepath.open("r", encoding="utf-8") as stream:
+        try:
+            return json.load(stream)
+        except json.JSONDecodeError as error:
+            raise ValueError(f"{filepath}:{error.lineno}:{error.colno}: {error.msg}") from error
 
 
 def _build_attack_config_map(raw: dict) -> Dict[int, AttackConfig]:
@@ -499,6 +483,8 @@ _CONSTANTS_RAW = _load_json("constants.json")
 _TERRAIN_CONFIG_RAW = _load_json("terrain_config.json")
 _VISION_CONFIG_RAW = _load_json("vision_config.json")
 _AI_CONFIG_RAW = _load_json("ai_config.json")
+_REWARD_CONFIG_RAW = _load_json("reward_config.json")
+_SURVIVAL_CONFIG_RAW = _load_json("survival_config.json")
 
 _NAVIGATION_MAP_MAP: Dict[str, NavigationMap] = {}
 _NAVIGATION_AI_CONFIG: NavigationAiConfig = _build_navigation_ai_config(
@@ -510,6 +496,39 @@ _ENTITY_CAPABILITY_MAP: Dict[str, EntityCapability] = _build_entity_capability_m
 _CONSTANTS: dict = _build_constants(_CONSTANTS_RAW)
 _TERRAIN_CAPABILITY_MAP: Dict[str, TerrainCapability] = _build_terrain_capability_map(_TERRAIN_CONFIG_RAW)
 _VISION_MAP: Dict[str, VisionParams] = _build_vision_map(_VISION_CONFIG_RAW)
+_REWARD_CONFIG: RewardConfig = build_reward_config(_REWARD_CONFIG_RAW)
+_SURVIVAL_CONFIG: SurvivalConfig = build_survival_config(_SURVIVAL_CONFIG_RAW)
+
+
+def get_reward_config() -> RewardConfig:
+    """取得完整奖励对象的隔离副本，编号索引的修改不会污染共享缓存。"""
+    return deepcopy(_REWARD_CONFIG)
+
+
+def get_reward_definition(reward_id: str) -> RewardDefinition:
+    """按奖励编号取定义；未知编号直接报错，避免静默发错奖励。"""
+    if reward_id not in _REWARD_CONFIG.rewards:
+        raise KeyError(f"奖励配置不存在: {reward_id}")
+    return _REWARD_CONFIG.rewards[reward_id]
+
+
+def get_survival_config() -> SurvivalConfig:
+    """取得生存表的隔离副本，模式可在开始时保存该副本。"""
+    return deepcopy(_SURVIVAL_CONFIG)
+
+
+def get_survival_stage(stage_id: int) -> SurvivalStage:
+    """按从 1 开始的阶段编号读取，拒绝负数和越界编号。"""
+    if type(stage_id) is not int or not 1 <= stage_id <= len(_SURVIVAL_CONFIG.stages):
+        raise KeyError(f"生存阶段不存在: {stage_id}")
+    return deepcopy(_SURVIVAL_CONFIG.stages[stage_id - 1])
+
+
+def get_entity_visual_config(entity_config_key: str) -> dict:
+    """提供与客户端同源的表现配置，用于资源检查，不参与服务端战斗。"""
+    if entity_config_key not in _ENTITY_CONFIG_RAW:
+        raise KeyError(f"实体配置不存在: {entity_config_key}")
+    return strip_comments(_ENTITY_CONFIG_RAW[entity_config_key].get("visual", {}))
 
 
 # ===========================================================================
@@ -589,7 +608,7 @@ def get_vision(mode: str = "normal") -> VisionParams:
 
 def is_vision_enabled() -> bool:
     """
-    敌人视锥功能总开关(shared_config/constants.json 的 VISION_ENABLED)。
+    敌人视锥功能总开关(json_config/constants.json 的 VISION_ENABLED)。
 
     默认 True(配置缺失时按开启处理,保持既有行为)。
     关闭后:敌人无视视锥角度/半径限制与追击距离上限,追击最近的玩家
@@ -642,7 +661,7 @@ def is_walkable(terrain_id: int) -> bool:
         import logging
         logging.getLogger(__name__).warning(
             f"is_walkable 收到未知 terrain_id={terrain_id},默认返回 True。"
-            f"请在 shared_config/terrain_config.json 补配置"
+            f"请在 json_config/terrain_config.json 补配置"
         )
         return True
     return _TERRAIN_CAPABILITY_MAP.get(terrain_name, TerrainCapability()).walkable

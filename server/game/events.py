@@ -25,6 +25,7 @@ class EntitySnapshot:
     moving: bool = False
     ai_state: str = ""
     combat_snapshot: CombatSnapshot = field(default_factory=CombatSnapshot)
+    entity_config_key: str = ""
 
 class Event:
     pass

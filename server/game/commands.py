@@ -47,6 +47,11 @@ class SpawnEnemyCommand(WorldCommand):
     x: float = 0.0
     y: float = 0.0
 
+@dataclass
+class RewardChoiceCommand(WorldCommand):
+    ''' 升级之后的三选一奖励 '''
+    reward_idx: int = 0
+
 # endregion 
 
 # region SessionCommand

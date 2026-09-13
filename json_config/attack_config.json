@@ -1,5 +1,9 @@
 {
-    "_comment": "攻击配置表(单数据源,双端共享。改完跑 tools/sync_config.py 同步到 server/config 和 client/res/config)",
+    "_comment": "攻击配置，唯一源文件为 json_config/attack_config.json；运行 tools/sync_config.py 同步到 server/config 与 client/config",
+    "_timing_desc": "duration 与 hit_time 均从整次攻击开始计时，单位毫秒；多段攻击必须填写不同的绝对命中时间",
+    "_cooldown_desc": "保留现有字段名 colldown_ms；冷却从攻击开始计算，并应覆盖最后一段持续时间；AI 另有攻击意图间隔",
+    "_damage_desc": "当前伤害为 max(int(max(攻击力-防御力,0)*damage_multiplier),1)；每段独立计算与取整",
+    "_presentation_desc": "怪物攻击由 ConfiguredAttackEffect 按实际形状与命中时序绘制预警及挥击；玩家 1001、1004 使用专用特效，其余攻击使用配置驱动表现",
     "_shape_type_values": "sector|rect|circle|ring(和服务端 ShapeType enum 的 value 对齐)",
     "_angle_unit": "角度(degree),loader 读取时转弧度。理由:人读角度比弧度直观",
     "_hit_mask_removed": "原 hit_mask 字段已移除。命中层级改由实体类型的 attack_mask 决定(见 entity_config.json),玩家和敌人复用同一 atk_id 时各自打各自阵营,避免攻击配置耦合阵营",
@@ -34,7 +38,7 @@
     },
 
     "1002": {
-        "_desc": "扇形两刀(当前两个 shape 配置相同;第二段为最后一段,命中击退 80px)",
+        "_desc": "扇形两刀：第 83ms、666ms 各命中一次，1166ms 完成；第二段命中击退 80px",
         "shape_list": [
             {
                 "shape": "sector",
@@ -46,8 +50,8 @@
             {
                 "shape": "sector",
                 "params": {"radius": 35.0, "angle": 120.0},
-                "duration": 583,
-                "hit_time": 83,
+                "duration": 1166,
+                "hit_time": 666,
                 "damage_multiplier": 0.9,
                 "knockback_distance": 80.0
             }
@@ -67,5 +71,47 @@
             }
         ],
         "colldown_ms": 500
+    },
+    "2001": {
+        "_desc": "疾行怪短挥击：180ms 后命中，400ms 完成，不击退；预警和挥击使用配置形状",
+        "shape_list": [
+            {
+                "shape": "sector",
+                "params": {"radius": 40.0, "angle": 100.0},
+                "duration": 400,
+                "hit_time": 180,
+                "damage_multiplier": 1.1,
+                "knockback_distance": 0.0
+            }
+        ],
+        "colldown_ms": 850
+    },
+    "2002": {
+        "_desc": "精英重挥：600ms 前摇，1050ms 完成，不击退；需要同方向、同范围的客户端预警",
+        "shape_list": [
+            {
+                "shape": "sector",
+                "params": {"radius": 90.0, "angle": 100.0},
+                "duration": 1050,
+                "hit_time": 600,
+                "damage_multiplier": 1.1,
+                "knockback_distance": 0.0
+            }
+        ],
+        "colldown_ms": 1600
+    },
+    "2003": {
+        "_desc": "首领扇形重击：800ms 前摇，1500ms 完成，不击退；需要客户端预警，暂不配置半血变招",
+        "shape_list": [
+            {
+                "shape": "sector",
+                "params": {"radius": 160.0, "angle": 120.0},
+                "duration": 1500,
+                "hit_time": 800,
+                "damage_multiplier": 1.1,
+                "knockback_distance": 0.0
+            }
+        ],
+        "colldown_ms": 2300
     }
 }

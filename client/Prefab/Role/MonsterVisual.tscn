@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://dj4lm5m3eur28"]
+
+[ext_resource type="PackedScene" uid="uid://yjdvw2mw27mc" path="res://Prefab/Role/PlayerVisual.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://cnlk6741tck60" path="res://Scirpt/game/view/MonsterVisual.gd" id="2_script"]
+
+[node name="MonsterVisual" unique_id=368860114 instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+
+[node name="Body" parent="." index="2" unique_id=1743655513]
+animation = &"Up_Idle"
+frame_progress = 0.0

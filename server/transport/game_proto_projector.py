@@ -19,6 +19,7 @@ class GameProtoProjector:
             entity_id=snapshot.entity_id,
             player_name=snapshot.player_name,
             entity_type=snapshot.entity_type,
+            entity_config_key=snapshot.entity_config_key,
             x=snapshot.x,
             y=snapshot.y,
             facing_x=snapshot.facing[0],

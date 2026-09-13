@@ -1,0 +1,410 @@
+{
+    "_comment": "八阶段生存配置；同名字段的中文注释仅在文件中首次出现时保留，后续条目不重复。有注释的对象上半部分集中放置 _同名字段 说明，下半部分放置实际配置字段，中间空行分隔。加载器递归忽略所有下划线开头的键。",
+    "_units": "seconds为秒，ms为毫秒；出生距离使用游戏世界单位，不是显示器物理像素；budget_share为相对预算权重，数量比例还与怪物价格有关。",
+    "_implementation": "本表说明目标规则。当前生存模式正在接入；生成间隔/数量上限、预算封顶、导航检查、特殊事件和奖励结算尚未完整实现。读取到字段不代表对应功能已经生效。",
+    "_schema_version": "配置结构版本号，用于标识字段组织方式；当前加载器只读取，不检查版本。",
+    "_balance_version": "当前数值方案标识；用于识别配表，不参与伤害、预算或时间计算。",
+    "_run": "开局人数、阶段推进、胜负与同帧结算优先级。",
+    "_multiplayer": "根据开局人数调整预算、数量和特殊怪生命；下文 N 表示固定的开局人数。",
+    "_spawn": "普通怪的生成检查、预算积攒上限、阶段节奏、出生位置与回收规则。",
+    "_enemies": "按 entity_config 中的怪物模板ID索引生存规则；这里只定义角色、价格及阶段倍率开关。",
+    "_timed_spawns": "按整局战斗时间投放的特殊怪事件；每个事件每局只消费一次，不占普通怪预算。",
+    "_stages": "按顺序执行的阶段列表；阶段时间使用实际推进的玩法时间，暂停时不增加。",
+
+    "schema_version": 1,
+    "balance_version": "0.2",
+    "run": {
+        "_start_on_first_player": "是否在首名玩家进入且满足最少人数时开始一局；当前 true 表示不等待房间满员。",
+        "_min_players": "开局所需的最少玩家数；当前1表示允许单人开始。",
+        "_max_players": "一局允许参与战斗的最多玩家数；当前2表示最多双人。",
+        "_late_join_policy": "开局后加入的处理方式；spectate 表示观战，不改变本局已锁定的人数与强度。",
+        "_advance_stage_policy": "阶段推进方式；elapsed_time 表示阶段计时结束就推进，不要求清空场上怪物。",
+        "_victory_condition": "胜利条件；boss_dead_and_player_alive 表示最终首领死亡且仍有至少一名存活玩家。",
+        "_timeout_result": "最终阶段到时而未满足胜利条件的结果；defeat 表示失败。",
+        "_all_players_dead_result": "所有玩家死亡时的结果；defeat 表示失败。",
+        "_same_tick_priority": "同一帧多个结束条件同时满足时，按数组从前到后选择结果；当前依次为全员死亡、首领死亡、超时。",
+        "_reference_player_attack_id": "用于数值设计估算的玩家参考攻击ID，引用 attack_config；不替换玩家当前实际使用的攻击。",
+
+        "start_on_first_player": true,
+        "min_players": 1,
+        "max_players": 2,
+        "late_join_policy": "spectate",
+        "advance_stage_policy": "elapsed_time",
+        "victory_condition": "boss_dead_and_player_alive",
+        "timeout_result": "defeat",
+        "all_players_dead_result": "defeat",
+        "same_tick_priority": [
+            "all_players_dead",
+            "boss_dead",
+            "timeout"
+        ],
+        "reference_player_attack_id": 1001
+    },
+    "multiplayer": {
+        "_lock_player_count_at_start": "是否固定使用开局人数 N 计算整局强度；true 时死亡、断线或后来观战不会重新降低倍率。",
+        "_normal_budget_multiplier_per_player": "普通怪预算人数系数；实际预算收入乘 N × 此值。当前1.0表示双人获得单人2倍预算。",
+        "_normal_alive_cap_multiplier_per_player": "普通怪存活上限的人数系数；阶段上限乘 N × 此值，所有普通怪合计使用同一个上限。",
+        "_normal_spawn_rate_multiplier_per_player": "普通怪每秒生成额度的人数系数；单人每秒上限乘 N × 此值。",
+        "_special_hp_extra_per_additional_player": "每多一名玩家增加的精英/首领生命比例；倍率为 1 + 此值 × (N - 1)，当前双人生命倍率1.8。",
+        "_normal_xp_distribution": "普通怪经验分配方式；divide_by_initial_players 表示拾取后按开局人数平分，向各存活玩家发放并保留小数。",
+        "_stage_xp_distribution": "阶段经验分配方式；full_each_alive 表示每位存活玩家都获得完整 completion_xp，不按人数平分。",
+
+        "lock_player_count_at_start": true,
+        "normal_budget_multiplier_per_player": 1.0,
+        "normal_alive_cap_multiplier_per_player": 1.0,
+        "normal_spawn_rate_multiplier_per_player": 1.0,
+        "special_hp_extra_per_additional_player": 0.8,
+        "normal_xp_distribution": "divide_by_initial_players",
+        "stage_xp_distribution": "full_each_alive"
+    },
+    "spawn": {
+        "_spawn_check_interval_seconds": "两轮生成检查之间的玩法时间间隔，单位秒；当前1.0表示每秒进行一轮检查，每轮可以生成多只。预算仍按每帧dt增加，暂停时两者都不推进。",
+        "_max_normal_spawns_per_second": "单人每秒最多成功生成的普通怪总数；当前3且每秒检查一次，所以一轮最多3只，各怪物类型共享额度。多人按人数系数扩大；改短检查间隔后，多轮仍须共享每秒额度。",
+        "_budget_carry_seconds": "每种普通怪允许保留的预算，最多按多少秒的当前预算收入计算；当前5.0对应5秒收入。用于限制积压，不是等待5秒才生成，也不是余额满5秒自动过期。与下一项共同决定容量。",
+        "_budget_carry_min_enemy_count": "每种怪预算容量的最低保障，以能购买几只该类型怪计；当前1保证容量至少容纳一只的价格。只提高容量下限，不赠送余额，不要求每轮至少生成一只。容量 = max(该类型每秒收入 × budget_carry_seconds, spawn_cost × 此值)。例：每秒收入0.1、单价2，容量为max(0.5,2)=2，避免永远攒不够。",
+        "_clear_budget_on_stage_change": "切换阶段时是否清空各普通怪类型的剩余预算；当前true，新阶段从零积累，不携带上阶段积压。",
+        "_special_alive_caps": "精英和首领分别使用的独立存活上限，与阶段 normal_alive_cap 分开。",
+        "_normal_stage_pulse": "阶段内前、中、后三段的预算收入节奏；仅在该阶段 use_normal_stage_pulse 为true时启用，为false时使用1倍基础收入。",
+        "_position": "出生点圆环距离、多人禁区、导航要求和尝试次数。出生点创建成功后才扣除该类型预算。",
+        "_recycle": "过远普通怪的回收规则；回收是移动已有怪物，不等同于击杀后重新生成。",
+
+        "spawn_check_interval_seconds": 1.0,
+        "max_normal_spawns_per_second": 3,
+        "budget_carry_seconds": 5.0,
+        "budget_carry_min_enemy_count": 1,
+        "clear_budget_on_stage_change": true,
+        "special_alive_caps": {
+            "_elite": "全场精英同时存活的最多数量，不占普通怪名额；当前1。",
+            "_boss": "全场首领同时存活的最多数量，不占普通怪名额；当前1。",
+
+            "elite": 1,
+            "boss": 1
+        },
+        "normal_stage_pulse": {
+            "_opening_seconds": "普通阶段开头使用 opening_rate_multiplier 的时长，单位秒；当前前15秒。",
+            "_closing_seconds": "普通阶段结尾使用 closing_rate_multiplier 的时长，单位秒；当前最后15秒。",
+            "_opening_rate_multiplier": "阶段开头的预算收入倍率；当前0.75表示基础收入的75%，不改变怪物价格或属性。",
+            "_middle_rate_multiplier": "阶段扣除开头、结尾后的中段预算收入倍率；当前1.125表示112.5%。90秒阶段的中段为60秒。",
+            "_closing_rate_multiplier": "阶段结尾的预算收入倍率；当前0.75表示75%。当前15/60/15秒与三段倍率搭配时，总预算与恒定1倍相同。",
+
+            "opening_seconds": 15.0,
+            "closing_seconds": 15.0,
+            "opening_rate_multiplier": 0.75,
+            "middle_rate_multiplier": 1.125,
+            "closing_rate_multiplier": 0.75
+        },
+        "position": {
+            "_require_outside_all_alive_views": "当前出生方案不使用此项，字段暂留待清理；圆环采样允许在视野内生成，不按该值做屏幕外限制。",
+            "_spawn_distance_min_px": "出生点到所有存活玩家中心的最小距离，单位为游戏世界单位；候选点落入任意玩家的此半径内就放弃。",
+            "_spawn_distance_max_px": "出生点到本次选中的中心玩家的最大世界距离；不要求同时处于其他玩家的这个距离内，与窗口分辨率和缩放无关。",
+            "_minimum_approach_seconds": "当前出生方案不使用此项，字段暂留待清理；不再根据接近时间和移动速度额外限制出生距离。",
+            "_require_walkable": "是否要求出生点位于可通行地面，避免生成到墙体或不可站立区域；导航检查待接入。",
+            "_require_reachable_player": "是否要求从出生点能够通过导航到达至少一名存活玩家；导航检查待接入。",
+            "_max_position_attempts": "生成一只怪时最多尝试多少个候选出生点；耗尽后放弃这只，等下一轮。当前代码仍写死10次，此配置12尚未接入。",
+            "_failure_policy": "找点失败策略；skip_attempt_keep_capped_budget 表示本次不生成、不扣预算，余额保留但受 budget_carry 上限约束。",
+
+            "require_outside_all_alive_views": true,
+            "spawn_distance_min_px": 64.0,
+            "spawn_distance_max_px": 160.0,
+            "minimum_approach_seconds": 1.0,
+            "require_walkable": true,
+            "require_reachable_player": true,
+            "max_position_attempts": 12,
+            "failure_policy": "skip_attempt_keep_capped_budget"
+        },
+        "recycle": {
+            "_roles": "允许回收的怪物角色列表；当前只含 normal，不回收精英和首领。",
+            "_outside_view_margin_px": "回收条件中的视野外余量，单位为游戏世界单位；怪物需远离所有存活玩家视野再超出此距离。回收规则尚待实现，与出生圆环距离分开。",
+            "_preserve_instance_state": "回收时是否移动原实体并保留当前HP、出生阶段、事件来源及奖励处理状态；true 时不创建新怪来替换。",
+            "_grant_rewards": "回收时是否发放击杀奖励；当前false，回收不算击杀，不产生经验或礼包。",
+
+            "roles": [
+                "normal"
+            ],
+            "outside_view_margin_px": 600.0,
+            "preserve_instance_state": true,
+            "grant_rewards": false
+        }
+    },
+    "enemies": {
+        "_enemy_slime": "史莱姆的生存规则；键引用 entity_config 的同名模板。",
+        "_enemy_skeleton": "骷髅的生存规则；键引用 entity_config 的同名模板。",
+        "_enemy_runner": "疾行怪的生存规则；键引用 entity_config 的同名模板。",
+        "_enemy_elite": "精英的生存规则；键引用 entity_config 的同名模板，由 timed_spawns 投放。",
+        "_enemy_boss": "首领的生存规则；键引用 entity_config 的同名模板，由最终阶段 entry_spawn 投放。",
+
+        "enemy_slime": {
+            "_role": "生存模式角色：normal为普通怪，elite为精英，boss为首领；用于选择对应的预算和存活上限。",
+            "_spawn_cost": "生成一只该类型普通怪消耗的预算价格；只有创建成功才扣除。特殊怪填0表示由事件独立投放，不表示可在普通池中免费生成。",
+            "_apply_stage_scaling": "是否用出生阶段的 hp_multiplier 和 attack_multiplier 乘模板生命/攻击；已有怪跨阶段不重新计算。特殊怪的人数生命倍率另外计算。",
+
+            "role": "normal",
+            "spawn_cost": 1,
+            "apply_stage_scaling": true
+        },
+        "enemy_skeleton": {
+            "role": "normal",
+            "spawn_cost": 2,
+            "apply_stage_scaling": true
+        },
+        "enemy_runner": {
+            "role": "normal",
+            "spawn_cost": 2,
+            "apply_stage_scaling": true
+        },
+        "enemy_elite": {
+            "role": "elite",
+            "spawn_cost": 0,
+            "apply_stage_scaling": true
+        },
+        "enemy_boss": {
+            "role": "boss",
+            "spawn_cost": 0,
+            "apply_stage_scaling": false
+        }
+    },
+    "timed_spawns": [
+        {
+            "_event_id": "本局特殊怪投放事件的唯一标识；定时事件消费后记录，阶段入口事件成功后记录，用于防止重复投放。",
+            "_at_combat_seconds": "从本局开始累计的战斗时间，单位秒，不是进入当前阶段后的秒数；暂停时不增加。",
+            "_enemy_type": "怪物模板ID，引用 enemies 和 entity_config；普通池仅使用 role=normal 的模板并读取 spawn_cost；定时事件和阶段入口事件指定要单独投放的模板，一次事件计划生成一只。",
+            "_cap_reached_policy": "到点时该角色已经达到存活上限的策略；skip_event 表示消费并跳过本事件，不排队补刷。",
+
+            "event_id": "elite_stage_2",
+            "at_combat_seconds": 120,
+            "enemy_type": "enemy_elite",
+            "cap_reached_policy": "skip_event"
+        },
+        {
+            "event_id": "elite_stage_4",
+            "at_combat_seconds": 300,
+            "enemy_type": "enemy_elite",
+            "cap_reached_policy": "skip_event"
+        },
+        {
+            "event_id": "elite_stage_6",
+            "at_combat_seconds": 480,
+            "enemy_type": "enemy_elite",
+            "cap_reached_policy": "skip_event"
+        }
+    ],
+    "stages": [
+        {
+            "_stage_id": "阶段编号，当前从1开始依次排列；与数组从0开始的下标不同。",
+            "_name": "阶段显示名称，不参与预算或属性计算。",
+            "_duration_seconds": "当前阶段持续的玩法时间，单位秒；到时推进或结束，不等待清场，暂停时不计时。",
+            "_normal_budget_per_minute": "单人基础状态下，每分钟分给整个普通怪池的总预算；每帧总收入 = 此值 / 60 × dt × 阶段节奏倍率 × 人数预算倍率。",
+            "_normal_alive_cap": "单人时场上允许同时存活的普通怪总数，各普通类型合计计数；精英、首领、尸体和经验球不计入，双人按人数系数扩大。到上限时停止增加普通预算。",
+            "_use_normal_stage_pulse": "是否使用 spawn.normal_stage_pulse 的三段预算节奏；true使用开头/中段/结尾倍率，false按1倍基础速率积累。",
+            "_hp_multiplier": "怪物基础最大HP的阶段倍率，只对 apply_stage_scaling=true 的模板在出生时应用；已有怪不随阶段再次叠乘。",
+            "_attack_multiplier": "怪物基础攻击的阶段倍率，只对 apply_stage_scaling=true 的模板在出生时应用；不改变防御、移速或攻击形状。",
+            "_completion_xp": "完成当前阶段时每位存活玩家获得的固定经验；与击杀经验分开发放，0表示没有阶段经验。",
+            "_pool": "当前阶段可使用普通预算生成的怪物类型与相对预算权重；每种类型独立保存自己的预算余额。",
+
+            "stage_id": 1,
+            "name": "初战",
+            "duration_seconds": 90,
+            "normal_budget_per_minute": 30,
+            "normal_alive_cap": 16,
+            "use_normal_stage_pulse": true,
+            "hp_multiplier": 1.0,
+            "attack_multiplier": 1.0,
+            "completion_xp": 8,
+            "pool": [
+                {
+                    "_budget_share": "相对预算权重，不需要合计为1或100；该类型收入 = 总收入 × 此权重 / 当前池权重总和。8和2表示分得80%和20%的预算，数量比例还需除以各自价格。",
+
+                    "enemy_type": "enemy_slime",
+                    "budget_share": 1.0
+                }
+            ]
+        },
+        {
+            "stage_id": 2,
+            "name": "精英初见",
+            "duration_seconds": 90,
+            "normal_budget_per_minute": 40,
+            "normal_alive_cap": 20,
+            "use_normal_stage_pulse": true,
+            "hp_multiplier": 1.15,
+            "attack_multiplier": 1.1,
+            "completion_xp": 12,
+            "pool": [
+                {
+                    "enemy_type": "enemy_slime",
+                    "budget_share": 0.8
+                },
+                {
+                    "enemy_type": "enemy_skeleton",
+                    "budget_share": 0.2
+                }
+            ]
+        },
+        {
+            "stage_id": 3,
+            "name": "疾行追赶",
+            "duration_seconds": 90,
+            "normal_budget_per_minute": 50,
+            "normal_alive_cap": 24,
+            "use_normal_stage_pulse": true,
+            "hp_multiplier": 1.35,
+            "attack_multiplier": 1.25,
+            "completion_xp": 16,
+            "pool": [
+                {
+                    "enemy_type": "enemy_slime",
+                    "budget_share": 0.7
+                },
+                {
+                    "enemy_type": "enemy_skeleton",
+                    "budget_share": 0.15
+                },
+                {
+                    "enemy_type": "enemy_runner",
+                    "budget_share": 0.15
+                }
+            ]
+        },
+        {
+            "stage_id": 4,
+            "name": "中期试炼",
+            "duration_seconds": 90,
+            "normal_budget_per_minute": 60,
+            "normal_alive_cap": 28,
+            "use_normal_stage_pulse": true,
+            "hp_multiplier": 1.55,
+            "attack_multiplier": 1.4,
+            "completion_xp": 20,
+            "pool": [
+                {
+                    "enemy_type": "enemy_slime",
+                    "budget_share": 0.55
+                },
+                {
+                    "enemy_type": "enemy_skeleton",
+                    "budget_share": 0.25
+                },
+                {
+                    "enemy_type": "enemy_runner",
+                    "budget_share": 0.2
+                }
+            ]
+        },
+        {
+            "stage_id": 5,
+            "name": "持续包围",
+            "duration_seconds": 90,
+            "normal_budget_per_minute": 70,
+            "normal_alive_cap": 32,
+            "use_normal_stage_pulse": true,
+            "hp_multiplier": 1.8,
+            "attack_multiplier": 1.55,
+            "completion_xp": 24,
+            "pool": [
+                {
+                    "enemy_type": "enemy_slime",
+                    "budget_share": 0.5
+                },
+                {
+                    "enemy_type": "enemy_skeleton",
+                    "budget_share": 0.25
+                },
+                {
+                    "enemy_type": "enemy_runner",
+                    "budget_share": 0.25
+                }
+            ]
+        },
+        {
+            "stage_id": 6,
+            "name": "构筑成型",
+            "duration_seconds": 90,
+            "normal_budget_per_minute": 80,
+            "normal_alive_cap": 36,
+            "use_normal_stage_pulse": true,
+            "hp_multiplier": 2.1,
+            "attack_multiplier": 1.75,
+            "completion_xp": 28,
+            "pool": [
+                {
+                    "enemy_type": "enemy_slime",
+                    "budget_share": 0.45
+                },
+                {
+                    "enemy_type": "enemy_skeleton",
+                    "budget_share": 0.3
+                },
+                {
+                    "enemy_type": "enemy_runner",
+                    "budget_share": 0.25
+                }
+            ]
+        },
+        {
+            "stage_id": 7,
+            "name": "终局前夜",
+            "duration_seconds": 90,
+            "normal_budget_per_minute": 90,
+            "normal_alive_cap": 40,
+            "use_normal_stage_pulse": true,
+            "hp_multiplier": 2.4,
+            "attack_multiplier": 2.0,
+            "completion_xp": 32,
+            "pool": [
+                {
+                    "enemy_type": "enemy_slime",
+                    "budget_share": 0.4
+                },
+                {
+                    "enemy_type": "enemy_skeleton",
+                    "budget_share": 0.35
+                },
+                {
+                    "enemy_type": "enemy_runner",
+                    "budget_share": 0.25
+                }
+            ]
+        },
+        {
+            "_clear_roles_on_entry": "进入当前阶段时清除哪些角色的已有怪物；当前首领阶段清除normal和elite，其他阶段省略表示不清除。",
+            "_grant_rewards_for_entry_clear": "因进入阶段而清除怪物时是否发放击杀奖励；当前false，不把阶段清理当作玩家击杀。",
+            "_entry_spawn": "进入当前阶段时安排的一次特殊怪投放；省略表示没有入口事件。首领位置失败的重试由其中的策略决定。",
+
+            "stage_id": 8,
+            "name": "首领决战",
+            "duration_seconds": 150,
+            "normal_budget_per_minute": 30,
+            "normal_alive_cap": 12,
+            "use_normal_stage_pulse": false,
+            "hp_multiplier": 2.4,
+            "attack_multiplier": 2.0,
+            "completion_xp": 0,
+            "clear_roles_on_entry": [
+                "normal",
+                "elite"
+            ],
+            "grant_rewards_for_entry_clear": false,
+            "entry_spawn": {
+                "_position_failure_policy": "出生点失败后的处理；retry_until_run_end 表示保留同一个待生成事件，在后续检查中重试，直到生成成功或本局结束。",
+
+                "event_id": "final_boss",
+                "enemy_type": "enemy_boss",
+                "position_failure_policy": "retry_until_run_end"
+            },
+            "pool": [
+                {
+                    "enemy_type": "enemy_slime",
+                    "budget_share": 0.7
+                },
+                {
+                    "enemy_type": "enemy_skeleton",
+                    "budget_share": 0.2
+                },
+                {
+                    "enemy_type": "enemy_runner",
+                    "budget_share": 0.1
+                }
+            ]
+        }
+    ]
+}

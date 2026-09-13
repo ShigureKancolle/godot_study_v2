@@ -25,6 +25,7 @@ def project_identity_snapshot(entity: Entity) -> dict[str, Any]:
         "entity_id": entity.entity_id,
         "player_name": name,
         "entity_type": entity.entity_type.value,
+        "entity_config_key": entity.entity_config_key,
     }
 
 def project_ai_state_snapshot(entity: Entity) -> dict[str, Any]:

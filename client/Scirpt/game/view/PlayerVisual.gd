@@ -18,6 +18,11 @@ func play_anim(anim_name: String = "idle", reset: bool = false) -> void:
 
 	if _body.animation != anim_name or reset:
 		_body.play(anim_name)
+	if anim_name.ends_with("_Die"):
+		clear_attack_effects()
+
+func play_attack_anim(anim_name: String, _attack: ConfigLoader.AttackConfig) -> void:
+	play_anim(anim_name, true)
 
 func set_player_name(player_name: String):
 	name_label.text = player_name
@@ -38,6 +43,9 @@ func play_atk_effect(atk_effect: Node2D):
 	var atk_effect_key = "atk_effect%d" % _next_atk_effect_id
 	_atk_effects[atk_effect_key] = atk_effect
 	_atk_effect_parent.add_child(atk_effect)
+	if atk_effect is ConfiguredAttackEffect:
+		atk_effect.completed.connect(_on_animation_finished.bind(atk_effect_key), CONNECT_ONE_SHOT)
+		return
 
 	var animated_sprite := atk_effect.get_node(
 		"Scale/AnimatedSprite2D"
@@ -48,6 +56,12 @@ func play_atk_effect(atk_effect: Node2D):
 		CONNECT_ONE_SHOT
 	)
 	animated_sprite.play("Attack")
+
+func clear_attack_effects() -> void:
+	for effect in _atk_effects.values():
+		if is_instance_valid(effect):
+			effect.queue_free()
+	_atk_effects.clear()
 
 func _on_animation_finished(atk_effect_key: String):
 	var atk_effect := _atk_effects.get(atk_effect_key) as Node2D

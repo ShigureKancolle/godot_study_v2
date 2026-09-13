@@ -24,6 +24,8 @@ message EntityInfo {
   bool moving = 9;
   string ai_state = 10;
   CombatEntityInfo combat_entity_info = 11;
+  // 实体模板键，客户端据此选择角色资源，不解析 entity_id。
+  string entity_config_key = 12;
 }
 
 

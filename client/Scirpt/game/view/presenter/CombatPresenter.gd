@@ -11,7 +11,14 @@ func apply_atk_facing(facing: float):
 
 func apply_attack_start(attack_id: int, atk_facing: float):
 	# 根据id创建攻击动画 然后挂到entity_view.entity_visual上
-	var atk_effect = AttackEffectFactory.create_attack_effect(attack_id)
+	var attack: ConfigLoader.AttackConfig = ConfigLoader.get_attack_config(attack_id)
+	if attack == null:
+		return
+	var animation := _entity_view.get_presenter(AnimationPresenter.presenter_name) as AnimationPresenter
+	if animation.is_dead():
+		return
+	animation.play_attack(atk_facing, attack)
+	var atk_effect = AttackEffectFactory.create_attack_effect(attack_id, _entity_view.entity_visual is MonsterVisual)
 	if not atk_effect:
 		return
 
@@ -19,4 +26,7 @@ func apply_attack_start(attack_id: int, atk_facing: float):
 	atk_effect.rotation = -atk_facing
 
 func apply_damage_received(damage: int):
-	pass
+	if damage <= 0:
+		return
+	var animation := _entity_view.get_presenter(AnimationPresenter.presenter_name) as AnimationPresenter
+	animation.play_hurt()

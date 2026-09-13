@@ -6,6 +6,48 @@ static var presenter_name := &"AnimationPresenter"
 
 var _facing_dir: String = "Down"
 var _current_state: String = "idle"
+var _locomotion_state: String = "idle"
+var _locomotion_facing: String = "Down"
+var _action_remaining: float = 0.0
+
+func is_dead() -> bool:
+	return _current_state == "die"
+
+func process(delta: float) -> void:
+	if _action_remaining <= 0.0 or is_dead():
+		return
+	_action_remaining = maxf(0.0, _action_remaining - delta)
+	if _action_remaining <= 0.0:
+		_current_state = _locomotion_state
+		_facing_dir = _locomotion_facing
+		_play_current()
+
+func play_attack(facing: float, attack: ConfigLoader.AttackConfig) -> void:
+	if is_dead():
+		return
+	var direction: String = _move_dir_to_facing(Vector2(cos(facing), -sin(facing)))
+	var full_name: String = direction + "_Attack"
+	if not _entity_view.entity_visual.has_animation(full_name):
+		return
+	_current_state = "attack"
+	_facing_dir = direction
+	_action_remaining = float(attack.get_attack_time()) / 1000.0
+	_entity_view.entity_visual.play_attack_anim(full_name, attack)
+
+func play_hurt() -> void:
+	if is_dead():
+		return
+	var visual: PlayerVisual = _entity_view.entity_visual
+	if visual is MonsterVisual:
+		visual.flash_hurt()
+	# 受击只叠加颜色反馈，不中断仍在执行的攻击预警和挥击时序。
+	if _current_state == "attack":
+		return
+	if not visual.has_animation(_facing_dir + "_Hurt"):
+		return
+	_current_state = "hurt"
+	_action_remaining = 0.2
+	_play_current()
 
 
 func update_facing(dir: Vector2):
@@ -16,7 +58,10 @@ func update_facing(dir: Vector2):
 	if dir.is_equal_approx(Vector2.ZERO):
 		return
 
-	_facing_dir = _move_dir_to_facing(dir)
+	_locomotion_facing = _move_dir_to_facing(dir)
+	if _action_remaining > 0.0:
+		return
+	_facing_dir = _locomotion_facing
 	_play_current()
 
 func _move_dir_to_facing(dir: Vector2) -> String:
@@ -44,6 +89,12 @@ func play_anim(anim_name: String = "idle") -> void:
 	# 死亡动画保持到视图移除，后续移动状态和重复死亡通知不能覆盖它。
 	if _current_state == "die":
 		return
+	if anim_name in ["idle", "run"]:
+		_locomotion_state = anim_name
+		if _action_remaining > 0.0:
+			return
+	if anim_name == "die":
+		_action_remaining = 0.0
 	# 缓存当前状态名,facing 变化时要用它拼新方向动画
 	_current_state = anim_name
 	_play_current()

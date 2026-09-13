@@ -31,6 +31,11 @@ func setup(entity_state: EntityState):
 	var combat_state = entity_state.combat_entity_state
 	if combat_state:
 		get_presenter(CombatPresenter.presenter_name).setup(combat_state)
+		# 中途收到快照时也立即呈现死亡，避免短暂出现存活姿势。
+		if combat_state.dead:
+			play_dead_animation()
+		else:
+			get_presenter(AnimationPresenter.presenter_name).play_anim(entity_state.anim_state if not entity_state.anim_state.is_empty() else "idle")
 	__setup(entity_state)
 
 func __setup(entity_state: EntityState):

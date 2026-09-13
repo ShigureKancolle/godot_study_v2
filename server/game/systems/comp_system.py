@@ -198,6 +198,9 @@ class JoinCompSystem(CompSystem):
             command.account,
             entity_snapshot
         )
+        if not world.game_mode.is_started():
+            # 第一个玩家加入时 开游戏模式
+            world.game_mode.start(world)     
 
         logger.debug("加入命令处理完成：account=%s", command.account)
         return [env]

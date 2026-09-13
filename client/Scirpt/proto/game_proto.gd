@@ -862,6 +862,11 @@ class EntityInfo:
 		service.func_ref = Callable(self, "new_combat_entity_info")
 		data[__combat_entity_info.tag] = service
 		
+		__entity_config_key = PBField.new("entity_config_key", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 12, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __entity_config_key
+		data[__entity_config_key.tag] = service
+		
 	var data = {}
 	
 	var __entity_id: PBField
@@ -1007,6 +1012,19 @@ class EntityInfo:
 	func new_combat_entity_info() -> CombatEntityInfo:
 		__combat_entity_info.value = CombatEntityInfo.new()
 		return __combat_entity_info.value
+	
+	var __entity_config_key: PBField
+	func has_entity_config_key() -> bool:
+		if __entity_config_key.value != null:
+			return true
+		return false
+	func get_entity_config_key() -> String:
+		return __entity_config_key.value
+	func clear_entity_config_key() -> void:
+		data[12].state = PB_SERVICE_STATE.UNFILLED
+		__entity_config_key.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_entity_config_key(value : String) -> void:
+		__entity_config_key.value = value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
