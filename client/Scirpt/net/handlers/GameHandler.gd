@@ -28,3 +28,19 @@ func on_command_rejected(msg: GameProto.ServerMessage):
 	var reason_message := rejected.get_reason_message()
 	push_warning("命令被拒绝 [%s/%s]：%s" % [command_name, reason_code, reason_message])
 	SignalMgr.Get().snl_command_rejected.emit(command_name, reason_code, reason_message)
+
+func on_level_debug(msg: GameProto.ServerMessage):
+	var debug := msg.get_level_debug_data()
+	print("等级调试信息：", debug)
+	var data = TestLevelDebugUI.LevelDebugData.new()
+	data.server_tick = debug.get_server_tick()
+	data.cur_stage_id = debug.get_cur_stage_id()
+	data.spwan_time_count_down_ms = debug.get_spwan_time_count_down_ms()
+	data.stage_time_seconds = debug.get_stage_time_seconds()
+	data.enemy_count = debug.get_enemy_count()
+	data.normal_enemy_count = debug.get_normal_enemy_count()
+	var enemy_budget_data := debug.get_enemy_budget_data()
+	for enemy_budget in enemy_budget_data:
+		data.enemy_budget_data += enemy_budget.get_enemy_type() + ":" + str(enemy_budget.get_budget()) + "\n"
+
+	SignalMgr.Get().snl_level_debug.emit(data)

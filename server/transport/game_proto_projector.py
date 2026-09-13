@@ -111,3 +111,25 @@ class GameProtoProjector:
                 entity_id=event.entity_id,
             ),
         )
+
+    @staticmethod
+    def enemy_budget(event: events.EnemyBudgetData) -> game_pb2.EnemyBudgetData:
+        """按现有整数协议发送预算，保留领域快照中的小数精度。"""
+        return game_pb2.EnemyBudgetData(
+            enemy_type=event.enemy_type,
+            budget=int(event.budget),
+        )
+
+    @staticmethod
+    def level_debug(event: events.LevelDebugEvent) -> game_pb2.LevelDebugData:
+        """时间按协议单位取整，已到期的倒计时按零发送。"""
+        enemy_budget_data = [GameProtoProjector.enemy_budget(enemy_budget) for enemy_budget in event.enemy_budget]
+        return game_pb2.LevelDebugData(
+            enemy_budget_data = enemy_budget_data,
+            server_tick=event.server_tick,
+            cur_stage_id = event.cur_stage_id,
+            spwan_time_count_down_ms=max(0, int(event.spwan_time_count_down_ms)),
+            stage_time_seconds=int(event.stage_time_seconds),
+            enemy_count=event.enemy_count,
+            normal_enemy_count=event.normal_enemy_count,
+        )

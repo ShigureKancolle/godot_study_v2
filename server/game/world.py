@@ -26,6 +26,7 @@ if typing.TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+DEBUG = True
 
 # region 单房间 先这样 到时候再加roommgr
 game_room: "GameWorld" = None
@@ -86,7 +87,7 @@ class GameWorld:
             raise ValueError("dt must be greater than 0")
 
         events: list[event.Event] = []
-        events.extend(self(self._game_mode.before_step(self, dt)))
+        events.extend(self._game_mode.before_step(self, dt))
         commands = self._pending_commands
         self._pending_commands = []
 
@@ -111,6 +112,9 @@ class GameWorld:
         
         events.extend(list(self._tick_pipeline.update(self, dt)))
         events.extend(self._game_mode.after_step(self, dt))
+
+        if DEBUG:
+            events.extend(self._debug_data(dt))
 
         self._tick += 1
         return event.TickResult(
@@ -224,7 +228,13 @@ class GameWorld:
         return res
 
     def remove_entity(self, entity_id: str) -> "entity.Entity | None":
-        return self._entites.pop(entity_id, None)
+        """移除指定实体。"""
+        _eneity = self._entites.pop(entity_id, None)
+        if _eneity is None:
+            return None
+
+        self.remove_enemy(_eneity.entity_config_key, _eneity.entity_id)
+        return _eneity
     
     # endregion entity
 
@@ -253,6 +263,10 @@ class GameWorld:
         player.add_component(combat_comp)
         self.add_entity(player)
         return player
+
+    # def remove_player(self, account: str):
+    #     """移除指定玩家。"""
+    #     self.remove_entity(f"player: {account}_{self.get_next_entity_idx()}")
 
     # endregion player
 
@@ -299,7 +313,35 @@ class GameWorld:
             enemy_type = [enemy_type]
         return sum([len(self._enemys[_enemy_type]) for _enemy_type in enemy_type if _enemy_type in self._enemys])
 
+    def remove_enemy(self, enemy_type: str, enemy_id: str):
+        """移除指定敌人。"""
+        enemy = self._enemys.get(enemy_type, {}).pop(enemy_id, None)
+        return enemy
     # endregion enemy
+
+    # region debug 
+    def _debug_data(self, dt: float) -> list[event.LevelDebugEvent]:
+        self._game_mode: "survival_mode_module.SurvivalMode"
+        if not self._game_mode.should_advance_gameplay() or self._game_mode._game_finished:
+            return []
+        enemy_budget = []
+        for enemy_type, budget_data in self._game_mode._enemy_budget.items():
+            enemy_budget.append(event.EnemyBudgetData(enemy_type=enemy_type, budget=budget_data.budget))
+
+        normal_enemy_type = ["enemy_slime", "enemy_skeleton", "enemy_runner"]
+        return [event.LevelDebugEvent(
+            enemy_budget=enemy_budget,
+            server_tick=self.cur_tick(),
+            cur_stage_id = self._game_mode._cur_stage.stage_id,
+            stage_time_seconds = int(
+                (self._game_mode._game_timestamp_ms - self._game_mode._stage_start_timestamp_ms) / 1000.0
+            ),
+            spwan_time_count_down_ms = self._game_mode._refresh_timestamp_ms - self._game_mode._game_timestamp_ms,
+            enemy_count = self.enemy_count(),
+            normal_enemy_count = self.enemy_count(normal_enemy_type),
+        )]
+
+    # endregion
 
     
     

@@ -27,6 +27,11 @@ class EntitySnapshot:
     combat_snapshot: CombatSnapshot = field(default_factory=CombatSnapshot)
     entity_config_key: str = ""
 
+@dataclass(frozen=True)
+class EnemyBudgetData:
+    enemy_type: str = ""
+    budget: float = 0.0
+
 class Event:
     pass
 
@@ -113,3 +118,13 @@ class CommandRejectedEvent(Event):
 @dataclass(frozen=True)
 class EntitySpawnedEvent(Event):
     entity_info: EntitySnapshot = field(default_factory=EntitySnapshot)
+
+@dataclass(frozen=True)
+class LevelDebugEvent(Event):
+    enemy_budget: list[EnemyBudgetData] = field(default_factory=list)
+    server_tick: int = 0
+    cur_stage_id: int = 0
+    stage_time_seconds: float = 0.0
+    spwan_time_count_down_ms: float = 0.0
+    enemy_count: int = 0
+    normal_enemy_count: int = 0

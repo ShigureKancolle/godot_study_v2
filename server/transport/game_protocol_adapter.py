@@ -43,6 +43,10 @@ class GameProtocolAdapter:
                 if connection_id is not None:
                     excluded_connection_ids.add(connection_id)
 
+            if isinstance(current_event, events.LevelDebugEvent):
+                self.publish_level_debug(current_event, server_tick)
+                continue
+
             builder.apply(current_event)
 
         if not builder.has_changes():
@@ -54,6 +58,16 @@ class GameProtocolAdapter:
             room_id=self._game_world.room_id,
             server_tick=server_tick,
             exclude_ids=list(excluded_connection_ids),
+        )
+
+    def publish_level_debug(self, event: events.LevelDebugEvent, server_tick: int):
+        """向所有连接发送等级调试信息。"""
+        message = GameProtoProjector.level_debug(event)
+        self._outbound.broadcast(
+            "level_debug_data",
+            message,
+            room_id=self._game_world.room_id,
+            server_tick=server_tick,
         )
 
     def publish_command_rejected(

@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://c6517kmwqdn2b"]
+
+[ext_resource type="Script" uid="uid://8awcra7mogs0" path="res://Scirpt/ui/Debug/test_level_debug_ui.gd" id="1_j3k5i"]
+
+[node name="TestLevelDebugUi" type="Node2D" unique_id=915423884]
+script = ExtResource("1_j3k5i")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=285742464]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="BoxContainer" type="BoxContainer" parent="PanelContainer" unique_id=1395673366]
+layout_mode = 2
+vertical = true
+
+[node name="server_tick" type="Label" parent="PanelContainer/BoxContainer" unique_id=1398381075]
+layout_mode = 2
+text = "1234"
+
+[node name="cur_stage" type="Label" parent="PanelContainer/BoxContainer" unique_id=1905215555]
+layout_mode = 2
+text = "1234"
+
+[node name="spwan_time_count_down" type="Label" parent="PanelContainer/BoxContainer" unique_id=1663318482]
+layout_mode = 2
+text = "1234"
+
+[node name="enemy_budget" type="Label" parent="PanelContainer/BoxContainer" unique_id=1903892981]
+layout_mode = 2
+text = "1234
+slime"
+
+[node name="stage_time" type="Label" parent="PanelContainer/BoxContainer" unique_id=2047008529]
+layout_mode = 2
+text = "1234"
+
+[node name="enemy_count" type="Label" parent="PanelContainer/BoxContainer" unique_id=1472517562]
+layout_mode = 2
+text = "1234"
+
+[node name="normal_enemy_count" type="Label" parent="PanelContainer/BoxContainer" unique_id=1133349751]
+layout_mode = 2
+text = "1234"

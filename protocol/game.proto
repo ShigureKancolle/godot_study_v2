@@ -163,6 +163,23 @@ message WorldFrame {
   repeated WorldEvent events = 6; // 单独处理的事件
 }
 
+// 怪物预算信息
+message EnemyBudgetData {
+  string enemy_type = 1;
+  uint64 budget = 2;
+}
+
+// 用来debug的关卡信息
+message LevelDebugData {
+  repeated EnemyBudgetData enemy_budget_data = 1;
+  int32 server_tick = 2;
+  int32 cur_stage_id = 3;
+  uint64 spwan_time_count_down_ms = 4;
+  uint64 stage_time_seconds = 5;
+  int32 enemy_count = 6;
+  int32 normal_enemy_count = 7;
+}
+
 // 该包络只允许承载客户端发往服务端的消息。
 message ClientMessage {
   oneof payload {
@@ -186,5 +203,6 @@ message ServerMessage {
     WorldSnapshot world_snapshot = 4;
     CommandRejected command_rejected = 9;
     WorldFrame world_frame = 14;
+    LevelDebugData level_debug_data = 15;
   }
 }

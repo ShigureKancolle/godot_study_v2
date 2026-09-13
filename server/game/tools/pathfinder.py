@@ -87,7 +87,7 @@ class PathFinder:
         while(todo_list):
             f, x, y = heapq.heappop(todo_list)
             if (x, y) == end_block:
-                return self._reconstruct_path(parent_map, (x, y), start_pos, end_pos)
+                return self._reconstruct_path(parent_map, end_pos)
 
             for dx, dy, is_diagonal in _DIRECTIONS:
                 new_x = x + dx

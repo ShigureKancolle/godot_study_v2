@@ -2640,6 +2640,224 @@ class WorldFrame:
 			return PB_ERR.PARSE_INCOMPLETE
 		return result
 	
+class EnemyBudgetData:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__enemy_type = PBField.new("enemy_type", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __enemy_type
+		data[__enemy_type.tag] = service
+		
+		__budget = PBField.new("budget", PB_DATA_TYPE.UINT64, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64])
+		service = PBServiceField.new()
+		service.field = __budget
+		data[__budget.tag] = service
+		
+	var data = {}
+	
+	var __enemy_type: PBField
+	func has_enemy_type() -> bool:
+		if __enemy_type.value != null:
+			return true
+		return false
+	func get_enemy_type() -> String:
+		return __enemy_type.value
+	func clear_enemy_type() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__enemy_type.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_enemy_type(value : String) -> void:
+		__enemy_type.value = value
+	
+	var __budget: PBField
+	func has_budget() -> bool:
+		if __budget.value != null:
+			return true
+		return false
+	func get_budget() -> int:
+		return __budget.value
+	func clear_budget() -> void:
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__budget.value = DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64]
+	func set_budget(value : int) -> void:
+		__budget.value = value
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
+class LevelDebugData:
+	extends RefCounted
+	func _init():
+		var service
+		
+		var __enemy_budget_data_default: Array[EnemyBudgetData] = []
+		__enemy_budget_data = PBField.new("enemy_budget_data", PB_DATA_TYPE.MESSAGE, PB_RULE.REPEATED, 1, true, __enemy_budget_data_default)
+		service = PBServiceField.new()
+		service.field = __enemy_budget_data
+		service.func_ref = Callable(self, "add_enemy_budget_data")
+		data[__enemy_budget_data.tag] = service
+		
+		__server_tick = PBField.new("server_tick", PB_DATA_TYPE.INT32, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.INT32])
+		service = PBServiceField.new()
+		service.field = __server_tick
+		data[__server_tick.tag] = service
+		
+		__cur_stage_id = PBField.new("cur_stage_id", PB_DATA_TYPE.INT32, PB_RULE.OPTIONAL, 3, true, DEFAULT_VALUES_3[PB_DATA_TYPE.INT32])
+		service = PBServiceField.new()
+		service.field = __cur_stage_id
+		data[__cur_stage_id.tag] = service
+		
+		__spwan_time_count_down_ms = PBField.new("spwan_time_count_down_ms", PB_DATA_TYPE.UINT64, PB_RULE.OPTIONAL, 4, true, DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64])
+		service = PBServiceField.new()
+		service.field = __spwan_time_count_down_ms
+		data[__spwan_time_count_down_ms.tag] = service
+		
+		__stage_time_seconds = PBField.new("stage_time_seconds", PB_DATA_TYPE.UINT64, PB_RULE.OPTIONAL, 5, true, DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64])
+		service = PBServiceField.new()
+		service.field = __stage_time_seconds
+		data[__stage_time_seconds.tag] = service
+		
+		__enemy_count = PBField.new("enemy_count", PB_DATA_TYPE.INT32, PB_RULE.OPTIONAL, 6, true, DEFAULT_VALUES_3[PB_DATA_TYPE.INT32])
+		service = PBServiceField.new()
+		service.field = __enemy_count
+		data[__enemy_count.tag] = service
+		
+		__normal_enemy_count = PBField.new("normal_enemy_count", PB_DATA_TYPE.INT32, PB_RULE.OPTIONAL, 7, true, DEFAULT_VALUES_3[PB_DATA_TYPE.INT32])
+		service = PBServiceField.new()
+		service.field = __normal_enemy_count
+		data[__normal_enemy_count.tag] = service
+		
+	var data = {}
+	
+	var __enemy_budget_data: PBField
+	func get_enemy_budget_data() -> Array[EnemyBudgetData]:
+		return __enemy_budget_data.value
+	func clear_enemy_budget_data() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__enemy_budget_data.value.clear()
+	func add_enemy_budget_data() -> EnemyBudgetData:
+		var element = EnemyBudgetData.new()
+		__enemy_budget_data.value.append(element)
+		return element
+	
+	var __server_tick: PBField
+	func has_server_tick() -> bool:
+		if __server_tick.value != null:
+			return true
+		return false
+	func get_server_tick() -> int:
+		return __server_tick.value
+	func clear_server_tick() -> void:
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__server_tick.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT32]
+	func set_server_tick(value : int) -> void:
+		__server_tick.value = value
+	
+	var __cur_stage_id: PBField
+	func has_cur_stage_id() -> bool:
+		if __cur_stage_id.value != null:
+			return true
+		return false
+	func get_cur_stage_id() -> int:
+		return __cur_stage_id.value
+	func clear_cur_stage_id() -> void:
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__cur_stage_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT32]
+	func set_cur_stage_id(value : int) -> void:
+		__cur_stage_id.value = value
+	
+	var __spwan_time_count_down_ms: PBField
+	func has_spwan_time_count_down_ms() -> bool:
+		if __spwan_time_count_down_ms.value != null:
+			return true
+		return false
+	func get_spwan_time_count_down_ms() -> int:
+		return __spwan_time_count_down_ms.value
+	func clear_spwan_time_count_down_ms() -> void:
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__spwan_time_count_down_ms.value = DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64]
+	func set_spwan_time_count_down_ms(value : int) -> void:
+		__spwan_time_count_down_ms.value = value
+	
+	var __stage_time_seconds: PBField
+	func has_stage_time_seconds() -> bool:
+		if __stage_time_seconds.value != null:
+			return true
+		return false
+	func get_stage_time_seconds() -> int:
+		return __stage_time_seconds.value
+	func clear_stage_time_seconds() -> void:
+		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__stage_time_seconds.value = DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64]
+	func set_stage_time_seconds(value : int) -> void:
+		__stage_time_seconds.value = value
+	
+	var __enemy_count: PBField
+	func has_enemy_count() -> bool:
+		if __enemy_count.value != null:
+			return true
+		return false
+	func get_enemy_count() -> int:
+		return __enemy_count.value
+	func clear_enemy_count() -> void:
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__enemy_count.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT32]
+	func set_enemy_count(value : int) -> void:
+		__enemy_count.value = value
+	
+	var __normal_enemy_count: PBField
+	func has_normal_enemy_count() -> bool:
+		if __normal_enemy_count.value != null:
+			return true
+		return false
+	func get_normal_enemy_count() -> int:
+		return __normal_enemy_count.value
+	func clear_normal_enemy_count() -> void:
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__normal_enemy_count.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT32]
+	func set_normal_enemy_count(value : int) -> void:
+		__normal_enemy_count.value = value
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
 class ClientMessage:
 	extends RefCounted
 	func _init():
@@ -2859,6 +3077,12 @@ class ServerMessage:
 		service.func_ref = Callable(self, "new_world_frame")
 		data[__world_frame.tag] = service
 		
+		__level_debug_data = PBField.new("level_debug_data", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 15, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __level_debug_data
+		service.func_ref = Callable(self, "new_level_debug_data")
+		data[__level_debug_data.tag] = service
+		
 	var data = {}
 	
 	enum PayloadCase {
@@ -2867,6 +3091,7 @@ class ServerMessage:
 		WORLD_SNAPSHOT = 4,
 		COMMAND_REJECTED = 9,
 		WORLD_FRAME = 14,
+		LEVEL_DEBUG_DATA = 15,
 	}
 	var _payload_case: int = 0
 
@@ -2913,6 +3138,8 @@ class ServerMessage:
 		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__world_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[14].state = PB_SERVICE_STATE.UNFILLED
+		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[15].state = PB_SERVICE_STATE.UNFILLED
 		__login_accepted.value = LoginAccepted.new()
 		return __login_accepted.value
 	
@@ -2933,6 +3160,8 @@ class ServerMessage:
 		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__world_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[14].state = PB_SERVICE_STATE.UNFILLED
+		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[15].state = PB_SERVICE_STATE.UNFILLED
 		__world_snapshot.value = WorldSnapshot.new()
 		return __world_snapshot.value
 	
@@ -2953,6 +3182,8 @@ class ServerMessage:
 		_payload_case = 9
 		__world_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[14].state = PB_SERVICE_STATE.UNFILLED
+		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[15].state = PB_SERVICE_STATE.UNFILLED
 		__command_rejected.value = CommandRejected.new()
 		return __command_rejected.value
 	
@@ -2973,8 +3204,32 @@ class ServerMessage:
 		data[9].state = PB_SERVICE_STATE.UNFILLED
 		data[14].state = PB_SERVICE_STATE.FILLED
 		_payload_case = 14
+		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[15].state = PB_SERVICE_STATE.UNFILLED
 		__world_frame.value = WorldFrame.new()
 		return __world_frame.value
+	
+	var __level_debug_data: PBField
+	func has_level_debug_data() -> bool:
+		return data[15].state == PB_SERVICE_STATE.FILLED
+	func get_level_debug_data() -> LevelDebugData:
+		return __level_debug_data.value
+	func clear_level_debug_data() -> void:
+		data[15].state = PB_SERVICE_STATE.UNFILLED
+		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_level_debug_data() -> LevelDebugData:
+		__login_accepted.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__world_snapshot.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
+		__world_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[14].state = PB_SERVICE_STATE.UNFILLED
+		data[15].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 15
+		__level_debug_data.value = LevelDebugData.new()
+		return __level_debug_data.value
 	
 	func get_payload_case() -> int:
 		return _payload_case

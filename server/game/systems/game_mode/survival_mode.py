@@ -2,8 +2,10 @@
 
 import math
 import random
+import time
 
 
+from game.entity_projector import project_entity_snapshot
 from game.model.components import PlayerComponent, TransformComponent
 from game.systems.game_mode.game_mode import GameMode
 import game.commands as commands
@@ -31,22 +33,37 @@ class SurvivalMode(GameMode):
 
     def __init__(self):
         super().__init__()
+        self._game_timestamp_ms = 0
+        '''游戏开始计时，单位毫秒，整个生存模式的计时都以这个为准'''
+
         self._survival_config = config_loader.get_survival_config()
         self._cur_stage = None
-        # 当前预算
+        # region stage数据 切换的时候要清空
         self._cur_budget = 0.0
-        self._enemy_budget: dict[str, ] = {}
+        self._enemy_budget: dict[str, SpawnBudgetData] = {}
+        self._stage_start_timestamp_ms = 0.0
+        self._next_stage_timestamp_ms = 0
+        # endregion
+
+        # 下次刷新怪物在这个tick之后检查是否需要刷新
+        self._refresh_timestamp_ms = 0
+
+        self._game_finished = False
 
     def start(self, world: "gw.GameWorld"):
         """开始游戏模式。"""
         super().start(world)
         # 开始计时 准备刷怪
         self._cur_stage = self._survival_config.stages[0]
-        self._enemy_budget: dict[str, SpawnBudgetData] = {}
+        self._game_timestamp_ms = time.time() * 1000
         self._init_stage()
 
     def _init_stage(self):
         """初始化当前阶段。"""
+        # 阶段起点使用玩法时钟，暂停期间不会累计已用时间。
+        self._stage_start_timestamp_ms = self._game_timestamp_ms
+        self._refresh_timestamp_ms = self._game_timestamp_ms + self._survival_config.spawn.spawn_check_interval_seconds * 1000
+        self._next_stage_timestamp_ms = self._game_timestamp_ms + self._cur_stage.duration_seconds * 1000
         total_weight = 0.0
         for enemy in self._cur_stage.pool:
             total_weight += enemy.budget_share
@@ -66,27 +83,57 @@ class SurvivalMode(GameMode):
             return spawn_cost
 
         self._enemy_budget = dict(sorted(self._enemy_budget.items(), key=sort, reverse=True))
+        # todo 也许需要通知刷新ui
 
     def _next_stage(self):
         """切换到下一个阶段。"""
+        # stages是list stage_id是索引+1
         if self._cur_stage.stage_id + 1 not in [stage.stage_id for stage in self._survival_config.stages]:
             # 应该结束游戏了
             self._game_finished = True
+            return
 
-        self._cur_stage = self._survival_config.stages[self._cur_stage.stage_id + 1] 
+        # 上面检查的是下一阶段是否存在 如果存在 那么下一阶段的索引就是这阶段id
+        self._cur_stage = self._survival_config.stages[self._cur_stage.stage_id] 
         
         self._init_stage()
 
 
     def before_step(self, world: "gw.GameWorld", dt: float) -> list[events.Event]:
         """在 tick 开始前调用。"""
+        if not self.should_advance_gameplay():
+            return []
+        
+        _before_step_events: list[events.Event] = []
+        if self._game_finished:
+            # 抛出结算游戏？
+            return _before_step_events
+
         super().before_step(world, dt)
-        self._budget_add(world, dt)
+        self._game_timestamp_ms += dt * 1000
+        self._budget_add(world, dt, _before_step_events)
+        self._countdown_time(world, dt, _before_step_events)
+        return _before_step_events
+
 
     def after_step(self, world: "gw.GameWorld", dt: float) -> list[events.Event]:
         """在 tick 结束后调用。"""
+        if not self.should_advance_gameplay():
+            return []
+
+        if self._game_finished:
+            return []
+
+        _after_step_events: list[events.Event] = []
+        super().after_step(world, dt)
+        if self._try_next_stage(world, dt, _after_step_events):
+            # 下一阶段事件
+            return _after_step_events
+
         # 在帧最后刷新敌人， 给点反应时间
-        self._try_spawn_enemy(world, dt)
+        self._try_spawn_enemy(world, dt, _after_step_events)
+        return _after_step_events
+
 
     def register_command_handlers(self, router: "command_router.CommandRouter"):
         """注册当前游戏模式特有的命令处理函数。"""
@@ -112,7 +159,14 @@ class SurvivalMode(GameMode):
         """处理奖励选择命令。"""
         pass
 
-    def _budget_add(self, world: "gw.GameWorld", dt: float):
+    def _countdown_time(self, world: "gw.GameWorld", dt: float, evns: list[events.Event]):
+        """倒计时。"""
+
+        # 先不统一管理了 谁用谁维护
+
+        pass
+
+    def _budget_add(self, world: "gw.GameWorld", dt: float, evns: list[events.Event]):
         """添加预算。"""
         # 暂停了
         if not self.should_advance_gameplay():
@@ -144,32 +198,51 @@ class SurvivalMode(GameMode):
         # 把预算按权重分配给每个敌人
         for enemy in self._cur_stage.pool:
             budget_data = self._enemy_budget[enemy.enemy_type]
-            budget_data.budget += total_budget * budget_data.budget_weight
+            target_budget = budget_data.budget + total_budget * budget_data.budget_weight
+            max_budget = self._survival_config.spawn.budget_carry_seconds * self._survival_config.enemies[enemy.enemy_type].spawn_cost
+            budget_data.budget = min(target_budget, max_budget)
 
-    def _try_spawn_enemy(self, world: "gw.GameWorld", dt: float):
+        # todo 同步
+
+    def _try_spawn_enemy(self, world: "gw.GameWorld", dt: float, evns: list[events.Event]):
         """尝试生成敌人。"""
+        # 检查间隔
+        if self._refresh_timestamp_ms > self._game_timestamp_ms:
+            return
+
+        # 暂停了
+        if not self.should_advance_gameplay():
+            return
+
+        self._refresh_timestamp_ms = self._game_timestamp_ms + self._survival_config.spawn.spawn_check_interval_seconds * 1000
+
         normal_enemy_type = ["enemy_slime", "enemy_skeleton", "enemy_runner"]
 
+        spawn_count = 0
         for enemy_type, budget_data in self._enemy_budget.items():
             spawn_budget = self._survival_config.enemies[enemy_type].spawn_cost
             # 检查上限
             if world.enemy_count(normal_enemy_type) >= self._cur_stage.normal_alive_cap:
                 break
 
-            # 检查间隔
+            # 一次生成的普通敌人数量有限制
+            if spawn_count >= self._survival_config.spawn.max_normal_spawns_per_second:
+                break
 
             # 检查预算
             if budget_data.budget >= spawn_budget:
-                if self._real_spawn_enemy(world, enemy_type):
+                if _enemy := self._real_spawn_enemy(world, enemy_type):
                     budget_data.budget -= spawn_budget
+                    spawn_count += 1
+                    evns.append(events.EntitySpawnedEvent(entity_info=project_entity_snapshot(_enemy)))
 
 
-    def _real_spawn_enemy(self, world: "gw.GameWorld", enemy_type: str):
+    def _real_spawn_enemy(self, world: "gw.GameWorld", enemy_type: str) -> "entity.Entity | None":
         """真实生成敌人。"""
         # 随便找一个玩家 生成在他周围
-        players: list["entity.Entity"] = world.entities_with(PlayerComponent, TransformComponent)
+        players: list["entity.Entity"] = world.entities_with([PlayerComponent, TransformComponent])
         if not players:
-            return
+            return None
 
         # 以这个玩家为圆心的环形范围生成敌人 但是要避开其他玩家的最近距离
         random_player: "entity.Entity" = random.Random().choice(players)
@@ -201,7 +274,15 @@ class SurvivalMode(GameMode):
                 break
 
         if idx >= 10:
-            return False
+            return None
 
-        world.create_enemy(enemy_type, enemy_x, enemy_y)
+        enemy = world.create_enemy(enemy_type, enemy_x, enemy_y)
+        return enemy
+
+    def _try_next_stage(self, world: "gw.GameWorld", dt: float, evns: list[events.Event]):
+        """尝试切换到下一个阶段。"""
+        if self._next_stage_timestamp_ms > self._game_timestamp_ms:
+            return False
+        self._next_stage()
+        # evns.append(events.StageChangedEvent(stage=self._cur_stage))
         return True

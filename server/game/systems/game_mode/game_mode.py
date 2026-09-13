@@ -44,6 +44,7 @@ class GameMode:
         self._start_tick = 0
         self._cur_tick = 0
         self._run_id = 0
+        self._world: "gw.GameWorld" = None  # type: "gw.GameWorld" | None
 
     def start(self, world: "gw.GameWorld"):
         """开始游戏模式。"""
@@ -51,6 +52,7 @@ class GameMode:
         self._start_time = time.time()
         self._start_tick = world.cur_tick()
         self._run_id = new_run_id()
+        self._world = world
 
     def is_started(self) -> bool:
         """是否游戏已开始。"""
@@ -59,14 +61,15 @@ class GameMode:
     def before_step(self, world: "gw.GameWorld", dt: float) -> list[events.Event]:
         """在 tick 开始前调用。"""
         self._cur_tick = world.cur_tick()
+        return []
 
     def after_step(self, world: "gw.GameWorld", dt: float) -> list[events.Event]:
         """在 tick 结束后调用。"""
-        pass
+        return []
 
     def should_advance_gameplay(self) -> bool:
         """是否应该继续游戏。"""
-        return not self._gameplay_paused
+        return not self._gameplay_paused and self._game_started
 
     def pause_gameplay(self):
         """暂停玩法时间，世界 tick 和生命周期命令仍会继续。"""

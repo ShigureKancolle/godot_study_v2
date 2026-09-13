@@ -77,3 +77,6 @@ sprite_frames = SubResource("SpriteFrames_c1bf2")
 animation = &"Attack"
 frame = 7
 frame_progress = 1.0
+
+[node name="stage_time" type="Label" parent="." unique_id=768443747]
+text = "1234"
