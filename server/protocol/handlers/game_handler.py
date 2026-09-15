@@ -36,3 +36,22 @@ def attack_intent_handler(context: ConnectionContext, proto: game_pb2.AttackInte
         entity_id=context.player_entity_id,
         attack_id=attack_id,
     )
+
+def pause_game_world_handler(context: ConnectionContext, proto: game_pb2.PauseGameWorld):
+    return commands.PauseGameWorldCommand(
+        connection_id=context.connection_id,
+        pause=bool(proto.pause),
+    )
+
+# region debug
+def skip_cur_stage_handler(context: ConnectionContext, proto: game_pb2.SkipCurStage):
+    return commands.SkipCurStageCommand(
+        connection_id=context.connection_id,
+    )
+
+def game_speed_change_handler(context: ConnectionContext, proto: game_pb2.GameSpeedChange):
+    return commands.GameSpeedChangeCommand(
+        connection_id=context.connection_id,
+    )
+
+# endregion

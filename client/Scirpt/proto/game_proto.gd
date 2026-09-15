@@ -2858,6 +2858,154 @@ class LevelDebugData:
 			return PB_ERR.PARSE_INCOMPLETE
 		return result
 	
+class SkipCurStage:
+	extends RefCounted
+	func _init():
+		var service
+		
+	var data = {}
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
+class GameSpeedChange:
+	extends RefCounted
+	func _init():
+		var service
+		
+	var data = {}
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
+class CurGameSpeed:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__speed = PBField.new("speed", PB_DATA_TYPE.INT32, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.INT32])
+		service = PBServiceField.new()
+		service.field = __speed
+		data[__speed.tag] = service
+		
+	var data = {}
+	
+	var __speed: PBField
+	func has_speed() -> bool:
+		if __speed.value != null:
+			return true
+		return false
+	func get_speed() -> int:
+		return __speed.value
+	func clear_speed() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT32]
+	func set_speed(value : int) -> void:
+		__speed.value = value
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
+class PauseGameWorld:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__pause = PBField.new("pause", PB_DATA_TYPE.INT32, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.INT32])
+		service = PBServiceField.new()
+		service.field = __pause
+		data[__pause.tag] = service
+		
+	var data = {}
+	
+	var __pause: PBField
+	func has_pause() -> bool:
+		if __pause.value != null:
+			return true
+		return false
+	func get_pause() -> int:
+		return __pause.value
+	func clear_pause() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__pause.value = DEFAULT_VALUES_3[PB_DATA_TYPE.INT32]
+	func set_pause(value : int) -> void:
+		__pause.value = value
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
 class ClientMessage:
 	extends RefCounted
 	func _init():
@@ -2893,6 +3041,24 @@ class ClientMessage:
 		service.func_ref = Callable(self, "new_atk_rotate_intent")
 		data[__atk_rotate_intent.tag] = service
 		
+		__pause_game_world = PBField.new("pause_game_world", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 6, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __pause_game_world
+		service.func_ref = Callable(self, "new_pause_game_world")
+		data[__pause_game_world.tag] = service
+		
+		__skip_cur_stage = PBField.new("skip_cur_stage", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 7, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __skip_cur_stage
+		service.func_ref = Callable(self, "new_skip_cur_stage")
+		data[__skip_cur_stage.tag] = service
+		
+		__game_speed_change = PBField.new("game_speed_change", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 8, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __game_speed_change
+		service.func_ref = Callable(self, "new_game_speed_change")
+		data[__game_speed_change.tag] = service
+		
 	var data = {}
 	
 	enum PayloadCase {
@@ -2902,6 +3068,9 @@ class ClientMessage:
 		MOVE_INTENT = 3,
 		ATTACK_INTENT = 4,
 		ATK_ROTATE_INTENT = 5,
+		PAUSE_GAME_WORLD = 6,
+		SKIP_CUR_STAGE = 7,
+		GAME_SPEED_CHANGE = 8,
 	}
 	var _payload_case: int = 0
 
@@ -2924,6 +3093,12 @@ class ClientMessage:
 		data[4].state = PB_SERVICE_STATE.UNFILLED
 		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__pause_game_world.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__skip_cur_stage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[8].state = PB_SERVICE_STATE.UNFILLED
 		__login_request.value = LoginRequest.new()
 		return __login_request.value
 	
@@ -2946,6 +3121,12 @@ class ClientMessage:
 		data[4].state = PB_SERVICE_STATE.UNFILLED
 		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__pause_game_world.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__skip_cur_stage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[8].state = PB_SERVICE_STATE.UNFILLED
 		__enter_game_request.value = EnterGameRequest.new()
 		return __enter_game_request.value
 	
@@ -2968,6 +3149,12 @@ class ClientMessage:
 		data[4].state = PB_SERVICE_STATE.UNFILLED
 		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__pause_game_world.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__skip_cur_stage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[8].state = PB_SERVICE_STATE.UNFILLED
 		__move_intent.value = MoveIntent.new()
 		return __move_intent.value
 	
@@ -2990,6 +3177,12 @@ class ClientMessage:
 		_payload_case = 4
 		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__pause_game_world.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__skip_cur_stage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[8].state = PB_SERVICE_STATE.UNFILLED
 		__attack_intent.value = AttackIntent.new()
 		return __attack_intent.value
 	
@@ -3012,8 +3205,98 @@ class ClientMessage:
 		data[4].state = PB_SERVICE_STATE.UNFILLED
 		data[5].state = PB_SERVICE_STATE.FILLED
 		_payload_case = 5
+		__pause_game_world.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__skip_cur_stage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[8].state = PB_SERVICE_STATE.UNFILLED
 		__atk_rotate_intent.value = AtkRotateIntent.new()
 		return __atk_rotate_intent.value
+	
+	var __pause_game_world: PBField
+	func has_pause_game_world() -> bool:
+		return data[6].state == PB_SERVICE_STATE.FILLED
+	func get_pause_game_world() -> PauseGameWorld:
+		return __pause_game_world.value
+	func clear_pause_game_world() -> void:
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__pause_game_world.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_pause_game_world() -> PauseGameWorld:
+		__login_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__enter_game_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__move_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__attack_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
+		data[6].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 6
+		__skip_cur_stage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__pause_game_world.value = PauseGameWorld.new()
+		return __pause_game_world.value
+	
+	var __skip_cur_stage: PBField
+	func has_skip_cur_stage() -> bool:
+		return data[7].state == PB_SERVICE_STATE.FILLED
+	func get_skip_cur_stage() -> SkipCurStage:
+		return __skip_cur_stage.value
+	func clear_skip_cur_stage() -> void:
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__skip_cur_stage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_skip_cur_stage() -> SkipCurStage:
+		__login_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__enter_game_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__move_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__attack_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__pause_game_world.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		data[7].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 7
+		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__skip_cur_stage.value = SkipCurStage.new()
+		return __skip_cur_stage.value
+	
+	var __game_speed_change: PBField
+	func has_game_speed_change() -> bool:
+		return data[8].state == PB_SERVICE_STATE.FILLED
+	func get_game_speed_change() -> GameSpeedChange:
+		return __game_speed_change.value
+	func clear_game_speed_change() -> void:
+		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_game_speed_change() -> GameSpeedChange:
+		__login_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__enter_game_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__move_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__attack_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__pause_game_world.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__skip_cur_stage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		data[8].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 8
+		__game_speed_change.value = GameSpeedChange.new()
+		return __game_speed_change.value
 	
 	func get_payload_case() -> int:
 		return _payload_case
@@ -3083,6 +3366,12 @@ class ServerMessage:
 		service.func_ref = Callable(self, "new_level_debug_data")
 		data[__level_debug_data.tag] = service
 		
+		__cur_game_speed = PBField.new("cur_game_speed", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 16, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __cur_game_speed
+		service.func_ref = Callable(self, "new_cur_game_speed")
+		data[__cur_game_speed.tag] = service
+		
 	var data = {}
 	
 	enum PayloadCase {
@@ -3092,6 +3381,7 @@ class ServerMessage:
 		COMMAND_REJECTED = 9,
 		WORLD_FRAME = 14,
 		LEVEL_DEBUG_DATA = 15,
+		CUR_GAME_SPEED = 16,
 	}
 	var _payload_case: int = 0
 
@@ -3140,6 +3430,8 @@ class ServerMessage:
 		data[14].state = PB_SERVICE_STATE.UNFILLED
 		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[15].state = PB_SERVICE_STATE.UNFILLED
+		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[16].state = PB_SERVICE_STATE.UNFILLED
 		__login_accepted.value = LoginAccepted.new()
 		return __login_accepted.value
 	
@@ -3162,6 +3454,8 @@ class ServerMessage:
 		data[14].state = PB_SERVICE_STATE.UNFILLED
 		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[15].state = PB_SERVICE_STATE.UNFILLED
+		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[16].state = PB_SERVICE_STATE.UNFILLED
 		__world_snapshot.value = WorldSnapshot.new()
 		return __world_snapshot.value
 	
@@ -3184,6 +3478,8 @@ class ServerMessage:
 		data[14].state = PB_SERVICE_STATE.UNFILLED
 		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[15].state = PB_SERVICE_STATE.UNFILLED
+		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[16].state = PB_SERVICE_STATE.UNFILLED
 		__command_rejected.value = CommandRejected.new()
 		return __command_rejected.value
 	
@@ -3206,6 +3502,8 @@ class ServerMessage:
 		_payload_case = 14
 		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[15].state = PB_SERVICE_STATE.UNFILLED
+		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[16].state = PB_SERVICE_STATE.UNFILLED
 		__world_frame.value = WorldFrame.new()
 		return __world_frame.value
 	
@@ -3228,8 +3526,34 @@ class ServerMessage:
 		data[14].state = PB_SERVICE_STATE.UNFILLED
 		data[15].state = PB_SERVICE_STATE.FILLED
 		_payload_case = 15
+		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[16].state = PB_SERVICE_STATE.UNFILLED
 		__level_debug_data.value = LevelDebugData.new()
 		return __level_debug_data.value
+	
+	var __cur_game_speed: PBField
+	func has_cur_game_speed() -> bool:
+		return data[16].state == PB_SERVICE_STATE.FILLED
+	func get_cur_game_speed() -> CurGameSpeed:
+		return __cur_game_speed.value
+	func clear_cur_game_speed() -> void:
+		data[16].state = PB_SERVICE_STATE.UNFILLED
+		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_cur_game_speed() -> CurGameSpeed:
+		__login_accepted.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__world_snapshot.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
+		__world_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[14].state = PB_SERVICE_STATE.UNFILLED
+		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[15].state = PB_SERVICE_STATE.UNFILLED
+		data[16].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 16
+		__cur_game_speed.value = CurGameSpeed.new()
+		return __cur_game_speed.value
 	
 	func get_payload_case() -> int:
 		return _payload_case

@@ -1,6 +1,19 @@
 [gd_scene format=3 uid="uid://c6517kmwqdn2b"]
 
 [ext_resource type="Script" uid="uid://8awcra7mogs0" path="res://Scirpt/ui/Debug/test_level_debug_ui.gd" id="1_j3k5i"]
+[ext_resource type="Texture2D" uid="uid://csdd00cnx8evu" path="res://Prefab/CommonTexture/buttonRound_beige.png" id="2_ek8ts"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4ycsp"]
+texture = ExtResource("2_ek8ts")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ek8ts"]
+texture = ExtResource("2_ek8ts")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ycjit"]
+texture = ExtResource("2_ek8ts")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_e7hq2"]
+texture = ExtResource("2_ek8ts")
 
 [node name="TestLevelDebugUi" type="Node2D" unique_id=915423884]
 script = ExtResource("1_j3k5i")
@@ -41,3 +54,22 @@ text = "1234"
 [node name="normal_enemy_count" type="Label" parent="PanelContainer/BoxContainer" unique_id=1133349751]
 layout_mode = 2
 text = "1234"
+
+[node name="next_stage" type="Button" parent="PanelContainer/BoxContainer" unique_id=1616534657]
+custom_minimum_size = Vector2(45, 45)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_4ycsp")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_ek8ts")
+theme_override_styles/hover = SubResource("StyleBoxTexture_ycjit")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_e7hq2")
+text = "下个阶段
+前5秒"
+
+[node name="speed_change" type="Button" parent="PanelContainer/BoxContainer" unique_id=32423154]
+custom_minimum_size = Vector2(45, 45)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_4ycsp")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_ek8ts")
+theme_override_styles/hover = SubResource("StyleBoxTexture_ycjit")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_e7hq2")
+text = "1倍"

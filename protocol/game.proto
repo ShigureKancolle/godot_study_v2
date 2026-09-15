@@ -163,6 +163,7 @@ message WorldFrame {
   repeated WorldEvent events = 6; // 单独处理的事件
 }
 
+// debug msg ===========================================================================
 // 怪物预算信息
 message EnemyBudgetData {
   string enemy_type = 1;
@@ -180,6 +181,28 @@ message LevelDebugData {
   int32 normal_enemy_count = 7;
 }
 
+// 直接跳到当前stage只剩5秒的时候 如果不足五秒 没有效果
+message SkipCurStage {
+
+}
+
+// 加速 根据接受次数来决定是几倍速
+message GameSpeedChange {
+
+}
+
+// 告诉客户端现在是几倍速
+message CurGameSpeed {
+  int32 speed = 1;
+}
+
+// debug msg end =======================================================================
+
+// 暂停游戏
+message PauseGameWorld {
+  int32 pause = 1; // 1暂停  0解除
+}
+
 // 该包络只允许承载客户端发往服务端的消息。
 message ClientMessage {
   oneof payload {
@@ -188,6 +211,11 @@ message ClientMessage {
     MoveIntent move_intent = 3;
     AttackIntent attack_intent = 4;
     AtkRotateIntent atk_rotate_intent = 5;
+    PauseGameWorld pause_game_world = 6;
+    // debug_msg
+    SkipCurStage skip_cur_stage = 7;
+    GameSpeedChange game_speed_change = 8;
+    // debug_msg_end
   }
 }
 
@@ -203,6 +231,9 @@ message ServerMessage {
     WorldSnapshot world_snapshot = 4;
     CommandRejected command_rejected = 9;
     WorldFrame world_frame = 14;
+    // debug_msg
     LevelDebugData level_debug_data = 15;
+    CurGameSpeed cur_game_speed = 16;
+    // debug_msg_end
   }
 }

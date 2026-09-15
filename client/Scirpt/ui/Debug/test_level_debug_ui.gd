@@ -8,6 +8,8 @@ class_name TestLevelDebugUI
 @onready var stage_time: Label = $PanelContainer/BoxContainer/stage_time
 @onready var enemy_count: Label = $PanelContainer/BoxContainer/enemy_count
 @onready var normal_enemy_count: Label = $PanelContainer/BoxContainer/normal_enemy_count
+@onready var speed_change: Button = $PanelContainer/BoxContainer/speed_change
+@onready var next_stage: Button = $PanelContainer/BoxContainer/next_stage
 
 class LevelDebugData:
 	extends Object
@@ -18,6 +20,26 @@ class LevelDebugData:
 	var stage_time_seconds: int = 0
 	var enemy_count: int = 0
 	var normal_enemy_count: int = 0
+
+func _ready() -> void:
+	speed_change.connect("pressed", on_speed_change)
+	next_stage.connect("pressed", on_next_stage)
+	SignalMgr.Get().snl_cur_game_speed.connect(hdl_cur_game_speed)
+	
+func on_speed_change():
+	WebSocketMgr.Get().send(
+		"game_speed_change",
+		{}
+	)
+	
+func on_next_stage():
+	WebSocketMgr.Get().send(
+		"skip_cur_stage",
+		{}
+	)
+	
+func hdl_cur_game_speed(speed: int):
+	speed_change.text = str(speed) + "倍"
 
 
 func update(debug: LevelDebugData):

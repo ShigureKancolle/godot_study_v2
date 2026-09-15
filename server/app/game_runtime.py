@@ -26,10 +26,11 @@ class GameRuntime:
         # 服务端游戏主循环
         while self._running:
             try:
-            # 固定推进一次世界
-                result = self._world.step(FIXED_DT)
+                # 固定推进一次世界
+                results = self._world.step(FIXED_DT)
 
-                self._protocol_adapter.publish_tick_result(result)
+                for result in results:
+                    self._protocol_adapter.publish_tick_result(result)
             except asyncio.CancelledError:
                 # 服务端正常关闭
                 raise

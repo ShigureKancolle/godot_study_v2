@@ -64,6 +64,7 @@ class GameWorld:
         self._ai_comp_system: AICompSystem = None
         self._game_mode = current_game_mode if current_game_mode is not None else game_mode_module.GameMode()
         self._system_instances: dict[type[comp_system.CompSystem], comp_system.CompSystem] = {}
+        self._cur_speed: int = 1
         self.map_id: str = navigation_grid.TEST_MAP_ID
         self.pathfinder = pathfinder.PathFinder(self.map_id)
 
@@ -77,12 +78,37 @@ class GameWorld:
         # 在这里初始化gamemode
         pass
 
+    # region debug
+    def change_game_speed(self) -> int:
+        """改变游戏速度"""
+        speed = [1, 2, 4]
+        self._cur_speed = speed[(speed.index(self._cur_speed) + 1) % len(speed)]
+
+        return self._cur_speed
+
+    def skip_cur_stage(self):
+        if isinstance(self._game_mode, survival_mode_module.SurvivalMode):
+            self._game_mode.skip_cur_stage()
+
+    # endregion
+
     def get_next_entity_idx(self):
         self._entity_idx += 1
         return self._entity_idx
 
     # region loop
-    def step(self, dt: float):
+    def step(self, dt: float) -> list[event.TickResult]:
+        # 这一步执行几次 
+        tick_time = self._cur_speed
+        results: list[event.TickResult] = []
+        
+        while tick_time > 0:
+            tick_time -= 1
+            results.append(self._step(dt))
+
+        return results
+
+    def _step(self, dt: float) -> event.TickResult:
         if dt <= 0:
             raise ValueError("dt must be greater than 0")
 
@@ -175,6 +201,23 @@ class GameWorld:
         )
         self.register_system(combat_comp_system.CombatCompSystem, command.AtkRotateCommand)
         self.register_system(spawn_compsystem.SpawnEnemySystem, command.SpawnEnemyCommand)
+        self.register_system(
+            comp_system.PauseGameWorldCompSystem, 
+            command.PauseGameWorldCommand,
+            game_mode_module.CommandScope.LIFECYCLE,
+        )
+
+        self.register_system(
+            comp_system.SkipCurStageCompSystem, 
+            command.SkipCurStageCommand,
+            game_mode_module.CommandScope.LIFECYCLE,
+        )
+
+        self.register_system(
+            comp_system.GameSpeedChangeCompSystem, 
+            command.GameSpeedChangeCommand,
+            game_mode_module.CommandScope.LIFECYCLE,
+        )
 
 
     def register_game_mode_command_handlers(self):

@@ -1,0 +1,89 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://Prefab/CommonTexture/VFX/Player_Attack_SectorSlashFX_1001.png" id="1_sector"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_0"]
+atlas = ExtResource("1_sector")
+region = Rect2(0, 0, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_1"]
+atlas = ExtResource("1_sector")
+region = Rect2(444, 0, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_2"]
+atlas = ExtResource("1_sector")
+region = Rect2(887, 0, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_3"]
+atlas = ExtResource("1_sector")
+region = Rect2(1331, 0, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_4"]
+atlas = ExtResource("1_sector")
+region = Rect2(0, 444, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_5"]
+atlas = ExtResource("1_sector")
+region = Rect2(444, 444, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_6"]
+atlas = ExtResource("1_sector")
+region = Rect2(887, 444, 443, 443)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame_7"]
+atlas = ExtResource("1_sector")
+region = Rect2(1331, 444, 443, 443)
+filter_clip = true
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_attack"]
+animations = [{
+"frames": [{
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_0")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_1")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_2")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_3")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_4")
+}, {
+"duration": 2.0,
+"texture": SubResource("AtlasTexture_frame_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_frame_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_frame_7")
+}],
+"loop": false,
+"name": &"Attack",
+"speed": 24.0
+}]
+
+[node name="AttackEffect_1005" type="Node2D"]
+z_index = 1
+texture_filter = 1
+
+[node name="Scale" type="Node2D" parent="."]
+rotation = -0.020789681
+scale = Vector2(0.192833282, 0.192833282)
+metadata/calibration = "以透明度至少50%的刀光主体校准：半径70，前向左右各60度；缩放只调整本节点"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Scale"]
+position = Vector2(163.117113, 0)
+sprite_frames = SubResource("SpriteFrames_attack")
+animation = &"Attack"

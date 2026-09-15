@@ -31,7 +31,7 @@ func on_command_rejected(msg: GameProto.ServerMessage):
 
 func on_level_debug(msg: GameProto.ServerMessage):
 	var debug := msg.get_level_debug_data()
-	print("等级调试信息：", debug)
+	# print("等级调试信息：", debug)
 	var data = TestLevelDebugUI.LevelDebugData.new()
 	data.server_tick = debug.get_server_tick()
 	data.cur_stage_id = debug.get_cur_stage_id()
@@ -44,3 +44,11 @@ func on_level_debug(msg: GameProto.ServerMessage):
 		data.enemy_budget_data += enemy_budget.get_enemy_type() + ":" + str(enemy_budget.get_budget()) + "\n"
 
 	SignalMgr.Get().snl_level_debug.emit(data)
+	
+func on_cur_game_speed(msg: GameProto.ServerMessage):
+	var speed_msg := msg.get_cur_game_speed()
+	
+	var speed := speed_msg.get_speed()
+	
+	SignalMgr.Get().snl_cur_game_speed.emit(speed)
+	

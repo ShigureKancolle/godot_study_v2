@@ -104,8 +104,8 @@
             "_failure_policy": "找点失败策略；skip_attempt_keep_capped_budget 表示本次不生成、不扣预算，余额保留但受 budget_carry 上限约束。",
 
             "require_outside_all_alive_views": true,
-            "spawn_distance_min_px": 64.0,
-            "spawn_distance_max_px": 160.0,
+            "spawn_distance_min_px": 400.0,
+            "spawn_distance_max_px": 560.0,
             "minimum_approach_seconds": 1.0,
             "require_walkable": true,
             "require_reachable_player": true,

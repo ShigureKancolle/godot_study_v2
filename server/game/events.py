@@ -119,6 +119,7 @@ class CommandRejectedEvent(Event):
 class EntitySpawnedEvent(Event):
     entity_info: EntitySnapshot = field(default_factory=EntitySnapshot)
 
+# region debug
 @dataclass(frozen=True)
 class LevelDebugEvent(Event):
     enemy_budget: list[EnemyBudgetData] = field(default_factory=list)
@@ -128,3 +129,11 @@ class LevelDebugEvent(Event):
     spwan_time_count_down_ms: float = 0.0
     enemy_count: int = 0
     normal_enemy_count: int = 0
+
+@dataclass(frozen=True)
+class GameSpeedChangedEvent(Event):
+    speed: int = 1
+
+# endregion
+
+

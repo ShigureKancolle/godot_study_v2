@@ -20,3 +20,6 @@ script = ExtResource("2_8ngca")
 [node name="Hud" type="Node2D" parent="." unique_id=457178477]
 
 [node name="Debug" type="Node2D" parent="." unique_id=467453600]
+
+[node name="TestLevelUI" type="CanvasLayer" parent="." unique_id=585713636]
+layer = 10

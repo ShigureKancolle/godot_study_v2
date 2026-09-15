@@ -133,3 +133,9 @@ class GameProtoProjector:
             enemy_count=event.enemy_count,
             normal_enemy_count=event.normal_enemy_count,
         )
+
+    @staticmethod
+    def cur_game_speed(event: events.GameSpeedChangedEvent) -> game_pb2.CurGameSpeed:
+        return game_pb2.CurGameSpeed(
+            speed=event.speed,
+        )

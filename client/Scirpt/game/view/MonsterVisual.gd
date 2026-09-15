@@ -2,6 +2,8 @@ extends PlayerVisual
 class_name MonsterVisual
 ## 怪物共用表现节点，资源由服务端传来的模板键选择。
 
+const NAMEPLATE_GAP: float = 6.0
+
 var entity_config_key: String = ""
 var _active_attack: ConfigLoader.AttackConfig = null
 var _attack_elapsed_ms: float = 0.0
@@ -23,12 +25,22 @@ func configure(config_key: String) -> bool:
 	body.scale = Vector2.ONE * float(visual.get("render_size_px", 80.0)) / frame_texture.get_width()
 	var label := get_node("NameLabel") as Label
 	label.text = String(visual.get("display_name", config_key))
-	label.position.y = -float(visual.get("render_size_px", 80.0)) * 0.5 - 14.0
 	label.add_theme_color_override("font_color", Color("efe6d2"))
 	label.add_theme_color_override("font_outline_color", Color("181923"))
 	label.add_theme_constant_override("outline_size", 4)
 	get_node("FacingArrow").visible = false
 	return true
+
+func layout_nameplate(hp_bar: MyProgressBar) -> void:
+	# 按实际显示高度从怪物顶部向上排列血条和名字，避免不同体型发生重叠。
+	var body := get_node("Body") as AnimatedSprite2D
+	var frame_texture: Texture2D = body.sprite_frames.get_frame_texture(body.animation, 0)
+	var body_top: float = body.position.y - frame_texture.get_height() * body.scale.y * 0.5
+	var progress := hp_bar.get_node("ProgressBar") as ProgressBar
+	hp_bar.position.y = body_top - NAMEPLATE_GAP - progress.get_rect().end.y
+	var label := get_node("NameLabel") as Label
+	var label_height: float = maxf(label.size.y, label.get_combined_minimum_size().y)
+	label.position.y = hp_bar.position.y + progress.position.y - NAMEPLATE_GAP - label_height
 
 func set_player_name(player_name: String) -> void:
 	if player_name.is_empty():

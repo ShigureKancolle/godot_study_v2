@@ -5,11 +5,20 @@ class_name LocalPlayerController
 var entity_id: String = ""
 var _last_direction: Vector2 = Vector2.ZERO
 var _last_moving: bool = false
+var _is_game_pause: bool = false
+
+func _ready() -> void:
+	SignalMgr.Get().snl_game_pause.connect(hdl_game_pause)
+	
+func hdl_game_pause(pause: bool):
+	_is_game_pause = pause
 
 func setup(target_entity_id: String):
 	entity_id = target_entity_id
 
 func _process(delta: float):
+	if _is_game_pause:
+		return
 	_move_intent(delta)
 	_atk_rotate_intent(delta)
 	_attack_intent(delta)

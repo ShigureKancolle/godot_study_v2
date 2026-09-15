@@ -3,6 +3,7 @@
 import enum
 import typing
 import time
+import game.model.components as comps
 import game.events as events
 if typing.TYPE_CHECKING:
     import game.command_router as command_router

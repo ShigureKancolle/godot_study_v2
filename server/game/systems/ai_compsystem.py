@@ -270,7 +270,7 @@ class AICompSystem(CompSystem):
             return (None, None)
         _target_entity = world.get_entity(_target_entity_id)
         if not _target_entity:
-            logger.error(f"_target_entity is None, target_entity_id = {_target_entity_id}")
+            # logger.error(f"_target_entity is None, target_entity_id = {_target_entity_id}")
             return (None, None)
         if _target_entity.is_dead():
             logger.error("_target_entity is dead")

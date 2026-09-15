@@ -1,9 +1,9 @@
 extends Node2D
 class_name TestLevel
 const LEVEL_SCENE := preload("res://Prefab/Level/TestLevel.tscn")
+const MENU_UI_PATH := "res://Prefab/Level/MenuUI.tscn"
 
-const DEBUG_UI_SCENE := preload("res://Prefab/Level/TestLevelDebugUI.tscn")
-
+@onready var test_level_ui: CanvasLayer = $TestLevelUI
 @onready var entity: Node2D = $Entity
 @onready var hud: Node2D = $Hud
 @onready var debug: Node2D = $Debug
@@ -13,8 +13,8 @@ const DEBUG_UI_SCENE := preload("res://Prefab/Level/TestLevelDebugUI.tscn")
 
 var tile_map_layer: TileMapLayer = null
 var entity_views: Dictionary[String, EntityView] = {}
+var menu_ui: Node2D = null
 
-var _debugui: TestLevelDebugUI = null
 
 # 现在只有一个关卡 先不搞mgr 用静态方法
 static func create_level():
@@ -37,12 +37,36 @@ func _ready():
 	# SignalMgr.Get().snl_entities_mp_changed.connect(hdl_entities_mp_changed)
 	SignalMgr.Get().snl_damage_received.connect(hdl_damage_received)
 	SignalMgr.Get().snl_entity_dead.connect(hdl_entity_dead)
-	SignalMgr.Get().snl_level_debug.connect(hdl_level_debug)
+	
 
 	# 初始化地图
 	tile_map_layer = NavigationMapView.new()
 	map.add_child(tile_map_layer)
 
+func _unhandled_input(event: InputEvent):
+	if event.is_action_pressed("esc_menu") and not event.is_echo():
+		# 打开菜单界面
+		if menu_ui == null:
+			menu_ui = load(MENU_UI_PATH).instantiate()
+			test_level_ui.add_child(menu_ui)
+			menu_ui.show()
+		else:
+			if menu_ui.is_visible():
+				menu_ui.hide()
+			else:
+				menu_ui.show()
+				
+		# send_pause_game(is_pause())
+
+func is_pause() -> bool:
+	if menu_ui == null:
+		return false
+	return menu_ui.is_visible()
+
+func send_pause_game(pause):
+	WebSocketMgr.Get().send("pause_game_world", {
+		"pause": pause
+	})
 
 func spawn_entity(entity_state: EntityState):
 	if entity_state.entity_id in entity_views:
@@ -117,12 +141,6 @@ func hdl_entity_dead(entity_id: String):
 	var entity_view = entity_views.get(entity_id, null)
 	if entity_view:
 		entity_view.play_dead_animation()
-
-func hdl_level_debug(data: TestLevelDebugUI.LevelDebugData):
-	if _debugui == null:
-		_debugui = DEBUG_UI_SCENE.instantiate()
-		add_child(_debugui)
-	_debugui.update(data)
 
 func clear_entity_views():
 	for view in entity_views.values():

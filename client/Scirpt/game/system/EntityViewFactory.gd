@@ -61,6 +61,8 @@ static func create_enemy_view(entity_state: EntityState):
 	var nameplate_presenter = NameplatePresenter.new(view)
 	var hp_bar_presenter = HpBarPresenter.new(view)
 	hp_bar_presenter.set_hp_bar(entity_hp_bar as MyProgressBar)
+	if view_visual is MonsterVisual:
+		(view_visual as MonsterVisual).layout_nameplate(entity_hp_bar as MyProgressBar)
 	view.add_presenter(MotionPresenter.presenter_name, motion_presenter)
 	view.add_presenter(AnimationPresenter.presenter_name, animation_presenter)
 	view.add_presenter(NameplatePresenter.presenter_name, nameplate_presenter)

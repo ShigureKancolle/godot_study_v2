@@ -52,6 +52,23 @@ class RewardChoiceCommand(WorldCommand):
     ''' 升级之后的三选一奖励 '''
     reward_idx: int = 0
 
+@dataclass
+class PauseGameWorldCommand(WorldCommand):
+    ''' 暂停游戏世界 '''
+    pause: bool = True
+
+@dataclass
+class SkipCurStageCommand(WorldCommand):
+    ''' 跳到当前stage最后5秒 如果时间不够则什么都不会做 '''
+    pass
+
+@dataclass
+class GameSpeedChangeCommand(WorldCommand):
+    ''' 游戏速度改变 '''
+    pass
+
+
+
 # endregion 
 
 # region SessionCommand

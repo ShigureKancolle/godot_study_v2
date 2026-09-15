@@ -47,6 +47,16 @@ class GameProtocolAdapter:
                 self.publish_level_debug(current_event, server_tick)
                 continue
 
+            if isinstance(current_event, events.GameSpeedChangedEvent):
+                message = GameProtoProjector.cur_game_speed(current_event)
+                self._outbound.broadcast(
+                    "cur_game_speed",
+                    message,
+                    room_id=self._game_world.room_id,
+                    server_tick=server_tick,
+                )
+                continue
+
             builder.apply(current_event)
 
         if not builder.has_changes():

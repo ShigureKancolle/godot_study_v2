@@ -28,20 +28,34 @@ class SpawnBudgetData:
     budget_weight: float
     '''预算分配占比'''
 
+@dataclass
+class TimeSpawnData:
+    """定时生成敌人"""
+    spawn_time: int
+    '''生成时间，开局第几毫秒'''
+
+    enemy_type: str
+    '''敌人类型ID'''
+
+    is_spawned: bool = False
+    '''是否已生成'''
+
 class SurvivalMode(GameMode):
     """生存模式。"""
 
     def __init__(self):
         super().__init__()
         self._game_timestamp_ms = 0
-        '''游戏开始计时，单位毫秒，整个生存模式的计时都以这个为准'''
+        '''游戏计时，单位毫秒，整个生存模式的计时都以这个为准'''
 
+        self._time_spawn_list: list[TimeSpawnData] = []
         self._survival_config = config_loader.get_survival_config()
         self._cur_stage = None
         # region stage数据 切换的时候要清空
         self._cur_budget = 0.0
         self._enemy_budget: dict[str, SpawnBudgetData] = {}
         self._stage_start_timestamp_ms = 0.0
+        '''当前阶段开始时间'''
         self._next_stage_timestamp_ms = 0
         # endregion
 
@@ -57,6 +71,7 @@ class SurvivalMode(GameMode):
         self._cur_stage = self._survival_config.stages[0]
         self._game_timestamp_ms = time.time() * 1000
         self._init_stage()
+        self._init_timed_spawns()
 
     def _init_stage(self):
         """初始化当前阶段。"""
@@ -83,6 +98,15 @@ class SurvivalMode(GameMode):
             return spawn_cost
 
         self._enemy_budget = dict(sorted(self._enemy_budget.items(), key=sort, reverse=True))
+
+        # 特殊生成
+        if self._cur_stage.entry_spawn:
+            # 这个是进入阶段立即生成 所以时间设为0
+            self._time_spawn_list.append(TimeSpawnData(
+                spawn_time = 0,
+                enemy_type = self._cur_stage.entry_spawn.enemy_type,
+            ))
+
         # todo 也许需要通知刷新ui
 
     def _next_stage(self):
@@ -98,6 +122,14 @@ class SurvivalMode(GameMode):
         
         self._init_stage()
 
+    def _init_timed_spawns(self):
+        """初始化定时生成。"""
+        self._time_spawn_list: list[TimeSpawnData] = []
+        for time_spawns in self._survival_config.timed_spawns:
+            self._time_spawn_list.append(TimeSpawnData(
+                spawn_time = self._game_timestamp_ms + int(time_spawns.at_combat_seconds) * 1000,
+                enemy_type = time_spawns.enemy_type,
+            ))
 
     def before_step(self, world: "gw.GameWorld", dt: float) -> list[events.Event]:
         """在 tick 开始前调用。"""
@@ -236,6 +268,13 @@ class SurvivalMode(GameMode):
                     spawn_count += 1
                     evns.append(events.EntitySpawnedEvent(entity_info=project_entity_snapshot(_enemy)))
 
+        # 特殊生成在没成功之前会一直尝试
+        for time_spawn_data in self._time_spawn_list:
+            if self._game_timestamp_ms >= time_spawn_data.spawn_time and not time_spawn_data.is_spawned:
+                if _enemy := self._real_spawn_enemy(world, time_spawn_data.enemy_type):
+                    time_spawn_data.is_spawned = True
+                    evns.append(events.EntitySpawnedEvent(entity_info=project_entity_snapshot(_enemy)))
+
 
     def _real_spawn_enemy(self, world: "gw.GameWorld", enemy_type: str) -> "entity.Entity | None":
         """真实生成敌人。"""
@@ -270,10 +309,17 @@ class SurvivalMode(GameMode):
                     # 在禁区
                     idx += 1
                     break
+
+                _pos_walkable = world.pathfinder.is_walkable(enemy_x, enemy_y)
+                if not _pos_walkable: 
+                    # 目标点不能走
+                    idx += 1
+                    break
+
             else:
                 break
 
-        if idx >= 10:
+        if idx >= self._survival_config.spawn.position.max_position_attempts:
             return None
 
         enemy = world.create_enemy(enemy_type, enemy_x, enemy_y)
@@ -286,3 +332,12 @@ class SurvivalMode(GameMode):
         self._next_stage()
         # evns.append(events.StageChangedEvent(stage=self._cur_stage))
         return True
+
+    # region debug
+    def skip_cur_stage(self):
+        """跳过当前阶段。"""
+        _game_timestamp_ms = self._next_stage_timestamp_ms - 5000
+        if self._game_timestamp_ms < _game_timestamp_ms:
+            self._game_timestamp_ms = _game_timestamp_ms
+
+    # endregion

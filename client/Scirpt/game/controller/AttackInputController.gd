@@ -1,7 +1,7 @@
 extends Object
 class_name AttackInputController
 
-const ATTACK_ID: int = 1004
+const ATTACK_ID: int = 1005
 
 
 static func get_attack_id(_delta: float) -> int:

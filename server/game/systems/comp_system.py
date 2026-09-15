@@ -406,5 +406,33 @@ class LeaveCompSystem(CompSystem):
         
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         return []
-    
+
+class PauseGameWorldCompSystem(CompSystem):
+    def apply_command(self, world: "game_world.GameWorld", command: "command.PauseGameWorldCommand") -> list[event.Event]:
+        logger.debug("处理暂停游戏世界命令：pause=%s", command.pause)
+        if command.pause:
+            world.game_mode.pause_gameplay()
+        else:
+            world.game_mode.resume_gameplay()
+        return []
+
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
+        return []
+
+class SkipCurStageCompSystem(CompSystem):
+    def apply_command(self, world: "game_world.GameWorld", command: "command.SkipCurStageCommand") -> list[event.Event]:
+        logger.debug("处理跳过当前阶段命令")
+        world.skip_cur_stage()
+        return []
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
+        return []
+
+class GameSpeedChangeCompSystem(CompSystem):
+    def apply_command(self, world: "game_world.GameWorld", command: "command.GameSpeedChangeCommand") -> list[event.Event]:
+        logger.debug("处理游戏速度改变命令")
+        cur_speed: int = world.change_game_speed()
+        return [event.GameSpeedChangedEvent(speed=cur_speed)]
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
+        return []
+                        
                        

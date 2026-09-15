@@ -1,0 +1,159 @@
+[gd_scene format=3 uid="uid://xsw3nymofve5"]
+
+[ext_resource type="Script" uid="uid://dpevv3igec8i2" path="res://Scirpt/ui/Level/MenuUI.gd" id="1_0nlnr"]
+[ext_resource type="Texture2D" uid="uid://d3ldu6b48aw5r" path="res://Prefab/CommonRes/UI/MenuPanel_CrimsonJade.png" id="1_panel"]
+[ext_resource type="Texture2D" uid="uid://d2gyka5r23k0u" path="res://Prefab/CommonRes/UI/MenuButton_Crimson.png" id="2_crimson"]
+[ext_resource type="Texture2D" uid="uid://ts8w0vdfwi5s" path="res://Prefab/CommonRes/UI/MenuButton_Jade.png" id="3_jade"]
+
+[sub_resource type="StyleBoxFlat" id="Style_focus"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.9, 0.59, 1)
+corner_radius_top_left = 128
+corner_radius_top_right = 128
+corner_radius_bottom_right = 128
+corner_radius_bottom_left = 128
+
+[sub_resource type="StyleBoxTexture" id="Style_crimson_hover"]
+texture = ExtResource("2_crimson")
+modulate_color = Color(1.15, 1.12, 1.06, 1)
+
+[sub_resource type="StyleBoxTexture" id="Style_crimson"]
+texture = ExtResource("2_crimson")
+
+[sub_resource type="StyleBoxTexture" id="Style_crimson_pressed"]
+texture = ExtResource("2_crimson")
+modulate_color = Color(0.8, 0.75, 0.68, 1)
+
+[sub_resource type="Theme" id="Theme_menu"]
+default_font_size = 16
+Button/colors/font_color = Color(1, 0.96, 0.85, 1)
+Button/colors/font_focus_color = Color(1, 1, 0.95, 1)
+Button/colors/font_hover_color = Color(1, 1, 0.95, 1)
+Button/colors/font_outline_color = Color(0.2, 0.15, 0.12, 1)
+Button/colors/font_pressed_color = Color(1, 0.91, 0.7, 1)
+Button/constants/outline_size = 3
+Button/styles/focus = SubResource("Style_focus")
+Button/styles/hover = SubResource("Style_crimson_hover")
+Button/styles/normal = SubResource("Style_crimson")
+Button/styles/pressed = SubResource("Style_crimson_pressed")
+
+[sub_resource type="AtlasTexture" id="Texture_panel"]
+atlas = ExtResource("1_panel")
+region = Rect2(28, 65, 1886, 661)
+filter_clip = true
+
+[sub_resource type="StyleBoxTexture" id="Style_panel"]
+texture = SubResource("Texture_panel")
+
+[sub_resource type="StyleBoxFlat" id="Style_jade_backing"]
+bg_color = Color(0.015, 0.24, 0.18, 1)
+corner_radius_top_left = 128
+corner_radius_top_right = 128
+corner_radius_bottom_right = 128
+corner_radius_bottom_left = 128
+
+[sub_resource type="StyleBoxTexture" id="Style_jade"]
+texture = ExtResource("3_jade")
+
+[sub_resource type="StyleBoxTexture" id="Style_jade_pressed"]
+texture = ExtResource("3_jade")
+modulate_color = Color(0.72, 0.78, 0.88, 1)
+
+[sub_resource type="StyleBoxTexture" id="Style_jade_hover"]
+texture = ExtResource("3_jade")
+modulate_color = Color(1.14, 1.16, 1.2, 1)
+
+[node name="MenuUi" type="Node2D" unique_id=1797207568]
+texture_filter = 1
+script = ExtResource("1_0nlnr")
+
+[node name="Panel" type="Panel" parent="." unique_id=2068402050]
+top_level = true
+texture_filter = 1
+anchors_preset = -1
+anchor_left = 0.22
+anchor_top = 0.305
+anchor_right = 0.78
+anchor_bottom = 0.695
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_menu")
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=681202699]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 22
+
+[node name="Buttons" type="HBoxContainer" parent="Panel/Margin" unique_id=1442320004]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="RestartSlot" type="AspectRatioContainer" parent="Panel/Margin/Buttons" unique_id=1534562313]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="BtnRestart" type="Button" parent="Panel/Margin/Buttons/RestartSlot" unique_id=1766222495]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "重开"
+
+[node name="ContinueSlot" type="AspectRatioContainer" parent="Panel/Margin/Buttons" unique_id=1038197474]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="JadeBacking" type="Control" parent="Panel/Margin/Buttons/ContinueSlot" unique_id=2086614652]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Disk" type="Panel" parent="Panel/Margin/Buttons/ContinueSlot/JadeBacking" unique_id=1509769744]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.15
+anchor_top = 0.15
+anchor_right = 0.85
+anchor_bottom = 0.85
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_jade_backing")
+
+[node name="BtnContinue" type="Button" parent="Panel/Margin/Buttons/ContinueSlot" unique_id=259667942]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("Style_jade")
+theme_override_styles/pressed = SubResource("Style_jade_pressed")
+theme_override_styles/hover = SubResource("Style_jade_hover")
+text = "继续"
+
+[node name="MainMenuSlot" type="AspectRatioContainer" parent="Panel/Margin/Buttons" unique_id=445637940]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="BtnMainMenu" type="Button" parent="Panel/Margin/Buttons/MainMenuSlot" unique_id=614003812]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "回到主界面"
+
+[connection signal="visibility_changed" from="." to="." method="_on_visibility_changed"]

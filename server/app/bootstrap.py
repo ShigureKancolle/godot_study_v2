@@ -19,3 +19,6 @@ def build_client_router():
     client_router.register("move_intent", game_handler.move_intent_handler)
     client_router.register("attack_intent", game_handler.attack_intent_handler)
     client_router.register("atk_rotate_intent", combat_handler.atk_rotate_intent_handler)
+    client_router.register("pause_game_world", game_handler.pause_game_world_handler)
+    client_router.register("skip_cur_stage", game_handler.skip_cur_stage_handler)
+    client_router.register("game_speed_change", game_handler.game_speed_change_handler)

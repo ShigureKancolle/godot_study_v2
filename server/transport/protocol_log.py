@@ -6,6 +6,7 @@ import os
 
 _HIGH_FREQUENCY_PROTOCOLS = frozenset({
     "world_frame",
+    "level_debug_data",
 })
 
 # 默认不打印高频帧；排查网络同步时设置为 1 可临时打开。
