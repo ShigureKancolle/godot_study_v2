@@ -12,6 +12,7 @@ class EntityType(enum.Enum):
     PLAYER = 1
     ENEMY = 2
     ORNAMENT = 3 # 装饰品 不能被交互 只能用来看 比如一朵花
+    EXP = 4 # 经验实体
 
 class Entity:
     def __init__(self, entity_id: str, entity_config_key: str):
@@ -35,6 +36,7 @@ class Entity:
 
     def add_component(self, component: comps.Component):
         self._components[type(component)] = component
+        component.on_add_to_entity(self)
 
     def get_component(self, component_type: type) -> comps.Component | None:
         return self._components.get(component_type, None)

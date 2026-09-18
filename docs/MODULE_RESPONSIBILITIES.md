@@ -47,11 +47,16 @@
 | `client/Scirpt/game/system/EntityViewFactory.gd` | 根据 EntityState 创建实体表现。 |
 | `client/Scirpt/game/controller/LocalPlayerController.gd` | 采样输入并只发送 `MoveIntent`。 |
 | `client/Scirpt/game/view/` | 插值和播放纯客户端表现，不决定权威结果。 |
+| `client/Scirpt/game/view/EntityView.gd` | 实体共有位置初始化、移动插值和生命周期；经验球直接使用，只装配移动 Presenter 和图片。 |
+| `client/Scirpt/game/view/Role.gd` | 玩家与怪物共有的动画、名字、血条和战斗表现；对应 Presenter 为必需依赖，由 Factory 装齐。怪物直接使用此类。 |
+| `client/Scirpt/game/view/PlayerRole.gd` | 在 Role 上增加玩家成长表现；本地玩家另挂输入控制器，远程玩家不采集输入。 |
 | `client/Scirpt/game/level/` | 持有本关卡实体视图并响应状态变化信号。 |
 | `client/Scirpt/ui/` | 显示会话/权威状态并发送用户请求。 |
 | `client/Scirpt/proto/game_proto.gd` | Protobuf GDScript 生成物，禁止手改。 |
 
 ## 客户端信号约定
+
+战斗和成长快照按实体实际组件提供：没有对应组件时，服务端快照为 `None`，协议省略对应子消息，客户端状态保持 `null`。不能以默认血量或等级代替缺失的能力。关卡将战斗通知交给 `Role`、成长通知交给 `PlayerRole`；视图内部直接使用所属类型的必需 Presenter，装配缺失应暴露错误，不以逐次判空跳过。
 
 按通知的作用范围决定信号归属：跨模块业务事件统一经过 `SignalMgr`；组件内部以及父子节点之间的生命周期通知就近连接。
 

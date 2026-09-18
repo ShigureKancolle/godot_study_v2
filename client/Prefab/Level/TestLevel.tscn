@@ -23,3 +23,23 @@ script = ExtResource("2_8ngca")
 
 [node name="TestLevelUI" type="CanvasLayer" parent="." unique_id=585713636]
 layer = 10
+
+[node name="HudUI" type="Control" parent="TestLevelUI" unique_id=1281775848]
+z_index = 10
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MenuUI" type="Control" parent="TestLevelUI" unique_id=1197635081]
+z_index = 20
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

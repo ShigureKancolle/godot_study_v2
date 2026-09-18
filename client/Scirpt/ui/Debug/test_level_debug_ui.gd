@@ -1,6 +1,8 @@
 extends Node2D
 class_name TestLevelDebugUI
 
+var draw_entity_path_enabled: bool = false
+
 @onready var server_tick: Label = $PanelContainer/BoxContainer/server_tick
 @onready var cur_stage: Label = $PanelContainer/BoxContainer/cur_stage
 @onready var spwan_time_count_down: Label = $PanelContainer/BoxContainer/spwan_time_count_down
@@ -10,6 +12,7 @@ class_name TestLevelDebugUI
 @onready var normal_enemy_count: Label = $PanelContainer/BoxContainer/normal_enemy_count
 @onready var speed_change: Button = $PanelContainer/BoxContainer/speed_change
 @onready var next_stage: Button = $PanelContainer/BoxContainer/next_stage
+@onready var draw_entity_path: Button = $PanelContainer/BoxContainer/draw_entity_path
 
 class LevelDebugData:
 	extends Object
@@ -24,6 +27,7 @@ class LevelDebugData:
 func _ready() -> void:
 	speed_change.connect("pressed", on_speed_change)
 	next_stage.connect("pressed", on_next_stage)
+	draw_entity_path.connect("pressed", on_draw_entity_path)
 	SignalMgr.Get().snl_cur_game_speed.connect(hdl_cur_game_speed)
 	
 func on_speed_change():
@@ -37,6 +41,11 @@ func on_next_stage():
 		"skip_cur_stage",
 		{}
 	)
+
+func on_draw_entity_path():
+	draw_entity_path_enabled = not draw_entity_path_enabled
+	SignalMgr.Get().snl_draw_entity_path.emit(draw_entity_path_enabled)
+	draw_entity_path.text = "绘制路径：" + ("开" if draw_entity_path_enabled else "关")
 	
 func hdl_cur_game_speed(speed: int):
 	speed_change.text = str(speed) + "倍"

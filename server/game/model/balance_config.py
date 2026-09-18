@@ -32,6 +32,7 @@ class RewardProgression:
     base_pickup_radius_px: float
     collect_dropped_xp_on_stage_end: bool
     overflow_policy: str
+    xp_attract_speed_px_per_second: float
 
 
 @dataclass(frozen=True)
@@ -349,6 +350,7 @@ def _build_reward_progression(entry: dict) -> RewardProgression:
         base_pickup_radius_px=float(entry.get("base_pickup_radius_px", 0.0)),
         collect_dropped_xp_on_stage_end=bool(entry.get("collect_dropped_xp_on_stage_end", False)),
         overflow_policy=str(entry.get("overflow_policy", "")),
+        xp_attract_speed_px_per_second=float(entry.get("xp_attract_speed_px_per_second", 0.0)),
     )
 
 

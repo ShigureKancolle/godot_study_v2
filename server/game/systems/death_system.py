@@ -7,6 +7,8 @@ import game.model.components as components
 import game.model.config_loader as config_loader
 from game.systems.comp_system import CompSystem
 import typing
+from game.model import entity as Entity
+from game.systems.game_mode import survival_mode
 
 if typing.TYPE_CHECKING:
     import game.world as game_world
@@ -43,5 +45,11 @@ class DeathSystem(CompSystem):
             removed = world.remove_entity(entity.entity_id)
             if removed is not None:
                 events.append(event.EntityRemovedEvent(entity_id=entity.entity_id))
+                if entity.entity_type == Entity.EntityType.ENEMY and type(world.game_mode) == survival_mode.SurvivalMode:
+                    exp = config_loader.get_reward_config().kill_rewards[entity.entity_config_key].xp
+                    if (exp > 0):
+                        x = entity.get_component(components.TransformComponent).x
+                        y = entity.get_component(components.TransformComponent).y
+                        world.game_mode.spawn_exp_entity(world, dt, events, exp, x, y)
 
         return events

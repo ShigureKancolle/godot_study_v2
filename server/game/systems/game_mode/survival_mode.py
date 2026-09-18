@@ -9,16 +9,18 @@ from game.entity_projector import project_entity_snapshot
 from game.model.components import PlayerComponent, TransformComponent
 from game.systems.game_mode.game_mode import GameMode
 import game.commands as commands
+import game.model.components as comps
 import game.events as events
 import game.model.config_loader as config_loader
 import game.model.balance_config as balance_config
 from dataclasses import dataclass
+from game.model import entity
+
 import typing
 if typing.TYPE_CHECKING:
     import game.world as gw
     import game.command_router as command_router
-    from game.model import entity
-
+    
 @dataclass
 class SpawnBudgetData:
     """生成预算数据。"""
@@ -49,6 +51,7 @@ class SurvivalMode(GameMode):
         '''游戏计时，单位毫秒，整个生存模式的计时都以这个为准'''
 
         self._time_spawn_list: list[TimeSpawnData] = []
+        self._exp_entity_list: list[entity.Entity] = []
         self._survival_config = config_loader.get_survival_config()
         self._cur_stage = None
         # region stage数据 切换的时候要清空
@@ -257,6 +260,9 @@ class SurvivalMode(GameMode):
             if world.enemy_count(normal_enemy_type) >= self._cur_stage.normal_alive_cap:
                 break
 
+            # if world.enemy_count(normal_enemy_type) >= 1:
+            #     break
+
             # 一次生成的普通敌人数量有限制
             if spawn_count >= self._survival_config.spawn.max_normal_spawns_per_second:
                 break
@@ -332,6 +338,19 @@ class SurvivalMode(GameMode):
         self._next_stage()
         # evns.append(events.StageChangedEvent(stage=self._cur_stage))
         return True
+
+    def spawn_exp_entity(self, world: "gw.GameWorld", dt: float, evns: list[events.Event], exp: int = 0, x: float = 0, y: float = 0):
+        """生成经验实体。"""
+        # 在地图的x,y处生成一个经验实体 
+        entity_id = f"exp_entity: {world.get_next_entity_idx()}"
+        exp_entity = entity.Entity(entity_id=entity_id, entity_config_key="xp_orb")
+        exp_entity.entity_type = entity.EntityType.EXP
+        exp_entity.add_component(TransformComponent(x=x, y=y))
+        exp_entity.add_component(comps.ExpComponent(exp=exp))
+        world.add_entity(exp_entity)
+        evns.append(events.EntitySpawnedEvent(entity_info=project_entity_snapshot(exp_entity)))
+        return exp_entity
+        
 
     # region debug
     def skip_cur_stage(self):

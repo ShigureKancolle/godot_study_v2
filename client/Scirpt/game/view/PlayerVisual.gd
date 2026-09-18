@@ -8,6 +8,7 @@ class_name PlayerVisual
 
 var _atk_effects: Dictionary[String, Node2D] = {}
 var _next_atk_effect_id: int = 0
+var entity_id: String = ""
 
 func has_animation(anim_name: String) -> bool:
 	return _body.sprite_frames.has_animation(anim_name)

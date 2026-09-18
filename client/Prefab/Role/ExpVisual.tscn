@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://mok05s6lcuab"]
+
+[ext_resource type="Texture2D" uid="uid://1cxfuvqp73oe" path="res://Prefab/Role/res/xp_orb_32.png" id="1_8grfq"]
+
+[node name="ExpVsual" type="Node2D" unique_id=1889249389]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=774177422]
+texture = ExtResource("1_8grfq")

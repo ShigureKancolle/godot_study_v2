@@ -1,9 +1,11 @@
 # coding=utf-8
 
 from game.model.entity import Entity
-from game.events import EntitySnapshot, CombatSnapshot
-from game.model import components, combat_component
+from game.events import EntitySnapshot, CombatSnapshot, ProgressionSnapshot, MovePathSnapshot
+from game.model import components, combat_component, progression_component, navigation_component, config_loader
 from typing import Any
+
+DEBUG = config_loader.get_constant("DEBUG_MSG_ENABLED")
 
 
 def project_entity_snapshot(entity: Entity) -> EntitySnapshot:
@@ -13,6 +15,8 @@ def project_entity_snapshot(entity: Entity) -> EntitySnapshot:
         **project_movement_snapshots(entity),
         **project_ai_state_snapshot(entity),
         combat_snapshot=project_combat_snapshot(entity),
+        progression_snapshot=project_progression_snapshot(entity),
+        move_path_snapshot=project_move_path_snapshot(entity),
     )
 
 def project_identity_snapshot(entity: Entity) -> dict[str, Any]:
@@ -64,10 +68,10 @@ def project_movement_snapshots(entity: Entity) -> dict[str, Any]:
     }
     return res
 
-def project_combat_snapshot(entity: Entity) -> CombatSnapshot:
+def project_combat_snapshot(entity: Entity) -> CombatSnapshot | None:
     combat: combat_component.CombatComponent = entity.get_component(combat_component.CombatComponent)
     if not combat:
-        return CombatSnapshot(entity_id=entity.entity_id)
+        return None
 
     return CombatSnapshot(
         entity_id=entity.entity_id,
@@ -77,4 +81,30 @@ def project_combat_snapshot(entity: Entity) -> CombatSnapshot:
         dead=combat.is_dead,
         defense=combat.defense,
         attack=combat.attack,
+    )
+
+def project_progression_snapshot(entity: Entity) -> ProgressionSnapshot | None:
+    prog_comp: progression_component.ProgressionComponent = entity.get_component(progression_component.ProgressionComponent)
+    if not prog_comp:
+        return None
+
+    return ProgressionSnapshot(
+        entity_id=entity.entity_id,
+        level=prog_comp.level,
+        total_exp=prog_comp.total_exp,
+    )
+
+def project_move_path_snapshot(entity: Entity) -> MovePathSnapshot | None:
+    if not DEBUG:
+        return None
+
+    navigation_comp: navigation_component.NavigationComponent = entity.get_component(navigation_component.NavigationComponent)
+    if not navigation_comp:
+        return None
+
+    return MovePathSnapshot(
+        entity_id=entity.entity_id,
+        path=list(navigation_comp.path),
+        path_index=navigation_comp.path_index,
+        target_id=navigation_comp.planned_target_id,
     )

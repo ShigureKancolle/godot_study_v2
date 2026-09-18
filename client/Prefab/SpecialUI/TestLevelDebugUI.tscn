@@ -73,3 +73,12 @@ theme_override_styles/pressed = SubResource("StyleBoxTexture_ek8ts")
 theme_override_styles/hover = SubResource("StyleBoxTexture_ycjit")
 theme_override_styles/disabled = SubResource("StyleBoxTexture_e7hq2")
 text = "1倍"
+
+[node name="draw_entity_path" type="Button" parent="PanelContainer/BoxContainer" unique_id=1608702134]
+custom_minimum_size = Vector2(45, 45)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_4ycsp")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_ek8ts")
+theme_override_styles/hover = SubResource("StyleBoxTexture_ycjit")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_e7hq2")
+text = "绘制路径：关"

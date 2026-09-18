@@ -1,18 +1,47 @@
 {
-    "_comment": "局内经验与奖励配置；唯一源文件在 json_config，修改后运行 tools/sync_config.py；双端加载器提供读取接口，奖励结算逻辑待接入",
-    "_units": "比例使用小数，例如 0.12 表示 12%；同类基础百分比加算，最终属性统一计算，生命和攻击最后向下取整",
+    "_comment": "局内经验与奖励配置；唯一源文件在 json_config，按需运行 tools/sync_config.py 同步。与 survival_config 一致，同名字段的中文注释仅在本文件首次出现时保留，后续条目不重复。有注释的对象上半部分集中放置 _同名字段 说明，下半部分放置实际配置字段，中间空行分隔。加载器递归忽略所有下划线开头的键。",
+    "_units": "比例使用小数，例如 0.12 表示 12%；同类基础百分比加算，最终属性统一计算，生命和攻击最后向下取整。ms为毫秒；px为游戏世界距离单位，不是显示器物理像素；px_per_second为每秒移动的世界距离。",
+    "_implementation": "本表说明目标规则；双端加载器提供读取接口，拾取、经验结算与奖励执行仍在接入，读取到字段不代表对应功能已经生效。",
+    "_schema_version": "配置结构版本号，用于标识字段组织方式；当前加载器只读取，不检查版本。",
+    "_progression": "局内初始等级、升级经验阈值、经验吸附和满级溢出规则。",
+    "_choice": "升级奖励候选的生成、暂停、超时自动选择和候选不足时的处理规则；候选由服务端保存。",
+    "_effect_rules": "奖励效果的运算契约；持续强化在本局结束时失效，具体计算方式见各项文字。",
+    "_rewards": "按奖励ID索引的升级选项定义，供候选池、保底和自动选择规则引用。",
+    "_kill_rewards": "按 entity_config 怪物模板ID索引的击杀奖励；仅真实击杀触发。普通经验由任意队友拾取后按开局人数平分给各存活玩家，小数保留；精英向每位存活玩家完整发放，不生成普通经验球。",
+    "_bundles": "按礼包ID索引的固定奖励定义；击杀条目通过 bundle_id 引用，不占升级奖励候选。",
+    "_settlement": "局末成绩积分与重开清理规则；积分只用于成绩展示，不能购买局外属性。",
+
     "schema_version": 1,
     "progression": {
-        "_desc": "数组下标 L-1 对应从 L 级升到 L+1 级；总需求 600，初始 1 级，最多 15 次选择",
+        "_initial_level": "每局开始时的玩家等级；当前1。",
+        "_max_level": "局内等级上限；当前16，从初始1级开始最多升级15次，对应15次奖励选择。",
+        "_next_level_xp": "每次升级单独需要的经验，不是累计阈值；数组下标 L-1 对应从 L 级升到 L+1 级。当前从1级升至16级共需600经验。",
+        "_base_pickup_radius_px": "玩家初始经验吸附半径，单位为游戏世界距离；经验球进入范围后开始吸附，到达玩家后才结算经验。拾取强化按此基础值加算，当前120，强化一次为150，两次为180。",
+        "_xp_attract_speed_px_per_second": "经验球锁定玩家后的吸附飞行速度，单位为世界距离每秒；每帧移动距离为此值乘玩法dt，朝目标当前位置移动，单次不超过剩余距离。",
+        "_collect_dropped_xp_on_stage_end": "阶段结束时是否统一收集场上掉落的经验，避免未拾取经验遗留；具体发放按普通经验分配规则处理。",
+        "_overflow_policy": "达到等级上限后的经验处理策略；statistics_only 表示仅计入统计，不继续升级或增加奖励选择。",
+
         "initial_level": 1,
         "max_level": 16,
         "next_level_xp": [12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68],
         "base_pickup_radius_px": 120.0,
+        "xp_attract_speed_px_per_second": 600.0,
         "collect_dropped_xp_on_stage_end": true,
         "overflow_policy": "statistics_only"
     },
     "choice": {
-        "_desc": "服务端保存候选；先过滤达到次数上限的奖励，再按权重无放回抽取；保证项已全满时取消该限制",
+        "_option_count": "一次升级期望提供的候选数量；先过滤达到叠层上限的奖励，再按权重无放回抽取，同次候选不重复。当前3。",
+        "_timeout_ms": "等待玩家选择奖励的时限，单位毫秒；当前8000即8秒，超时按 auto_choice_priority 自动选择。",
+        "_pause_single_player": "单人局选择奖励期间是否暂停玩法推进；选择倒计时仍需继续。",
+        "_pause_multiplayer": "多人局选择奖励期间是否暂停玩法推进；当前false，其他玩家和战斗继续。",
+        "_pool": "常规候选池，元素引用 rewards 中的奖励ID；实际候选仍需过滤已满叠层或当前无效的选项。",
+        "_guaranteed_any_of": "候选中至少包含此列表中的一个可用奖励；当前保证攻击或攻速之一，保证项均已满上限时取消该限制。",
+        "_auto_choice_priority": "超时自动选择的优先顺序；从前到后选择本次实际候选中可用的第一项。",
+        "_fallback_reward_id": "常规候选不足时用于补位的奖励ID，引用 rewards；当前heal_once为一次性急救。",
+        "_fallback_max_per_choice": "每次候选生成中兜底奖励最多出现的数量；当前1，不代表每局只能获得一次。",
+        "_allow_fewer_options": "过滤和补位后仍不足 option_count 时，是否允许使用较少的候选；当前true。",
+        "_empty_choice_policy": "没有任何有效候选时的处理策略；complete_without_reward 表示完成本次选择流程但不发奖励，不回退已获得的等级。",
+
         "option_count": 3,
         "timeout_ms": 8000,
         "pause_single_player": true,
@@ -26,7 +55,12 @@
         "empty_choice_policy": "complete_without_reward"
     },
     "effect_rules": {
-        "_desc": "以下是后续奖励执行器的操作契约，当前尚无执行器；持续强化结束于本局结束",
+        "_add_base_ratio": "基础比例加算操作的计算说明，供奖励 effects 中同名 operation 使用。",
+        "_add_flat": "固定数值增加操作的计算说明。",
+        "_heal_flat": "固定数值治疗操作及最大生命提高时的回复顺序说明。",
+        "_heal_max_hp_ratio": "按当前最大生命比例治疗的计算及有效性说明。",
+        "_attack_range": "攻击范围强化影响的几何参数边界；这是属性规则，不是独立的 operation。",
+
         "add_base_ratio": "按初始模板值计算，同属性比例相加；攻击频率作用于冷却、各段命中时间与持续时间的同一时间缩放",
         "add_flat": "在基础百分比运算之后加入固定值；精英攻击加成不再被攻击卡放大",
         "heal_flat": "增加当前生命并限制在最大生命内；最大生命强化先增加上限，再回复同等数值",
@@ -34,12 +68,36 @@
         "attack_range": "缩放判定半径、宽度、长度；角度、矩形起点偏移、命中次数和击退距离保持不变"
     },
     "rewards": {
+        "_attack_up": "攻击强化奖励定义。",
+        "_attack_frequency_up": "攻速强化奖励定义，统一缩放攻击时序。",
+        "_attack_range_up": "攻击范围强化奖励定义，具体几何边界见 effect_rules.attack_range。",
+        "_max_hp_up": "生命强化奖励定义，先提高最大生命，再回复生命。",
+        "_move_speed_up": "移动速度强化奖励定义。",
+        "_pickup_radius_up": "经验吸附半径强化奖励定义，增加的是基础半径的比例。",
+        "_heal_once": "仅在常规候选不足时使用的一次性急救；每次立即生效，不保存属性叠层，满血时无效。",
+
         "attack_up": {
+            "_name": "奖励的中文显示名称。",
+            "_description": "向玩家展示的效果说明；实际数值和操作由 effects 定义。",
+            "_weight": "符合条件的常规奖励参与随机抽取时的相对权重；不是固定概率，实际概率取决于剩余可用候选。",
+            "_max_stacks": "每位玩家每局可获得该持续强化的最大叠层数；达到上限后不再进入候选。null表示不设叠层上限，一次性治疗不保存叠层。",
+            "_effects": "按数组顺序执行的效果列表；礼包复用同一结构，stat指定属性，operation指定运算，value指定数值。",
+
             "name": "攻击强化",
             "description": "基础攻击力提高 12%",
             "weight": 1,
             "max_stacks": 5,
-            "effects": [{"stat": "attack", "operation": "add_base_ratio", "value": 0.12}]
+            "effects": [
+                {
+                    "_stat": "效果作用的属性；当前使用 attack攻击、attack_frequency攻速、attack_range攻击范围、max_hp最大生命、hp当前生命、move_speed移速、pickup_radius吸附半径。",
+                    "_operation": "运算标识，具体规则见 effect_rules；add_base_ratio为基础比例加算，add_flat为固定值增加，heal_flat为固定值治疗，heal_max_hp_ratio为最大生命比例治疗。",
+                    "_value": "效果数值；比例操作使用小数，固定值操作使用对应属性单位。当前0.12表示增加初始模板攻击的12%，同类比例加算而非逐次相乘。",
+
+                    "stat": "attack",
+                    "operation": "add_base_ratio",
+                    "value": 0.12
+                }
+            ]
         },
         "attack_frequency_up": {
             "name": "攻速强化",
@@ -80,7 +138,6 @@
             "effects": [{"stat": "pickup_radius", "operation": "add_base_ratio", "value": 0.25}]
         },
         "heal_once": {
-            "_desc": "仅在常规候选不足时使用；每次立即生效，不保存属性叠层",
             "name": "急救",
             "description": "立即回复最大生命的 25%",
             "weight": 1,
@@ -89,16 +146,32 @@
         }
     },
     "kill_rewards": {
-        "_desc": "仅真实击杀触发；普通经验由任意队友拾取后按开局人数平分给各存活玩家，小数保留；精英按每位存活玩家完整发放，不再生成普通经验球",
-        "enemy_slime": {"xp": 1, "delivery": "orb_shared", "bundle_id": ""},
+        "_enemy_slime": "史莱姆击杀奖励；键引用 entity_config 的同名怪物模板。",
+        "_enemy_skeleton": "骷髅击杀奖励。",
+        "_enemy_runner": "疾行怪击杀奖励。",
+        "_enemy_elite": "精英击杀奖励，直接发经验并附带固定礼包。",
+        "_enemy_boss": "首领击杀奖励；当前此条目不发经验或礼包，击杀积分由 settlement 配置。",
+
+        "enemy_slime": {
+            "_xp": "单次击杀提供的基础经验；orb_shared为经验球总额，direct_each_alive为每位存活玩家各自获得的完整数额。",
+            "_delivery": "经验发放方式；orb_shared为生成可拾取并按开局人数平分的经验球，direct_each_alive为直接向每位存活玩家完整发放，none为不发经验。",
+            "_bundle_id": "本次击杀附带的固定礼包ID，引用 bundles；空字符串表示无礼包，礼包发放上限由自身定义。",
+
+            "xp": 1,
+            "delivery": "orb_shared",
+            "bundle_id": ""
+        },
         "enemy_skeleton": {"xp": 2, "delivery": "orb_shared", "bundle_id": ""},
         "enemy_runner": {"xp": 2, "delivery": "orb_shared", "bundle_id": ""},
         "enemy_elite": {"xp": 12, "delivery": "direct_each_alive", "bundle_id": "elite_kill"},
         "enemy_boss": {"xp": 0, "delivery": "none", "bundle_id": ""}
     },
     "bundles": {
+        "_elite_kill": "精英击杀固定礼包；每个精英事件只授予一次，向存活玩家发放，不弹出额外选择。",
+
         "elite_kill": {
-            "_desc": "每个精英事件只授予一次，每位存活玩家每局最多获得三次，不弹出额外选择",
+            "_max_grants_per_run": "每位玩家每局最多获得此礼包的次数；当前3，达到上限后不再发放礼包效果。",
+
             "max_grants_per_run": 3,
             "effects": [
                 {"stat": "attack", "operation": "add_flat", "value": 4},
@@ -107,7 +180,11 @@
         }
     },
     "settlement": {
-        "_desc": "积分只用于成绩展示，不能购买局外属性；重开清除全部局内成长",
+        "_completed_normal_stage_score": "每完成一个普通阶段获得的成绩积分；当前100，与阶段发放的经验分开。",
+        "_elite_kill_score": "每次精英击杀对应的成绩积分；当前200，不是经验值。",
+        "_boss_kill_score": "首领击杀对应的成绩积分；当前1000，不是经验值。",
+        "_reset_progression_on_restart": "重开一局时是否清除上一局的等级、经验和持续强化等局内成长；当前true。",
+
         "completed_normal_stage_score": 100,
         "elite_kill_score": 200,
         "boss_kill_score": 1000,

@@ -9,6 +9,16 @@ var _active_attack: ConfigLoader.AttackConfig = null
 var _attack_elapsed_ms: float = 0.0
 var _flash_seconds: float = 0.0
 
+var _draw_entity_path_enabled: bool = false
+
+func _ready() -> void:
+	SignalMgr.Get().snl_draw_entity_path.connect(hdl_draw_entity_path)
+
+func hdl_draw_entity_path(_draw: bool):
+	_draw_entity_path_enabled = _draw
+	if ConfigLoader.get_constant("DEBUG_MSG_ENABLED"):
+		SignalMgr.Get().snl_entity_path_draw.emit(entity_id, _draw_entity_path_enabled)
+
 func configure(config_key: String) -> bool:
 	entity_config_key = config_key
 	var visual: Dictionary = ConfigLoader.get_entity_visual_config(config_key)
@@ -90,3 +100,4 @@ func _process(delta: float) -> void:
 			return
 		segment_start = shape.duration
 	_body.frame = 3
+	

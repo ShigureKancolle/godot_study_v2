@@ -1,83 +1,34 @@
 extends Node2D
 class_name EntityView
+## 实体共有表现：位置初始化、移动插值和生命周期，不包含角色能力。
 
-const LOCAL_PLAYER_CONTROLLER_SCRIPT := preload("res://Scirpt/game/controller/LocalPlayerController.gd")
-
-var entity_visual: PlayerVisual = null
-var local_player_controller: LocalPlayerController = null
 var entity_id: String = ""
 var _presenter: Dictionary[StringName, EntityViewPresenter] = {}
 
 func add_presenter(presenter_name: StringName, presenter: EntityViewPresenter):
-	if presenter_name and presenter_name not in _presenter:
-		_presenter[presenter_name] = presenter
+	# Factory 在创建时装齐依赖；重复注册或空实例属于装配错误。
+	assert(not presenter_name.is_empty())
+	assert(presenter != null)
+	assert(presenter_name not in _presenter)
+	_presenter[presenter_name] = presenter
 
 func get_presenter(presenter_name: StringName) -> EntityViewPresenter:
-	return _presenter.get(presenter_name, null)
+	# 必需的 Presenter 缺失时直接暴露错误，不把装配失败当作可选能力。
+	return _presenter[presenter_name]
 
 func _process(delta: float):
 	for presenter in _presenter.values():
 		presenter.process(delta)
 
-	# var move_dir = get_presenter(MotionPresenter.presenter_name).get_visual_move_direction()
-	# get_presenter(AnimationPresenter.presenter_name).update_facing(entity_state.facing_dir)
-
 func setup(entity_state: EntityState):
 	entity_id = entity_state.entity_id
 	get_presenter(MotionPresenter.presenter_name).set_position(entity_state.server_position)
-	get_presenter(AnimationPresenter.presenter_name).update_facing(entity_state.facing_dir)
-	get_presenter(NameplatePresenter.presenter_name).set_view_name(entity_state.player_name, entity_state.is_local_player)
-	get_presenter(HpBarPresenter.presenter_name).update_hp_bar(entity_state.combat_entity_state.hp, entity_state.combat_entity_state.max_hp)
-	var combat_state = entity_state.combat_entity_state
-	if combat_state:
-		get_presenter(CombatPresenter.presenter_name).setup(combat_state)
-		# 中途收到快照时也立即呈现死亡，避免短暂出现存活姿势。
-		if combat_state.dead:
-			play_dead_animation()
-		else:
-			get_presenter(AnimationPresenter.presenter_name).play_anim(entity_state.anim_state if not entity_state.anim_state.is_empty() else "idle")
-	__setup(entity_state)
-
-func __setup(entity_state: EntityState):
-	pass
-
-func dispose():
-	pass
-
-func apply_attack_start(attack_id: int, atk_facing: float):
-	get_presenter(CombatPresenter.presenter_name).apply_attack_start(attack_id, atk_facing)
-
-func apply_aims_changed(aims_state: EntityState):
-	get_presenter(CombatPresenter.presenter_name).apply_atk_facing(aims_state.combat_entity_state.atk_facing)
-
-func apply_atk_rotate(facing: float):
-	get_presenter(CombatPresenter.presenter_name).apply_atk_facing(facing)
 
 func apply_movement(state: EntityState) -> void:
 	get_presenter(MotionPresenter.presenter_name).set_target_position(state.server_position)
-	get_presenter(AnimationPresenter.presenter_name).play_anim(state.anim_state)
-	get_presenter(AnimationPresenter.presenter_name).update_facing(state.facing_dir)
-
-func apply_animation(state: EntityState) -> void:
-	get_presenter(AnimationPresenter.presenter_name).play_anim(state.anim_state)
 
 func apply_state(state: EntityState) -> void:
 	apply_movement(state)
 
-func apply_combat(state: CombatEntityState) -> void:
-	if not state:
-		return
-	apply_atk_rotate(state.atk_facing)
-
-func apply_hp_changed(state: EntityState) -> void:
-	get_presenter(HpBarPresenter.presenter_name).update_hp_bar(state.combat_entity_state.hp, state.combat_entity_state.max_hp)
-
-func apply_damage_received(damage: int):
-	get_presenter(CombatPresenter.presenter_name).apply_damage_received(damage)
-
-func play_dead_animation():
-	get_presenter(AnimationPresenter.presenter_name).play_anim("die")
-	# entity_visual._body.animation_finished.connect(play_dead_animation_finished)
-
-# func play_dead_animation_finished():
-# 	queue_free()
+func dispose():
+	pass

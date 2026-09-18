@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1100" viewBox="0 0 1800 1100">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#19324d" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#45617e"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#228567"/>
+    </marker>
+    <style>
+      .title { font: 700 38px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #15263b; }
+      .subtitle { font: 400 17px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #61738a; }
+      .lane-title { font: 700 18px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #33485f; letter-spacing: 1px; }
+      .node-title { font: 700 17px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #14283d; }
+      .node-code { font: 600 14px Consolas, "Microsoft YaHei", monospace; fill: #27516f; }
+      .node-desc { font: 400 13px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #66798d; }
+      .edge-label { font: 600 13px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #49647d; }
+      .step { font: 700 14px "Segoe UI", sans-serif; fill: #ffffff; }
+      .card { fill: #ffffff; stroke: #d5e0ea; stroke-width: 2; filter: url(#shadow); }
+      .note { fill: #fbfcfe; stroke: #9fb2c5; stroke-width: 2; stroke-dasharray: 8 7; }
+      .arrow { fill: none; stroke: #45617e; stroke-width: 3.5; marker-end: url(#arrow); }
+      .arrow-green { fill: none; stroke: #228567; stroke-width: 3.5; marker-end: url(#arrow-green); }
+      .register { fill: none; stroke: #7b6aa8; stroke-width: 2.5; stroke-dasharray: 9 7; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1100" fill="#f5f8fc"/>
+  <text x="70" y="65" class="title">服务端 World 协议流转</text>
+  <text x="70" y="98" class="subtitle">客户端请求进入命令队列，在固定 Tick 中执行为领域事件，再聚合为权威消息发送给目标连接</text>
+
+  <rect x="55" y="125" width="1690" height="245" rx="24" fill="#edf5ff"/>
+  <text x="80" y="160" class="lane-title">① 入站：协议请求 → WorldCommand</text>
+
+  <g transform="translate(80,200)">
+    <rect width="190" height="105" rx="15" class="card"/>
+    <text x="95" y="36" text-anchor="middle" class="node-title">客户端请求</text>
+    <text x="95" y="64" text-anchor="middle" class="node-code">enter_game_request</text>
+    <text x="95" y="87" text-anchor="middle" class="node-desc">ClientMessage bytes</text>
+  </g>
+  <path d="M270 252 H310" class="arrow"/>
+  <g transform="translate(325,200)">
+    <rect width="220" height="105" rx="15" class="card"/>
+    <text x="110" y="36" text-anchor="middle" class="node-title">WebSocket 接收</text>
+    <text x="110" y="64" text-anchor="middle" class="node-code">on_bytes_received()</text>
+    <text x="110" y="87" text-anchor="middle" class="node-desc">ProtocolCodec.decode_client()</text>
+  </g>
+  <path d="M545 252 H585" class="arrow"/>
+  <g transform="translate(600,200)">
+    <rect width="220" height="105" rx="15" class="card"/>
+    <text x="110" y="36" text-anchor="middle" class="node-title">应用入口</text>
+    <text x="110" y="64" text-anchor="middle" class="node-code">AppRuntime.on_client_message()</text>
+    <text x="110" y="87" text-anchor="middle" class="node-desc">连接/登录状态校验</text>
+  </g>
+  <path d="M820 252 H860" class="arrow"/>
+  <g transform="translate(875,200)">
+    <rect width="230" height="105" rx="15" class="card"/>
+    <text x="115" y="36" text-anchor="middle" class="node-title">协议路由</text>
+    <text x="115" y="64" text-anchor="middle" class="node-code">ClientMessageRouter.to_command()</text>
+    <text x="115" y="87" text-anchor="middle" class="node-desc">按 payload 找注册 Handler</text>
+  </g>
+  <path d="M1105 252 H1145" class="arrow"/>
+  <g transform="translate(1160,200)">
+    <rect width="245" height="105" rx="15" class="card"/>
+    <text x="122" y="36" text-anchor="middle" class="node-title">构造领域命令</text>
+    <text x="122" y="64" text-anchor="middle" class="node-code">enter_game_request_handler()</text>
+    <text x="122" y="87" text-anchor="middle" class="node-desc">→ JoinCommand</text>
+  </g>
+  <path d="M1405 252 H1445" class="arrow"/>
+  <g transform="translate(1460,200)">
+    <rect width="245" height="105" rx="15" class="card"/>
+    <text x="122" y="36" text-anchor="middle" class="node-title">进入世界命令队列</text>
+    <text x="122" y="64" text-anchor="middle" class="node-code">GameWorld.enqueue_command()</text>
+    <text x="122" y="87" text-anchor="middle" class="node-desc">等待下一个固定 Tick</text>
+  </g>
+
+  <rect x="730" y="320" width="520" height="38" rx="12" class="note"/>
+  <text x="990" y="345" text-anchor="middle" class="node-code">build_client_router() → register(proto, handler) · 启动时一次</text>
+  <path d="M990 320 V310" class="register"/>
+
+  <rect x="55" y="400" width="1690" height="310" rx="24" fill="#eefaf6"/>
+  <text x="80" y="435" class="lane-title">② 权威世界：命令与 System 在固定 Tick 中产生 Event</text>
+
+  <g transform="translate(90,485)">
+    <rect width="220" height="110" rx="15" class="card"/>
+    <circle cx="25" cy="25" r="16" fill="#228567"/><text x="25" y="30" text-anchor="middle" class="step">1</text>
+    <text x="110" y="44" text-anchor="middle" class="node-title">固定帧驱动</text>
+    <text x="110" y="72" text-anchor="middle" class="node-code">GameRuntime.run()</text>
+    <text x="110" y="94" text-anchor="middle" class="node-desc">30 tick/s</text>
+  </g>
+  <path d="M310 540 H350" class="arrow-green"/>
+  <g transform="translate(365,485)">
+    <rect width="220" height="110" rx="15" class="card"/>
+    <circle cx="25" cy="25" r="16" fill="#228567"/><text x="25" y="30" text-anchor="middle" class="step">2</text>
+    <text x="110" y="44" text-anchor="middle" class="node-title">推进世界</text>
+    <text x="110" y="72" text-anchor="middle" class="node-code">GameWorld.step() / _step()</text>
+    <text x="110" y="94" text-anchor="middle" class="node-desc">取出 pending_commands</text>
+  </g>
+  <path d="M585 540 H625" class="arrow-green"/>
+  <g transform="translate(640,485)">
+    <rect width="225" height="110" rx="15" class="card"/>
+    <circle cx="25" cy="25" r="16" fill="#228567"/><text x="25" y="30" text-anchor="middle" class="step">3</text>
+    <text x="112" y="44" text-anchor="middle" class="node-title">命令分派</text>
+    <text x="112" y="72" text-anchor="middle" class="node-code">TickPipeline.dispatch()</text>
+    <text x="112" y="94" text-anchor="middle" class="node-desc">→ CommandRouter.dispatch()</text>
+  </g>
+  <path d="M865 540 H905" class="arrow-green"/>
+  <g transform="translate(920,470)">
+    <rect width="255" height="140" rx="15" class="card"/>
+    <circle cx="25" cy="25" r="16" fill="#228567"/><text x="25" y="30" text-anchor="middle" class="step">4</text>
+    <text x="127" y="39" text-anchor="middle" class="node-title">System / GameMode</text>
+    <text x="127" y="61" text-anchor="middle" class="node-title">Handler</text>
+    <text x="127" y="86" text-anchor="middle" class="node-code">handler(world, command)</text>
+    <text x="127" y="109" text-anchor="middle" class="node-desc">主要业务逻辑在此执行</text>
+    <text x="127" y="130" text-anchor="middle" class="node-desc">返回 events.Event[]</text>
+  </g>
+  <path d="M1175 540 H1215" class="arrow-green"/>
+  <g transform="translate(1230,470)">
+    <rect width="230" height="140" rx="15" class="card"/>
+    <circle cx="25" cy="25" r="16" fill="#228567"/><text x="25" y="30" text-anchor="middle" class="step">5</text>
+    <text x="115" y="45" text-anchor="middle" class="node-title">更新世界系统</text>
+    <text x="115" y="73" text-anchor="middle" class="node-code">TickPipeline.update()</text>
+    <text x="115" y="99" text-anchor="middle" class="node-desc">AI / Movement / Combat…</text>
+    <text x="115" y="121" text-anchor="middle" class="node-desc">继续收集 Event</text>
+  </g>
+  <path d="M1460 540 H1500" class="arrow-green"/>
+  <g transform="translate(1515,485)">
+    <rect width="190" height="110" rx="15" class="card"/>
+    <circle cx="25" cy="25" r="16" fill="#228567"/><text x="25" y="30" text-anchor="middle" class="step">6</text>
+    <text x="95" y="44" text-anchor="middle" class="node-title">权威帧结果</text>
+    <text x="95" y="72" text-anchor="middle" class="node-code">events.TickResult</text>
+    <text x="95" y="94" text-anchor="middle" class="node-desc">server_tick + events</text>
+  </g>
+
+  <rect x="610" y="625" width="575" height="60" rx="13" class="note"/>
+  <text x="897" y="649" text-anchor="middle" class="node-title">启动装配（只执行一次）</text>
+  <text x="897" y="673" text-anchor="middle" class="node-code">init_pipeline() / register_system() / game_mode.register_command_handlers()</text>
+  <path d="M897 625 V612" class="register"/>
+
+  <rect x="55" y="740" width="1690" height="300" rx="24" fill="#fff8eb"/>
+  <text x="80" y="775" class="lane-title">③ 出站：TickResult → Protobuf → 目标客户端</text>
+
+  <path d="M1610 595 V745" class="arrow"/>
+  <g transform="translate(120,835)">
+    <rect width="270" height="115" rx="15" class="card"/>
+    <text x="135" y="40" text-anchor="middle" class="node-title">聚合 Tick 结果</text>
+    <text x="135" y="69" text-anchor="middle" class="node-code">publish_tick_result()</text>
+    <text x="135" y="93" text-anchor="middle" class="node-desc">GameProtocolAdapter</text>
+  </g>
+  <path d="M390 892 H445" class="arrow"/>
+  <g transform="translate(460,825)">
+    <rect width="290" height="135" rx="15" class="card"/>
+    <text x="145" y="38" text-anchor="middle" class="node-title">投影并构建消息</text>
+    <text x="145" y="67" text-anchor="middle" class="node-code">WorldFrameBuilder</text>
+    <text x="145" y="91" text-anchor="middle" class="node-code">GameProtoProjector</text>
+    <text x="145" y="115" text-anchor="middle" class="node-desc">WorldFrame / WorldSnapshot / Debug</text>
+  </g>
+  <path d="M750 892 H805" class="arrow"/>
+  <g transform="translate(820,835)">
+    <rect width="260" height="115" rx="15" class="card"/>
+    <text x="130" y="40" text-anchor="middle" class="node-title">编码并入队</text>
+    <text x="130" y="69" text-anchor="middle" class="node-code">OutBoundQueue.broadcast()</text>
+    <text x="130" y="93" text-anchor="middle" class="node-desc">OutboundMessage + recipient_ids</text>
+  </g>
+  <path d="M1080 892 H1135" class="arrow"/>
+  <g transform="translate(1150,835)">
+    <rect width="255" height="115" rx="15" class="card"/>
+    <text x="127" y="40" text-anchor="middle" class="node-title">异步取出数据包</text>
+    <text x="127" y="69" text-anchor="middle" class="node-code">WebSocketServer.sender_loop()</text>
+    <text x="127" y="93" text-anchor="middle" class="node-desc">按 recipient_ids 发送</text>
+  </g>
+  <path d="M1405 892 H1460" class="arrow"/>
+  <g transform="translate(1475,835)">
+    <rect width="210" height="115" rx="15" class="card"/>
+    <text x="105" y="40" text-anchor="middle" class="node-title">客户端消费</text>
+    <text x="105" y="69" text-anchor="middle" class="node-code">ServerMessage bytes</text>
+    <text x="105" y="93" text-anchor="middle" class="node-desc">snapshot / frame / event</text>
+  </g>
+  <path d="M1610 745 H255 V822" class="arrow"/>
+  <text x="940" y="806" text-anchor="middle" class="edge-label">每个 TickResult 进入统一协议适配与发送链路</text>
+</svg>

@@ -32,10 +32,15 @@ signal snl_entities_health_changed(change_states: Array[EntityState])
 signal snl_damage_received(attacker_id: String, target_id: String, attack_id: int, damage: int, critical: bool)
 signal snl_entity_dead(entity_id: String)
 signal snl_game_pause(pause: bool)
+signal snl_entities_prog_changed(change_states: Array[EntityState])
+signal snl_entity_upgrade(entity_id: String, pre_level: int, cur_level: int)
 
 # debug
 signal snl_level_debug(data: TestLevelDebugUI.LevelDebugData)
 signal snl_cur_game_speed(speed: int)
+signal snl_entities_move_paths_changed(change_states: Array[EntityMovePathState])
+signal snl_draw_entity_path(draw: bool)  # 能不能画
+signal snl_entity_path_draw(entity_id: String, draw_path: bool) # 告诉level显示或隐藏路径
 # debugend
 
 # Bootstrap

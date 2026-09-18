@@ -35,6 +35,12 @@ func _emit_world_frame_changes(changes: WorldFrameChanges):
 	if not changes.health_changed.is_empty():
 		SignalMgr.Get().snl_entities_health_changed.emit(changes.health_changed)
 
+	if not changes.prog_changed.is_empty():
+		SignalMgr.Get().snl_entities_prog_changed.emit(changes.prog_changed)
+
+	if not changes.entity_move_paths.is_empty():
+		SignalMgr.Get().snl_entities_move_paths_changed.emit(changes.entity_move_paths)
+
 	# 单独信号
 	for spawn in changes.spawned:
 		SignalMgr.Get().snl_entity_added.emit(spawn)
@@ -59,6 +65,9 @@ func _emit_world_event(env: GameProto.WorldEvent):
 		GameProto.WorldEvent.PayloadCase.ENTITY_DEAD:
 			var entity_dead: GameProto.EntityDead = env.get_entity_dead()
 			apply_entity_dead(entity_dead)
+		GameProto.WorldEvent.PayloadCase.UPGRADE:
+			var upgrade_event: GameProto.UpgradeEvent = env.get_upgrade()
+			apply_upgrade_event(upgrade_event)
 		
 func apply_world_snapshot(snapshot: GameProto.WorldSnapshot):
 	WorldSnapshotReducer.apply(store, snapshot)
@@ -83,6 +92,13 @@ func apply_damage_event(damage_event: GameProto.DamageEvent):
 func apply_entity_dead(entity_dead: GameProto.EntityDead):
 	var entity_id := entity_dead.get_entity_id()
 	SignalMgr.Get().snl_entity_dead.emit(entity_id)
+
+func apply_upgrade_event(upgrade_event: GameProto.UpgradeEvent):
+	var entity_id := upgrade_event.get_entity_id()
+	var pre_level := upgrade_event.get_pre_level()
+	var cur_level := upgrade_event.get_cur_level()
+	# TODO 这里一帧发3个升级也体现不出多次升级的特效 需要修复
+	SignalMgr.Get().snl_entity_upgrade.emit(entity_id, pre_level, cur_level)
 
 func reset_world():
 	WorldResetReducer.apply(store)

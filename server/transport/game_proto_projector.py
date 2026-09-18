@@ -28,15 +28,34 @@ class GameProtoProjector:
             moving=snapshot.moving,
             ai_state=snapshot.ai_state,
         )
-        
-        combat_info = game_pb2.CombatEntityInfo(
-            entity_id=snapshot.entity_id,
-            atk_facing=snapshot.combat_snapshot.atk_facing,
-            hp=snapshot.combat_snapshot.hp,
-            max_hp=snapshot.combat_snapshot.max_hp,
-            dead=snapshot.combat_snapshot.dead,
-        )
-        info.combat_entity_info.CopyFrom(combat_info)
+
+        if snapshot.combat_snapshot:
+            combat_info = game_pb2.CombatEntityInfo(
+                entity_id=snapshot.entity_id,
+                atk_facing=snapshot.combat_snapshot.atk_facing,
+                hp=snapshot.combat_snapshot.hp,
+                max_hp=snapshot.combat_snapshot.max_hp,
+                dead=snapshot.combat_snapshot.dead,
+            )
+            info.combat_entity_info.CopyFrom(combat_info)
+
+        if snapshot.progression_snapshot:
+            prog_info = game_pb2.ProgressionEntityInfo(
+                entity_id=snapshot.entity_id,
+                level=snapshot.progression_snapshot.level,
+                total_exp=snapshot.progression_snapshot.total_exp,
+            )
+            info.prog_entity_info.CopyFrom(prog_info)
+
+        if snapshot.move_path_snapshot:
+            info.entity_move_path.CopyFrom(
+                GameProtoProjector._make_entity_move_path(
+                    snapshot.move_path_snapshot.entity_id,
+                    snapshot.move_path_snapshot.path,
+                    snapshot.move_path_snapshot.path_index,
+                    snapshot.move_path_snapshot.target_id,
+                )
+            )
 
         return info
 
@@ -112,6 +131,7 @@ class GameProtoProjector:
             ),
         )
 
+    # region debug
     @staticmethod
     def enemy_budget(event: events.EnemyBudgetData) -> game_pb2.EnemyBudgetData:
         """按现有整数协议发送预算，保留领域快照中的小数精度。"""
@@ -138,4 +158,50 @@ class GameProtoProjector:
     def cur_game_speed(event: events.GameSpeedChangedEvent) -> game_pb2.CurGameSpeed:
         return game_pb2.CurGameSpeed(
             speed=event.speed,
+        )
+
+    @staticmethod
+    def entity_move_path(event: events.EntityMovePath) -> game_pb2.EntityMovePath:
+        return GameProtoProjector._make_entity_move_path(
+            event.entity_id,
+            event.path,
+            event.path_index,
+            event.target_id,
+        )
+
+    @staticmethod
+    def _make_entity_move_path(
+        entity_id: str,
+        path: list[tuple[float, float]],
+        path_index: int,
+        target_id: str,
+    ) -> game_pb2.EntityMovePath:
+        move_path = game_pb2.EntityMovePath(
+            entity_id=entity_id,
+            path_index=path_index,
+            target_id=target_id,
+        )
+        move_path.path.extend(
+            game_pb2.Vector2Info(x=point[0], y=point[1])
+            for point in path
+        )
+        return move_path
+    # endregion
+
+    @staticmethod
+    def progression_state_delta(event: events.EntityProgChangedEvent) -> game_pb2.ProgressionStateDelta:
+        return game_pb2.ProgressionStateDelta(
+            entity_id=event.entity_id,
+            cur_exp=event.total_exp,
+            cur_level=event.level,
+        )
+    @staticmethod
+    def level_changed(event: events.EntityUpgradeEvent) -> game_pb2.WorldEvent:
+        return game_pb2.WorldEvent(
+            event_id = get_event_id(),
+            upgrade = game_pb2.UpgradeEvent(
+                entity_id=event.entity_id,
+                pre_level=event.pre_level,
+                cur_level=event.cur_level,
+            ),
         )

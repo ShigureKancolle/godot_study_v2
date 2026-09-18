@@ -4,18 +4,26 @@ class_name EntityViewFactory
 const PALYER_VISUAL_SCENE := preload("res://Prefab/Role/PlayerVisual.tscn")
 const HP_BAR_SCENE := preload("res://Prefab/Role/ProgressBar.tscn")
 const MONSTER_VISUAL_SCENE := preload("res://Prefab/Role/MonsterVisual.tscn")
+const EXP_VISUAL_SCENE := preload("res://Prefab/Role/ExpVisual.tscn")
 
 const Role = preload("res://Scirpt/game/view/Role.gd")
+const PlayerRole = preload("res://Scirpt/game/view/PlayerRole.gd")
+const MonsterRole = preload("res://Scirpt/game/view/MonsterRole.gd")
 
 static func create_entity_view(entity_state: EntityState):
 	if entity_state.entity_type == EntityState.EntityType.PLAYER:
 		return create_role_view(entity_state)
-	else:
+
+	elif entity_state.entity_type == EntityState.EntityType.ENEMY:
 		return create_enemy_view(entity_state)
 
+	elif entity_state.entity_type == EntityState.EntityType.EXP:
+		return create_exp_view(entity_state)
+
 static func create_role_view(entity_state: EntityState):
-	var view = Role.new()
+	var view = PlayerRole.new()
 	var view_visual = PALYER_VISUAL_SCENE.instantiate()
+	view_visual.entity_id = entity_state.entity_id
 	view.add_child(view_visual)
 	var motion_presenter = MotionPresenter.new(view)
 	var animation_presenter = AnimationPresenter.new(view)
@@ -31,15 +39,15 @@ static func create_role_view(entity_state: EntityState):
 	hp_bar_presenter.set_hp_bar(entity_hp_bar)
 	view.add_presenter(HpBarPresenter.presenter_name, hp_bar_presenter)
 	
-	if entity_state.combat_entity_state:
-		var combat_presenter = CombatPresenter.new(view)
-		view.add_presenter(CombatPresenter.presenter_name, combat_presenter)
+	var combat_presenter = CombatPresenter.new(view)
+	view.add_presenter(CombatPresenter.presenter_name, combat_presenter)
+	view.add_presenter(ProgressionPresenter.presenter_name, ProgressionPresenter.new(view))
 
 	return view
 
 static func create_enemy_view(entity_state: EntityState):
 	# 依据权威模板键选择怪物图集，木桩等无图集对象仍使用通用外观。
-	var view = Role.new()
+	var view = MonsterRole.new()
 	var visual_config: Dictionary = ConfigLoader.get_entity_visual_config(entity_state.entity_config_key)
 	var view_visual: PlayerVisual
 	if not visual_config.is_empty():
@@ -51,6 +59,8 @@ static func create_enemy_view(entity_state: EntityState):
 		view_visual = monster
 	else:
 		view_visual = PALYER_VISUAL_SCENE.instantiate() as PlayerVisual
+
+	view_visual.entity_id = entity_state.entity_id
 	view.add_child(view_visual)
 
 	var entity_hp_bar = HP_BAR_SCENE.instantiate()
@@ -69,8 +79,16 @@ static func create_enemy_view(entity_state: EntityState):
 	view.add_presenter(HpBarPresenter.presenter_name, hp_bar_presenter)
 
 	view.entity_visual = view_visual
-	if entity_state.combat_entity_state:
-		var combat_presenter = CombatPresenter.new(view)
-		view.add_presenter(CombatPresenter.presenter_name, combat_presenter)
+	var combat_presenter = CombatPresenter.new(view)
+	view.add_presenter(CombatPresenter.presenter_name, combat_presenter)
+	view.add_presenter(EntityMovePathPresenter.presenter_name, EntityMovePathPresenter.new(view))
 
+	return view
+
+static func create_exp_view(entity_state: EntityState):
+	# 经验球只需要图片和移动，不装配角色动画、血条或成长表现。
+	var view = EntityView.new()
+	var view_visual := EXP_VISUAL_SCENE.instantiate()
+	view.add_presenter(MotionPresenter.presenter_name, MotionPresenter.new(view))
+	view.add_child(view_visual)
 	return view

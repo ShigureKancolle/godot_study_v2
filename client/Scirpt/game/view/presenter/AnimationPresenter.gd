@@ -3,6 +3,11 @@ class_name AnimationPresenter
 
 static var presenter_name := &"AnimationPresenter"
 
+var _role: Role
+
+func _init(role: Role):
+	super(role)
+	_role = role
 
 var _facing_dir: String = "Down"
 var _current_state: String = "idle"
@@ -27,17 +32,17 @@ func play_attack(facing: float, attack: ConfigLoader.AttackConfig) -> void:
 		return
 	var direction: String = _move_dir_to_facing(Vector2(cos(facing), -sin(facing)))
 	var full_name: String = direction + "_Attack"
-	if not _entity_view.entity_visual.has_animation(full_name):
+	if not _role.entity_visual.has_animation(full_name):
 		return
 	_current_state = "attack"
 	_facing_dir = direction
 	_action_remaining = float(attack.get_attack_time()) / 1000.0
-	_entity_view.entity_visual.play_attack_anim(full_name, attack)
+	_role.entity_visual.play_attack_anim(full_name, attack)
 
 func play_hurt() -> void:
 	if is_dead():
 		return
-	var visual: PlayerVisual = _entity_view.entity_visual
+	var visual: PlayerVisual = _role.entity_visual
 	if visual is MonsterVisual:
 		visual.flash_hurt()
 	# 受击只叠加颜色反馈，不中断仍在执行的攻击预警和挥击时序。
@@ -102,8 +107,8 @@ func play_anim(anim_name: String = "idle") -> void:
 func _play_current() -> void:
 	var full_name: String = _facing_dir + "_" + _current_state.capitalize()
 	# 防御:SpriteFrames 里没配的动画名会告警
-	if _entity_view.entity_visual.has_animation(full_name):
+	if _role.entity_visual.has_animation(full_name):
 		# 避免重复播放当前动画(AnimatedSprite2D.play 同名动画会从头开始,这里只想继续)
-		_entity_view.entity_visual.play_anim(full_name, false)
+		_role.entity_visual.play_anim(full_name, false)
 	else:
 		push_warning("PlayerVisual: 动画不存在: " + full_name)

@@ -29,7 +29,7 @@
         "speed": 300.0,
         "dead_duration_ms": 0,
         "combat_stats": {
-            "max_hp": 100,
+            "max_hp": 10000,
             "attack_power": 20,
             "defense": 5,
             "look_around_fact_speed": 0

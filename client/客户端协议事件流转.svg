@@ -1,0 +1,183 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1100" viewBox="0 0 1800 1100">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#19324d" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#45617e"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#2878c7"/>
+    </marker>
+    <style>
+      .title { font: 700 38px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #15263b; }
+      .subtitle { font: 400 17px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #61738a; }
+      .lane-title { font: 700 18px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #33485f; letter-spacing: 1px; }
+      .node-title { font: 700 18px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #14283d; }
+      .node-code { font: 600 15px Consolas, "Microsoft YaHei", monospace; fill: #27516f; }
+      .node-desc { font: 400 14px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #66798d; }
+      .mini-title { font: 700 15px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #19344e; }
+      .mini-code { font: 500 13px Consolas, "Microsoft YaHei", monospace; fill: #49647d; }
+      .edge-label { font: 600 13px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #49647d; }
+      .step { font: 700 14px "Segoe UI", sans-serif; fill: #ffffff; }
+      .card { fill: #ffffff; stroke: #d5e0ea; stroke-width: 2; filter: url(#shadow); }
+      .mini { fill: #f8fbfe; stroke: #d7e2ec; stroke-width: 1.5; }
+      .arrow { fill: none; stroke: #45617e; stroke-width: 3.5; marker-end: url(#arrow); }
+      .arrow-blue { fill: none; stroke: #2878c7; stroke-width: 3.5; marker-end: url(#arrow-blue); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1100" fill="#f5f8fc"/>
+  <text x="70" y="65" class="title">客户端协议与事件消费流转</text>
+  <text x="70" y="98" class="subtitle">权威消息先写入 GameStore，再通过 SignalMgr 驱动场景、角色 Presenter、HUD 与调试表现</text>
+
+  <rect x="55" y="125" width="1690" height="190" rx="24" fill="#edf5ff"/>
+  <text x="80" y="158" class="lane-title">网络接收与协议路由</text>
+
+  <g transform="translate(80,180)">
+    <rect width="285" height="105" rx="16" class="card"/>
+    <circle cx="25" cy="25" r="16" fill="#2878c7"/><text x="25" y="30" text-anchor="middle" class="step">1</text>
+    <text x="142" y="42" text-anchor="middle" class="node-title">WebSocket 接收</text>
+    <text x="142" y="69" text-anchor="middle" class="node-code">WebSocketMgr.poll()</text>
+    <text x="142" y="91" text-anchor="middle" class="node-desc">get_packet()</text>
+  </g>
+  <path d="M365 232 H415" class="arrow-blue"/>
+  <text x="390" y="218" text-anchor="middle" class="edge-label">bytes</text>
+
+  <g transform="translate(430,180)">
+    <rect width="285" height="105" rx="16" class="card"/>
+    <circle cx="25" cy="25" r="16" fill="#2878c7"/><text x="25" y="30" text-anchor="middle" class="step">2</text>
+    <text x="142" y="42" text-anchor="middle" class="node-title">解析并识别 payload</text>
+    <text x="142" y="69" text-anchor="middle" class="node-code">MessageRouter.route()</text>
+    <text x="142" y="91" text-anchor="middle" class="node-desc">ServerMessage.from_bytes()</text>
+  </g>
+  <path d="M715 232 H765" class="arrow-blue"/>
+  <text x="740" y="218" text-anchor="middle" class="edge-label">payload</text>
+
+  <g transform="translate(780,180)">
+    <rect width="310" height="105" rx="16" class="card"/>
+    <circle cx="25" cy="25" r="16" fill="#2878c7"/><text x="25" y="30" text-anchor="middle" class="step">3</text>
+    <text x="155" y="42" text-anchor="middle" class="node-title">调用已注册 Handler</text>
+    <text x="155" y="69" text-anchor="middle" class="node-code">GameHandler.on_*</text>
+    <text x="155" y="91" text-anchor="middle" class="node-desc">world_snapshot / world_frame / debug</text>
+  </g>
+  <path d="M1090 232 H1140" class="arrow-blue"/>
+
+  <g transform="translate(1155,180)">
+    <rect width="360" height="105" rx="16" class="card"/>
+    <circle cx="25" cy="25" r="16" fill="#2878c7"/><text x="25" y="30" text-anchor="middle" class="step">4</text>
+    <text x="180" y="42" text-anchor="middle" class="node-title">顺序应用权威消息</text>
+    <text x="180" y="69" text-anchor="middle" class="node-code">ClientWorldSynchronizer</text>
+    <text x="180" y="91" text-anchor="middle" class="node-desc">过滤旧 tick · 调用 Reducer · 发出变化</text>
+  </g>
+
+  <path d="M1335 285 V345 H455 V382" class="arrow"/>
+  <text x="690" y="337" class="edge-label">WorldSnapshot：首次进入 / 重建完整镜像</text>
+  <path d="M1335 285 V345 H1325 V382" class="arrow"/>
+  <text x="1370" y="337" class="edge-label">WorldFrame：持续合并增量帧</text>
+
+  <rect x="55" y="390" width="800" height="330" rx="24" fill="#eefaf6" stroke="#c9eadc" stroke-width="2"/>
+  <rect x="75" y="410" width="150" height="32" rx="16" fill="#d6f2e7"/>
+  <text x="150" y="432" text-anchor="middle" class="lane-title">完整快照</text>
+
+  <g transform="translate(90,475)">
+    <rect width="210" height="110" rx="14" class="card"/>
+    <text x="105" y="39" text-anchor="middle" class="mini-title">解析快照</text>
+    <text x="105" y="68" text-anchor="middle" class="mini-code">WorldSnapshotReducer</text>
+    <text x="105" y="90" text-anchor="middle" class="node-desc">clear + EntityInfo → State</text>
+  </g>
+  <path d="M300 530 H345" class="arrow"/>
+  <g transform="translate(360,475)">
+    <rect width="210" height="110" rx="14" class="card"/>
+    <text x="105" y="39" text-anchor="middle" class="mini-title">重建权威镜像</text>
+    <text x="105" y="68" text-anchor="middle" class="mini-code">GameStore</text>
+    <text x="105" y="90" text-anchor="middle" class="node-desc">room / tick / entities</text>
+  </g>
+  <path d="M570 530 H615" class="arrow"/>
+  <g transform="translate(630,475)">
+    <rect width="190" height="110" rx="14" class="card"/>
+    <text x="95" y="39" text-anchor="middle" class="mini-title">进入世界</text>
+    <text x="95" y="68" text-anchor="middle" class="mini-code">snl_world_snapshot_applied</text>
+    <text x="95" y="90" text-anchor="middle" class="node-desc">GameBootstrap.enter_world()</text>
+  </g>
+  <rect x="90" y="625" width="730" height="60" rx="13" class="mini"/>
+  <text x="455" y="649" text-anchor="middle" class="mini-title">场景创建时从 GameStore 读取全部 EntityState</text>
+  <text x="455" y="673" text-anchor="middle" class="mini-code">TestLevel._ready() → spawn_entity() → view.setup()</text>
+  <path d="M725 585 V612" class="arrow"/>
+
+  <rect x="885" y="390" width="860" height="455" rx="24" fill="#fff8eb" stroke="#f1ddb1" stroke-width="2"/>
+  <rect x="905" y="410" width="150" height="32" rx="16" fill="#f9e8bc"/>
+  <text x="980" y="432" text-anchor="middle" class="lane-title">增量世界帧</text>
+
+  <g transform="translate(920,470)">
+    <rect width="220" height="105" rx="14" class="card"/>
+    <text x="110" y="38" text-anchor="middle" class="mini-title">拆分世界帧</text>
+    <text x="110" y="67" text-anchor="middle" class="mini-code">WorldFrameReducer.apply()</text>
+    <text x="110" y="89" text-anchor="middle" class="node-desc">按字段调用子 Reducer</text>
+  </g>
+  <path d="M1140 522 H1180" class="arrow"/>
+  <g transform="translate(1195,455)">
+    <rect width="265" height="155" rx="14" class="card"/>
+    <text x="132" y="34" text-anchor="middle" class="mini-title">组件 Reducer</text>
+    <text x="132" y="60" text-anchor="middle" class="mini-code">Spawn · Movement · Aims</text>
+    <text x="132" y="84" text-anchor="middle" class="mini-code">HP · Progression · Remove</text>
+    <text x="132" y="108" text-anchor="middle" class="mini-code">EntityMovePath (DEBUG)</text>
+    <text x="132" y="136" text-anchor="middle" class="node-desc">原地合并到已有 State</text>
+  </g>
+  <path d="M1460 532 H1500" class="arrow"/>
+  <g transform="translate(1515,470)">
+    <rect width="195" height="105" rx="14" class="card"/>
+    <text x="97" y="38" text-anchor="middle" class="mini-title">产出变化集</text>
+    <text x="97" y="67" text-anchor="middle" class="mini-code">WorldFrameChanges</text>
+    <text x="97" y="89" text-anchor="middle" class="node-desc">已更新 GameStore</text>
+  </g>
+
+  <path d="M1612 575 V640" class="arrow"/>
+  <g transform="translate(1240,650)">
+    <rect width="470" height="145" rx="16" class="card"/>
+    <text x="235" y="34" text-anchor="middle" class="mini-title">转换为客户端表现信号</text>
+    <text x="235" y="60" text-anchor="middle" class="mini-code">_emit_world_frame_changes()</text>
+    <text x="235" y="87" text-anchor="middle" class="node-desc">批量变化：moved / hp / progression / move_path…</text>
+    <text x="235" y="112" text-anchor="middle" class="node-desc">离散 WorldEvent：attack / damage / dead / upgrade</text>
+  </g>
+  <path d="M1030 575 V660 H1225" class="arrow"/>
+  <text x="1000" y="646" text-anchor="middle" class="edge-label">frame.events</text>
+
+  <rect x="55" y="875" width="1690" height="175" rx="24" fill="#f3effc" stroke="#ddd0f4" stroke-width="2"/>
+  <text x="80" y="910" class="lane-title">表现层消费</text>
+
+  <g transform="translate(110,935)">
+    <rect width="285" height="80" rx="15" class="card"/>
+    <text x="142" y="33" text-anchor="middle" class="node-title">SignalMgr</text>
+    <text x="142" y="59" text-anchor="middle" class="node-desc">跨模块业务事件总线</text>
+  </g>
+  <path d="M1475 795 V850 H252 V922" class="arrow-blue"/>
+
+  <path d="M395 975 H455" class="arrow"/>
+  <g transform="translate(470,930)">
+    <rect width="300" height="90" rx="15" class="card"/>
+    <text x="150" y="34" text-anchor="middle" class="node-title">TestLevel</text>
+    <text x="150" y="60" text-anchor="middle" class="node-desc">创建/删除 EntityView · 转发变化</text>
+    <text x="150" y="79" text-anchor="middle" class="mini-code">hdl_entities_*()</text>
+  </g>
+  <path d="M770 975 H830" class="arrow"/>
+  <g transform="translate(845,930)">
+    <rect width="300" height="90" rx="15" class="card"/>
+    <text x="150" y="34" text-anchor="middle" class="node-title">Role / MonsterRole</text>
+    <text x="150" y="60" text-anchor="middle" class="node-desc">按实体类型接收状态变化</text>
+    <text x="150" y="79" text-anchor="middle" class="mini-code">apply_*()</text>
+  </g>
+  <path d="M1145 975 H1205" class="arrow"/>
+  <g transform="translate(1220,930)">
+    <rect width="245" height="90" rx="15" class="card"/>
+    <text x="122" y="34" text-anchor="middle" class="node-title">Presenter</text>
+    <text x="122" y="60" text-anchor="middle" class="node-desc">移动、动画、战斗、路径</text>
+    <text x="122" y="79" text-anchor="middle" class="mini-code">更新具体 View</text>
+  </g>
+  <path d="M395 955 C600 875 1400 875 1510 922" class="arrow"/>
+  <g transform="translate(1525,930)">
+    <rect width="170" height="90" rx="15" class="card"/>
+    <text x="85" y="34" text-anchor="middle" class="node-title">HUD / DebugUI</text>
+    <text x="85" y="60" text-anchor="middle" class="node-desc">直接消费相关信号</text>
+  </g>
+</svg>

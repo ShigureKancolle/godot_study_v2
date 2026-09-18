@@ -8,6 +8,7 @@ import game.model.entity as entity
 import game.commands as command
 import game.events as event
 from game.model.navigation_component import NavigationComponent
+from game.systems import progression_compsystem
 from game.systems.ai_compsystem import AICompSystem
 import game.systems.comp_system as comp_system
 import game.systems.combat_compsystem as combat_comp_system
@@ -18,6 +19,7 @@ import game.model.config_loader as config_loader
 import game.model.navigation_grid as navigation_grid
 import game.tools.pathfinder as pathfinder
 import game.systems.game_mode.survival_mode as survival_mode_module
+import game.model.progression_component as progression_comp
 from typing import Tuple
 import typing
 if typing.TYPE_CHECKING:
@@ -26,7 +28,8 @@ if typing.TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-DEBUG = True
+DEBUG = config_loader.get_constant("DEBUG_MSG_ENABLED")
+
 
 # region 单房间 先这样 到时候再加roommgr
 game_room: "GameWorld" = None
@@ -127,7 +130,8 @@ class GameWorld:
 
         if self._game_mode.can_update_system(game_mode_module.SystemScope.GAMEPLAY):
             # AI 操作要在 pipeline 的 update 之前，否则 AI 命令会慢一帧。
-            ai_commands = self._ai_comp_system.decide(self, dt)
+            ai_commands, ai_events = self._ai_comp_system.decide(self, dt)
+            events.extend(ai_events)
             for ai_command in ai_commands:
                 try:
                     events.extend(self._tick_pipeline.dispatch(self, ai_command))
@@ -163,6 +167,10 @@ class GameWorld:
     def game_mode(self) -> game_mode_module.GameMode:
         """返回当前世界独占的游戏模式实例。"""
         return self._game_mode
+
+    def get_system(self, system_type: type[comp_system.CompSystem]) -> comp_system.CompSystem:
+        """返回指定类型的系统实例。"""
+        return self._system_instances.get(system_type)
 
     def register_system(
         self,
@@ -219,6 +227,9 @@ class GameWorld:
             game_mode_module.CommandScope.LIFECYCLE,
         )
 
+        # 既不要apply_command，也不要update
+        self.register_system(progression_compsystem.ProgressionCompSystem, command_scope=None)
+
 
     def register_game_mode_command_handlers(self):
         """注册游戏模式命令处理函数。"""
@@ -232,7 +243,9 @@ class GameWorld:
         self.register_system(comp_system.AttackCompSystem, update_scope=game_mode_module.SystemScope.GAMEPLAY)
         self.register_system(combat_comp_system.CombatCompSystem, update_scope=game_mode_module.SystemScope.GAMEPLAY)
         self.register_system(death_system.DeathSystem, update_scope=game_mode_module.SystemScope.GAMEPLAY)
+        self.register_system(comp_system.PickupCompSystem, update_scope=game_mode_module.SystemScope.GAMEPLAY)
 
+        # ai是独立的一步 不和其他的系统一起update
         self._ai_comp_system = self.register_system(AICompSystem)
 
     def register_always_update_system(self):
@@ -302,8 +315,11 @@ class GameWorld:
         combat_comp = combat_component.CombatComponent()
         combat_comp.load_combat_config("player")
         combat_comp.attack_mask = capability.attack_mask
-        
         player.add_component(combat_comp)
+
+        player.add_component(comps.PickupComponent(pickup_radius_px=config_loader.get_reward_config().progression.base_pickup_radius_px))
+        player.add_component(progression_comp.ProgressionComponent())
+        
         self.add_entity(player)
         return player
 

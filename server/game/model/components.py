@@ -2,9 +2,16 @@
 
 from dataclasses import dataclass, field
 
+import typing
+if typing.TYPE_CHECKING:
+    from game.model.entity import Entity
+
+
+
 @dataclass
 class Component:
-    pass
+    def on_add_to_entity(self, entity: "Entity"):
+        pass
 
 @dataclass
 class TransformComponent(Component):
@@ -50,3 +57,15 @@ class DeathTimerComponent(Component):
     """记录实体死亡后等待移除的权威计时状态。"""
     elapsed_ms: float = 0.0
     remove_after_ms: int = 0
+
+@dataclass
+class ExpComponent(Component):
+    '''这个实体是经验实体，记录了实体的经验, system会把经验实体吸附到附近玩家上, 玩家会获得经验'''
+    exp: int = 0
+    target_id: str = ""
+
+@dataclass
+class PickupComponent(Component):
+    '''拾取功能， '''
+    pickup_radius_px: float = 0.0
+    

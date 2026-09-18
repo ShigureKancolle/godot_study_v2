@@ -127,7 +127,7 @@ class PathFinder:
     def _reconstruct_path(self, parent_map: dict[tuple[int, int], tuple[int, int]], end_pos: tuple[float, float] | None = None) -> list[tuple[int, int]]:
         '''重建路径'''
         path = []
-        current = end_pos
+        current = self._world_pos_to_block(end_pos[0], end_pos[1])
         while current in parent_map:
             # 转换为块的中心坐标
             world_pos = self._block_center_to_world_pos(current[0], current[1])

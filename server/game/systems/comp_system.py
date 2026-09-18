@@ -434,5 +434,112 @@ class GameSpeedChangeCompSystem(CompSystem):
         return [event.GameSpeedChangedEvent(speed=cur_speed)]
     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
         return []
+
+# class ExpCompSystem(CompSystem):
+#     def apply_command(self, world: "game_world.GameWorld", command: "command.WorldCommand") -> list[event.Event]:
+#         return []
+
+#     def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
+#         exp_entities = world.entities_with([comps.ExpComponent, comps.TransformComponent])
+#         for e in exp_entities:
+#             pos = (e.get_component(comps.TransformComponent).x, e.get_component(comps.TransformComponent).y)
+#             exp_value = e.get_component(comps.ExpComponent).exp
+
+#             # 查找最近的玩家
+#             for player in world.entities_with([comps.PlayerComponent, comps.TransformComponent]):
+#                 player_pos = (player.get_component(comps.TransformComponent).x, player.get_component(comps.TransformComponent).y)
+#                 distance = (player_pos[0] - pos[0])**2 + (player_pos[1] - pos[1])**2
+
+#                 if distance < config_loader.get_reward_config().progression.base_pickup_radius_px**2: # 这里还涉及到玩家升级之后可以增加拾取范围
+#                     # 可以拾取经验 
+#                     pass
+
+class PickupCompSystem(CompSystem):
+    def apply_command(self, world: "game_world.GameWorld", command: "command.WorldCommand") -> list[event.Event]:
+        return []
+    
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
+        events = self._check_exp_pickup(world, dt)
                         
-                       
+        return events
+
+    def _check_exp_pickup(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
+        events: list[event.Event] = []
+        exp_entities = world.entities_with([comps.ExpComponent, comps.TransformComponent])
+        exp_config = config_loader.get_capability("xp_orb")
+        player_config = config_loader.get_capability("player")
+        for e in exp_entities:
+            pos = (e.get_component(comps.TransformComponent).x, e.get_component(comps.TransformComponent).y)
+            exp_comp: comps.ExpComponent = e.get_component(comps.ExpComponent)
+            if exp_comp.target_id != "":
+                step = config_loader.get_reward_config().progression.xp_attract_speed_px_per_second * dt
+                target_entity = world.get_entity(exp_comp.target_id)
+                if target_entity is None:
+                    exp_comp.target_id = ""
+                    continue
+                target_pos = (target_entity.get_component(comps.TransformComponent).x, target_entity.get_component(comps.TransformComponent).y)
+                dir_x = target_pos[0] - pos[0]
+                dir_y = target_pos[1] - pos[1]
+                distance = dir_x**2 + dir_y**2
+                if step**2 < distance:
+                    # 往这方向飞一步 
+                    dir = collision.Vector2(dir_x, dir_y).normalized()
+                    new_pos = (pos[0] + dir.x * step, pos[1] + dir.y * step)
+                    e.get_component(comps.TransformComponent).x = new_pos[0]
+                    e.get_component(comps.TransformComponent).y = new_pos[1]
+
+                    exp_circle = collision.Circle(
+                        pos=new_pos,
+                        radius=getattr(exp_config.body_params, "radius", 0.0),
+                    )
+
+                    target_circle = collision.Circle(
+                        pos=target_pos,
+                        radius=getattr(player_config.body_params, "radius", 0.0),
+                    )
+
+                    # 判断是不是碰撞了 
+                    if collision.intersect_circle_circle(exp_circle, target_circle):
+                        # 到达目标
+                        events.extend(self._on_exp_collision_target(e, target_entity, world))
+                    else:
+                        # 发送移动事件 通知客户端
+                        events.append(event.EntityMovedEvent(entity_id=e.entity_id, x=new_pos[0], y=new_pos[1]))
+
+                else:
+                    # 到达目标
+                    events.extend(self._on_exp_collision_target(e, target_entity, world))
+            else:
+                min_distance = float('inf')
+                min_player = None
+                # 查找最近的玩家
+                for player in world.entities_with([comps.PlayerComponent, comps.TransformComponent, comps.PickupComponent]):
+                    player_pos = (player.get_component(comps.TransformComponent).x, player.get_component(comps.TransformComponent).y)
+                    distance = (player_pos[0] - pos[0])**2 + (player_pos[1] - pos[1])**2
+                    if distance < player.get_component(comps.PickupComponent).pickup_radius_px**2 and \
+                        distance < min_distance:
+                        min_distance = distance
+                        min_player = player
+
+                if min_player is None:
+                    continue
+                # 可以拾取经验 
+                exp_comp.target_id = min_player.entity_id
+
+        return events
+
+    def _on_exp_collision_target(self, exp: entity.Entity, target: entity.Entity, world: "game_world.GameWorld") -> list[event.Event]:
+        events: list[event.Event] = []
+        removed = world.remove_entity(exp.entity_id)
+        if removed is not None:
+            # 这个东西存在并且能被remove掉才算是被捡到了
+            # 这里就是处理经验拾取的
+            import game.systems.progression_compsystem as progression_comp_system
+            prog_system: progression_comp_system.ProgressionCompSystem = world.get_system(progression_comp_system.ProgressionCompSystem)
+            events.extend(prog_system.add_exp(world,target.entity_id, exp.get_component(comps.ExpComponent).exp))
+
+            # 通知客户端 根据这个信息消除经验球渲染
+            events.append(event.EntityRemovedEvent(entity_id=exp.entity_id))
+
+            
+        return events

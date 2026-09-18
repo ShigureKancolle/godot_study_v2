@@ -14,6 +14,19 @@ class CombatSnapshot:
     dead: bool = False
 
 @dataclass(frozen=True)
+class ProgressionSnapshot:
+    entity_id: str = ""
+    level: int = 0
+    total_exp: int = 0
+
+@dataclass(frozen=True)
+class MovePathSnapshot:
+    entity_id: str = ""
+    path: list[tuple[float, float]] = field(default_factory=list)
+    path_index: int = 0
+    target_id: str = ""
+
+@dataclass(frozen=True)
 class EntitySnapshot:
     entity_id: str = ""
     player_name: str = ""
@@ -24,8 +37,10 @@ class EntitySnapshot:
     anim_state: str = ""
     moving: bool = False
     ai_state: str = ""
-    combat_snapshot: CombatSnapshot = field(default_factory=CombatSnapshot)
+    combat_snapshot: CombatSnapshot | None = None
     entity_config_key: str = ""
+    progression_snapshot: ProgressionSnapshot | None = None
+    move_path_snapshot: MovePathSnapshot | None = None
 
 @dataclass(frozen=True)
 class EnemyBudgetData:
@@ -119,6 +134,23 @@ class CommandRejectedEvent(Event):
 class EntitySpawnedEvent(Event):
     entity_info: EntitySnapshot = field(default_factory=EntitySnapshot)
 
+@dataclass(frozen=True)
+class EntityPickupEvent(Event):
+    pick_entity_id: str = ""
+    remove_entity_id: str = ""
+
+@dataclass(frozen=True)
+class EntityProgChangedEvent(Event):
+    entity_id: str = ""
+    level: int = 0
+    total_exp: float = 0.0
+
+@dataclass(frozen=True)
+class EntityUpgradeEvent(Event):
+    entity_id: str = ""
+    pre_level: int = 0
+    cur_level: int = 0
+
 # region debug
 @dataclass(frozen=True)
 class LevelDebugEvent(Event):
@@ -133,6 +165,13 @@ class LevelDebugEvent(Event):
 @dataclass(frozen=True)
 class GameSpeedChangedEvent(Event):
     speed: int = 1
+
+@dataclass(frozen=True)
+class EntityMovePath(Event):
+    entity_id: str = ""
+    path: list[tuple[float, float]] = field(default_factory=list)
+    path_index: int = 0
+    target_id: str = ""
 
 # endregion
 

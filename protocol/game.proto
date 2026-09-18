@@ -12,6 +12,20 @@ message CombatEntityInfo {
   bool dead = 5;
 }
 
+message ProgressionEntityInfo {
+  string entity_id = 1;
+  float total_exp = 2;
+  int32 level = 3;
+}
+
+// 当前寻路路径
+message EntityMovePath {
+  string entity_id = 1;
+  repeated Vector2Info path = 2;
+  uint64 path_index = 3;
+  string target_id = 4;
+}
+
 message EntityInfo {
   string entity_id = 1;
   string player_name = 2;
@@ -26,6 +40,16 @@ message EntityInfo {
   CombatEntityInfo combat_entity_info = 11;
   // 实体模板键，客户端据此选择角色资源，不解析 entity_id。
   string entity_config_key = 12;
+  ProgressionEntityInfo prog_entity_info = 13;
+
+  // debug
+  EntityMovePath entity_move_path = 14;
+
+}
+
+message Vector2Info {
+  float x = 1;
+  float y = 2;
 }
 
 
@@ -130,6 +154,31 @@ message EntityDead {
   string entity_id = 1;
 }
 
+// 合并帧同步当前属性  stateDelta 结尾
+message ProgressionStateDelta {
+  string entity_id = 1;
+  int32 cur_level = 2;
+  float cur_exp = 3;
+}
+
+// 离散帧事件 Event结尾
+message UpgradeEvent {
+  string entity_id = 1;
+  int32 pre_level = 2;
+  int32 cur_level = 3;
+}
+
+// 独立消息  不要和上面的雷同
+message RewardChoiseOffer {
+  string entity_id = 1;
+  repeated uint64 reward_ids = 2;
+}
+
+message RewardChoiseReply {
+  string entity_id = 1;
+  uint64 choise_id = 2;
+}
+
 // 服务端 -> 客户端。说明客户端命令被拒绝的原因；
 // 这是单次请求的响应，不属于权威世界状态。
 message CommandRejected {
@@ -147,6 +196,7 @@ message WorldEvent {
     AttackHit attack_hit = 3;
     DamageEvent damage = 4;
     EntityDead entity_dead = 5;
+    UpgradeEvent upgrade = 6;
   }
 }
 
@@ -161,6 +211,10 @@ message WorldFrame {
   repeated HealthStateDelta health_states = 5; // 血量变化
 
   repeated WorldEvent events = 6; // 单独处理的事件
+
+  repeated ProgressionStateDelta progression_state = 7; // 经验等级现状
+
+  repeated EntityMovePath entity_move_path = 8;
 }
 
 // debug msg ===========================================================================
@@ -195,6 +249,8 @@ message GameSpeedChange {
 message CurGameSpeed {
   int32 speed = 1;
 }
+
+
 
 // debug msg end =======================================================================
 

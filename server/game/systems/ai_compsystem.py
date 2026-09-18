@@ -20,6 +20,7 @@ if typing.TYPE_CHECKING:
     from game.model.entity import Entity
 
 logger = logging.getLogger(__name__)
+DEBUG = config_loader.get_constant("DEBUG_MSG_ENABLED")
 
 @dataclasses.dataclass
 class AIEntityComps:
@@ -36,6 +37,7 @@ class AICompSystem(CompSystem):
     """AI组件系统。"""
     def init(self, *args, **kwargs):
         self._ai_commands: list[commands.WorldCommand] = []
+        self.events: list[events.Event] = []
 
     def apply_command(self, world: "world.GameWorld", command: "commands.WorldCommand") -> list[events.Event]:
         # 客户端不会发送 AI状态变更请求
@@ -44,9 +46,10 @@ class AICompSystem(CompSystem):
     def decide(self, world, dt) -> "list[commands.WorldCommand]":
         self._ai_commands.clear()
         self.update(world, dt)
-        return self._ai_commands
+        return self._ai_commands, self.events
 
     def update(self, world: "world.GameWorld", dt: float) -> list[events.Event]:
+        self.events.clear()
         ai_entities = world.entities_with(AIComponent)
         for ai_entity in ai_entities:
             ai_entity_comps = self.countdown_all_timer(ai_entity, dt)
@@ -65,8 +68,8 @@ class AICompSystem(CompSystem):
             if self.try_idle(world, dt, ai_entity):
                 continue
 
-        # 这个系统理论上不该产生事件
-        return []
+        # todo这里把事件吞了 这个系统理论上不该产生事件
+        return self.events
 
 
     def try_attack(self, world: "world.GameWorld", dt: float, attacker: "Entity") -> bool:
@@ -332,6 +335,23 @@ class AICompSystem(CompSystem):
             (target_transform_comp.x, target_transform_comp.y),
             _ai_params.out_combat_distance
         )
+
+        if DEBUG:
+            debug_path = []
+            debug_path.extend(path)
+
+            if not debug_path:
+                debug_path = [(_transform_comp.x, _transform_comp.y)]
+
+            self.events.append(
+                events.EntityMovePath(
+                    entity_id = ai_entity.entity_id,
+                    path = debug_path,
+                    path_index = 0,
+                    target_id = _ai_comp.state_target_id,
+                )
+            )   
+
         if path:
             _navigation_comp.path = path
             _navigation_comp.path_index = 0
@@ -374,12 +394,31 @@ class AICompSystem(CompSystem):
             if path_dir_x ** 2 + path_dir_y ** 2 < dt_move_px ** 2:
                 # 到达目标点
                 _navigation_comp.path_index += 1
+                if DEBUG:
+                    self.events.append(
+                        events.EntityMovePath(
+                            entity_id = attacker.entity_id,
+                            path = _navigation_comp.path,
+                            path_index = _navigation_comp.path_index,
+                            target_id = _navigation_comp.planned_target_id,
+                        )
+                    )
                 continue 
             
             rotate_command = commands.AtkRotateCommand(attacker.entity_id, atk_facing = -math.atan2(path_dir_y, path_dir_x))
             move_command = commands.MoveCommand(attacker.entity_id, dir_x = path_dir_x, dir_y = path_dir_y, moving = True)
-            self.append_ai_command(rotate_command, move_command)
+            self.append_ai_command(rotate_command, move_command)  
             return
+
+        if DEBUG:
+            self.events.append(
+                events.EntityMovePath(
+                    entity_id = attacker.entity_id,
+                    path = _navigation_comp.path,
+                    path_index = _navigation_comp.path_index,
+                    target_id = _navigation_comp.planned_target_id,
+                )
+            )
 
         # 全部路径都走完了
         self.append_ai_command(commands.MoveCommand(attacker.entity_id, moving = False))
