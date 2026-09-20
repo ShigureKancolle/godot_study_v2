@@ -47,25 +47,6 @@ class SurvivalMode(GameMode):
 
     def __init__(self):
         super().__init__()
-        self._game_timestamp_ms = 0
-        '''游戏计时，单位毫秒，整个生存模式的计时都以这个为准'''
-
-        self._time_spawn_list: list[TimeSpawnData] = []
-        self._exp_entity_list: list[entity.Entity] = []
-        self._survival_config = config_loader.get_survival_config()
-        self._cur_stage = None
-        # region stage数据 切换的时候要清空
-        self._cur_budget = 0.0
-        self._enemy_budget: dict[str, SpawnBudgetData] = {}
-        self._stage_start_timestamp_ms = 0.0
-        '''当前阶段开始时间'''
-        self._next_stage_timestamp_ms = 0
-        # endregion
-
-        # 下次刷新怪物在这个tick之后检查是否需要刷新
-        self._refresh_timestamp_ms = 0
-
-        self._game_finished = False
 
     def start(self, world: "gw.GameWorld"):
         """开始游戏模式。"""
@@ -134,16 +115,25 @@ class SurvivalMode(GameMode):
                 enemy_type = time_spawns.enemy_type,
             ))
 
+    def should_advance_gameplay(self) -> bool:
+        """是否应该继续游戏。"""
+        return super().should_advance_gameplay() and not self._game_finished
+
     def before_step(self, world: "gw.GameWorld", dt: float) -> list[events.Event]:
         """在 tick 开始前调用。"""
+        self.check_game_over(world)
+
+        if self._game_finished:
+            # 游戏结束只通知一次；后续 tick 保持停止状态，等待生命周期命令重开。
+            if self._game_over_event_sent:
+                return []
+            self._game_over_event_sent = True
+            return [events.GameOverEvent()]
+
         if not self.should_advance_gameplay():
             return []
         
         _before_step_events: list[events.Event] = []
-        if self._game_finished:
-            # 抛出结算游戏？
-            return _before_step_events
-
         super().before_step(world, dt)
         self._game_timestamp_ms += dt * 1000
         self._budget_add(world, dt, _before_step_events)
@@ -153,6 +143,8 @@ class SurvivalMode(GameMode):
 
     def after_step(self, world: "gw.GameWorld", dt: float) -> list[events.Event]:
         """在 tick 结束后调用。"""
+        self.check_game_over(world)
+
         if not self.should_advance_gameplay():
             return []
 
@@ -169,6 +161,30 @@ class SurvivalMode(GameMode):
         self._try_spawn_enemy(world, dt, _after_step_events)
         return _after_step_events
 
+    def check_game_over(self, world: "gw.GameWorld"):
+        """检查游戏是否结束。"""
+        self._game_finished = False
+        if not self.is_started() or self._survival_config is None or self._cur_stage is None:
+            return self._game_finished
+
+        if len(world.entities_with([comps.PlayerComponent])) == 0:
+            # 玩家全死了
+            self._game_finished = True
+
+        if self._cur_stage.stage_id == self._survival_config.stages[-1].stage_id and \
+            self._game_timestamp_ms >= self._next_stage_timestamp_ms:
+            # 最后一阶段
+            # 时间到了
+            self._game_finished = True
+
+        if self._cur_stage.stage_id == self._survival_config.stages[-1].stage_id and \
+            world.enemy_count("enemy_boss") == 0:
+            # boos死了
+            self._game_finished = True
+
+
+        return self._game_finished
+
 
     def register_command_handlers(self, router: "command_router.CommandRouter"):
         """注册当前游戏模式特有的命令处理函数。"""
@@ -184,11 +200,31 @@ class SurvivalMode(GameMode):
 
     def is_finished(self) -> bool:
         """是否游戏结束。"""
-        return False
+        return self._game_finished
 
-    def clearup(self, world: "gw.GameWorld"):
+    def clearup(self):
         """清理游戏模式。"""
-        pass   
+        super().clearup()
+        self._game_timestamp_ms = 0
+        '''游戏计时，单位毫秒，整个生存模式的计时都以这个为准'''
+
+        self._time_spawn_list: list[TimeSpawnData] = []
+        self._exp_entity_list: list[entity.Entity] = []
+        self._survival_config = config_loader.get_survival_config()
+        self._cur_stage = None
+        # region stage数据 切换的时候要清空
+        self._cur_budget = 0.0
+        self._enemy_budget: dict[str, SpawnBudgetData] = {}
+        self._stage_start_timestamp_ms = 0.0
+        '''当前阶段开始时间'''
+        self._next_stage_timestamp_ms = 0
+        # endregion
+
+        # 下次刷新怪物在这个tick之后检查是否需要刷新
+        self._refresh_timestamp_ms = 0
+
+        self._game_finished = False
+        self._game_over_event_sent = False
 
     def _handle_reward_choice_command(self, command: commands.RewardChoiceCommand):
         """处理奖励选择命令。"""

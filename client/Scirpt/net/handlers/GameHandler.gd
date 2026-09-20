@@ -51,4 +51,8 @@ func on_cur_game_speed(msg: GameProto.ServerMessage):
 	var speed := speed_msg.get_speed()
 	
 	SignalMgr.Get().snl_cur_game_speed.emit(speed)
+
+func on_game_over(msg: GameProto.ServerMessage):
+	var over := msg.get_game_over()
+	SignalMgr.Get().snl_game_over.emit()
 	

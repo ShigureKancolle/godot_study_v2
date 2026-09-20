@@ -5,7 +5,7 @@
 SessionCommand 面向连接和会话状态；WorldCommand 进入队列后只能由游戏 System
 应用到 GameWorld。
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 # region WorldCommand
 @dataclass
@@ -67,6 +67,17 @@ class GameSpeedChangeCommand(WorldCommand):
     ''' 游戏速度改变 '''
     pass
 
+
+@dataclass(frozen=True)
+class RestartPlayerData:
+    connection_id: int
+    account: str
+    player_name: str
+
+@dataclass
+class RestartGameRequestCommand(WorldCommand):
+    ''' 请求重新开始游戏 '''
+    players: list[RestartPlayerData] = field(default_factory=list)
 
 
 

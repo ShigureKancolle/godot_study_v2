@@ -151,6 +151,11 @@ class EntityUpgradeEvent(Event):
     pre_level: int = 0
     cur_level: int = 0
 
+@dataclass(frozen=True)
+class GameOverEvent(Event):
+    pass
+
+
 # region debug
 @dataclass(frozen=True)
 class LevelDebugEvent(Event):

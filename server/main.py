@@ -25,7 +25,7 @@ async def main():
     build_client_router()
     socket = websocket_server.WebSocketServer(app_runtime)
 
-    test_server(game_world)
+    # test_server(game_world)
 
     await asyncio.gather(
         socket.start(),

@@ -3,6 +3,7 @@ class_name TestLevel
 const LEVEL_SCENE := preload("res://Prefab/Level/TestLevel.tscn")
 const MENU_UI_PATH := "res://Prefab/Level/MenuUI.tscn"
 const HUD_MAIN_UI_PATH := "res://Prefab/Hud/HudMain.tscn"
+const GAME_OVER_UI_PATH := "res://Prefab/Level/GameOverUI.tscn"
 
 @onready var hud_ui_root: Control = $TestLevelUI/HudUI
 @onready var menu_ui_root: Control = $TestLevelUI/MenuUI
@@ -18,6 +19,7 @@ var tile_map_layer: TileMapLayer = null
 var entity_views: Dictionary[String, EntityView] = {}
 var menu_ui: Node2D = null
 var hud_main_ui: Control = null
+var game_over_ui: Node2D = null
 var entity_path_painter: Dictionary[String, EntityPathPainter] = {}
 
 
@@ -46,6 +48,7 @@ func _ready():
 	SignalMgr.Get().snl_entity_upgrade.connect(hdl_entity_upgrade)
 	SignalMgr.Get().snl_entity_path_draw.connect(hdl_entity_path_draw)
 	SignalMgr.Get().snl_entities_move_paths_changed.connect(hdl_entities_move_paths_changed)
+	SignalMgr.Get().snl_game_over.connect(hdl_game_over)
 		
 
 	# 初始化地图
@@ -144,6 +147,12 @@ func hdl_entities_prog_changed(change_states: Array[EntityState]):
 func hdl_entity_upgrade(entity_id: String, pre_level: int, cur_level: int):
 	# 还没想好升级发什么特效
 	pass
+
+func hdl_game_over():
+	# 游戏结束
+	game_over_ui = load(GAME_OVER_UI_PATH).instantiate()
+	game_over_ui.show()
+	menu_ui_root.add_child(game_over_ui)
 
 func hdl_damage_received(attacker_id: String, target_id: String, attack_id: int, damage: int, critical: bool):
 	var target_view := entity_views.get(target_id) as Role

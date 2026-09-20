@@ -43,6 +43,13 @@ def pause_game_world_handler(context: ConnectionContext, proto: game_pb2.PauseGa
         pause=bool(proto.pause),
     )
 
+def restart_game_request_handler(context: ConnectionContext, proto: game_pb2.RestartGameRequset):
+    return commands.RestartGameRequestCommand(
+        connection_id=context.connection_id,
+        entity_id=context.player_entity_id,
+        players=[],
+    )
+
 # region debug
 def skip_cur_stage_handler(context: ConnectionContext, proto: game_pb2.SkipCurStage):
     return commands.SkipCurStageCommand(

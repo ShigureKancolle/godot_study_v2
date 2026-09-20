@@ -168,15 +168,31 @@ message UpgradeEvent {
   int32 cur_level = 3;
 }
 
-// 独立消息  不要和上面的雷同
+// 独立消息  不要和上面的雷同 通知客户端选择奖励
 message RewardChoiseOffer {
   string entity_id = 1;
   repeated uint64 reward_ids = 2;
 }
 
+// 客户端选择奖励通知服务端
 message RewardChoiseReply {
   string entity_id = 1;
   uint64 choise_id = 2;
+}
+
+// 这局游戏结束了
+message GameOver {
+  // 可以发送一些结算信息 balabala
+}
+
+// 请求重开游戏  多人联机的情况下可能需要一组新协议来通知其他人 经典15投
+message RestartGameRequset {
+  string entity_id = 1;
+}
+
+// 重开游戏  也许只需要重置游戏然后发一个新的世界快照 不需要单独协议
+message RestartGame {
+
 }
 
 // 服务端 -> 客户端。说明客户端命令被拒绝的原因；
@@ -272,6 +288,7 @@ message ClientMessage {
     SkipCurStage skip_cur_stage = 7;
     GameSpeedChange game_speed_change = 8;
     // debug_msg_end
+    RestartGameRequset restart_requset = 9;
   }
 }
 
@@ -291,5 +308,6 @@ message ServerMessage {
     LevelDebugData level_debug_data = 15;
     CurGameSpeed cur_game_speed = 16;
     // debug_msg_end
+    GameOver game_over = 17;
   }
 }

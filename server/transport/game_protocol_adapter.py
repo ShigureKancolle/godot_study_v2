@@ -57,15 +57,15 @@ class GameProtocolAdapter:
                 )
                 continue
 
-            # if isinstance(current_event, events.EntityMovePath):
-            #     message = GameProtoProjector.entity_move_path(current_event)
-            #     self._outbound.broadcast(
-            #         "entity_move_path",
-            #         message,
-            #         room_id=self._game_world.room_id,
-            #         server_tick=server_tick,
-            #     )
-            #     continue
+            if isinstance(current_event, events.GameOverEvent):
+                message = GameProtoProjector.game_over_event(current_event)
+                self._outbound.broadcast(
+                    "game_over",
+                    message,
+                    room_id=self._game_world.room_id,
+                    server_tick=server_tick,
+                )
+                continue
 
             builder.apply(current_event)
 

@@ -37,5 +37,9 @@ func reset_game_store():
 
 func enter_world(snapshot: GameProto.WorldSnapshot):
 	var current := get_tree().current_scene
-	if current == null or current.scene_file_path != GAME_SCENE:
-		get_tree().change_scene_to_file.call_deferred(GAME_SCENE)
+	if current != null and current.scene_file_path == GAME_SCENE:
+		# 重开时 Store 已由新快照替换，重载关卡才能按新状态重建表现节点和 UI。
+		get_tree().reload_current_scene.call_deferred()
+		return
+
+	get_tree().change_scene_to_file.call_deferred(GAME_SCENE)

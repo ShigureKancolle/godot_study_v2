@@ -10,3 +10,4 @@ static func register(game_handler: GameHandler):
 	router.register(&"world_frame", game_handler.on_world_frame)
 	router.register(&"level_debug_data", game_handler.on_level_debug)
 	router.register(&"cur_game_speed", game_handler.on_cur_game_speed)
+	router.register(&"game_over", game_handler.on_game_over)

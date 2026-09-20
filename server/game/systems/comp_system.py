@@ -543,3 +543,31 @@ class PickupCompSystem(CompSystem):
 
             
         return events
+
+class RestartGameCompSystem(CompSystem):
+
+    def apply_command(self, world: "game_world.GameWorld", command: "command.RestartGameRequestCommand") -> list[event.Event]:       
+        events = []
+        # 多人的情况可能需要根据玩家同意票数来决定是否重启游戏
+        if True:  # world.check_restart_game(command)
+            events.extend(self._restart_game(world, command))    
+        return events
+
+    def update(self, world: "game_world.GameWorld", dt: float) -> list[event.Event]:
+                        
+        return []
+
+    def _restart_game(self, world: "game_world.GameWorld", command: "command.RestartGameRequestCommand"):
+        from game.commands import JoinCommand
+        events = []
+        world.restart()
+        join_system = world.get_system(JoinCompSystem)
+        for player in command.players:
+            command = JoinCommand(
+                connection_id=player.connection_id,
+                account=player.account,
+                player_name=player.player_name,
+            )
+            events.extend(join_system.apply_command(world, command))
+        
+        return events

@@ -22,3 +22,4 @@ def build_client_router():
     client_router.register("pause_game_world", game_handler.pause_game_world_handler)
     client_router.register("skip_cur_stage", game_handler.skip_cur_stage_handler)
     client_router.register("game_speed_change", game_handler.game_speed_change_handler)
+    client_router.register("restart_requset", game_handler.restart_game_request_handler)

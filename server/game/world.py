@@ -56,18 +56,19 @@ def get_room_id():
 
 class GameWorld:
     def __init__(self, current_game_mode: game_mode_module.GameMode | None = None):
+        self.clearup()
         self.room_id: str = get_room_id()
-        self._entites: dict[str, entity.Entity] = {}
-        self._enemys: dict[str, dict[str, entity.Entity]] = {}
+        # self._entites: dict[str, entity.Entity] = {}
+        # self._enemys: dict[str, dict[str, entity.Entity]] = {}
         self._pending_commands: list[command.Command] = []
-        self._tick: int = 0
-        self._entity_idx: int = 0
+        # self._tick: int = 0
+        # self._entity_idx: int = 0
         self._command_router: "command_router.CommandRouter" = None
         self._tick_pipeline: "tick_pipeline.TickPipeline" = None
         self._ai_comp_system: AICompSystem = None
         self._game_mode = current_game_mode if current_game_mode is not None else game_mode_module.GameMode()
         self._system_instances: dict[type[comp_system.CompSystem], comp_system.CompSystem] = {}
-        self._cur_speed: int = 1
+        # self._cur_speed: int = 1
         self.map_id: str = navigation_grid.TEST_MAP_ID
         self.pathfinder = pathfinder.PathFinder(self.map_id)
 
@@ -80,6 +81,26 @@ class GameWorld:
     async def start(self):
         # 在这里初始化gamemode
         pass
+
+    def clearup(self):
+        self._entites: dict[str, entity.Entity] = {}
+        self._enemys: dict[str, dict[str, entity.Entity]] = {}
+        self._tick: int = 0
+        self._entity_idx: int = 0
+        self._cur_speed: int = 1
+
+    def restart(self):
+        self.clearup()
+        self._game_mode.restart(self)
+
+        # 给所有链接发一个快照刷新状态
+        for i in range(len(self._entites)):
+            cmd = command.JoinCommand(
+                entity_id=self._entites[i].entity_id,
+                
+            )
+            self._system_instances[comp_system.JoinCompSystem].apply_command(self, cmd)
+        
 
     # region debug
     def change_game_speed(self) -> int:
@@ -229,6 +250,12 @@ class GameWorld:
 
         # 既不要apply_command，也不要update
         self.register_system(progression_compsystem.ProgressionCompSystem, command_scope=None)
+
+        self.register_system(
+            comp_system.RestartGameCompSystem,  
+            command.RestartGameRequestCommand,
+            game_mode_module.CommandScope.LIFECYCLE,
+        )
 
 
     def register_game_mode_command_handlers(self):

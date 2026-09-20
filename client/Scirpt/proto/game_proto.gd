@@ -2839,6 +2839,108 @@ class RewardChoiseReply:
 			return PB_ERR.PARSE_INCOMPLETE
 		return result
 	
+class GameOver:
+	extends RefCounted
+	func _init():
+		var service
+		
+	var data = {}
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
+class RestartGameRequset:
+	extends RefCounted
+	func _init():
+		var service
+		
+		__entity_id = PBField.new("entity_id", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		service = PBServiceField.new()
+		service.field = __entity_id
+		data[__entity_id.tag] = service
+		
+	var data = {}
+	
+	var __entity_id: PBField
+	func has_entity_id() -> bool:
+		if __entity_id.value != null:
+			return true
+		return false
+	func get_entity_id() -> String:
+		return __entity_id.value
+	func clear_entity_id() -> void:
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__entity_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
+	func set_entity_id(value : String) -> void:
+		__entity_id.value = value
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
+class RestartGame:
+	extends RefCounted
+	func _init():
+		var service
+		
+	var data = {}
+	
+	func _to_string() -> String:
+		return PBPacker.message_to_string(data)
+		
+	func to_bytes() -> PackedByteArray:
+		return PBPacker.pack_message(data)
+		
+	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
+		var cur_limit = bytes.size()
+		if limit != -1:
+			cur_limit = limit
+		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
+		if result == cur_limit:
+			if PBPacker.check_required(data):
+				if limit == -1:
+					return PB_ERR.NO_ERRORS
+			else:
+				return PB_ERR.REQUIRED_FIELDS
+		elif limit == -1 && result > 0:
+			return PB_ERR.PARSE_INCOMPLETE
+		return result
+	
 class CommandRejected:
 	extends RefCounted
 	func _init():
@@ -3707,6 +3809,12 @@ class ClientMessage:
 		service.func_ref = Callable(self, "new_game_speed_change")
 		data[__game_speed_change.tag] = service
 		
+		__restart_requset = PBField.new("restart_requset", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 9, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __restart_requset
+		service.func_ref = Callable(self, "new_restart_requset")
+		data[__restart_requset.tag] = service
+		
 	var data = {}
 	
 	enum PayloadCase {
@@ -3719,6 +3827,7 @@ class ClientMessage:
 		PAUSE_GAME_WORLD = 6,
 		SKIP_CUR_STAGE = 7,
 		GAME_SPEED_CHANGE = 8,
+		RESTART_REQUSET = 9,
 	}
 	var _payload_case: int = 0
 
@@ -3747,6 +3856,8 @@ class ClientMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__restart_requset.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__login_request.value = LoginRequest.new()
 		return __login_request.value
 	
@@ -3775,6 +3886,8 @@ class ClientMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__restart_requset.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__enter_game_request.value = EnterGameRequest.new()
 		return __enter_game_request.value
 	
@@ -3803,6 +3916,8 @@ class ClientMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__restart_requset.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__move_intent.value = MoveIntent.new()
 		return __move_intent.value
 	
@@ -3831,6 +3946,8 @@ class ClientMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__restart_requset.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__attack_intent.value = AttackIntent.new()
 		return __attack_intent.value
 	
@@ -3859,6 +3976,8 @@ class ClientMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__restart_requset.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__atk_rotate_intent.value = AtkRotateIntent.new()
 		return __atk_rotate_intent.value
 	
@@ -3887,6 +4006,8 @@ class ClientMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__restart_requset.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__pause_game_world.value = PauseGameWorld.new()
 		return __pause_game_world.value
 	
@@ -3915,6 +4036,8 @@ class ClientMessage:
 		_payload_case = 7
 		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[8].state = PB_SERVICE_STATE.UNFILLED
+		__restart_requset.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__skip_cur_stage.value = SkipCurStage.new()
 		return __skip_cur_stage.value
 	
@@ -3943,8 +4066,40 @@ class ClientMessage:
 		data[7].state = PB_SERVICE_STATE.UNFILLED
 		data[8].state = PB_SERVICE_STATE.FILLED
 		_payload_case = 8
+		__restart_requset.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
 		__game_speed_change.value = GameSpeedChange.new()
 		return __game_speed_change.value
+	
+	var __restart_requset: PBField
+	func has_restart_requset() -> bool:
+		return data[9].state == PB_SERVICE_STATE.FILLED
+	func get_restart_requset() -> RestartGameRequset:
+		return __restart_requset.value
+	func clear_restart_requset() -> void:
+		data[9].state = PB_SERVICE_STATE.UNFILLED
+		__restart_requset.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_restart_requset() -> RestartGameRequset:
+		__login_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[1].state = PB_SERVICE_STATE.UNFILLED
+		__enter_game_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[2].state = PB_SERVICE_STATE.UNFILLED
+		__move_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__attack_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__atk_rotate_intent.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[5].state = PB_SERVICE_STATE.UNFILLED
+		__pause_game_world.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[6].state = PB_SERVICE_STATE.UNFILLED
+		__skip_cur_stage.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[7].state = PB_SERVICE_STATE.UNFILLED
+		__game_speed_change.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[8].state = PB_SERVICE_STATE.UNFILLED
+		data[9].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 9
+		__restart_requset.value = RestartGameRequset.new()
+		return __restart_requset.value
 	
 	func get_payload_case() -> int:
 		return _payload_case
@@ -4020,6 +4175,12 @@ class ServerMessage:
 		service.func_ref = Callable(self, "new_cur_game_speed")
 		data[__cur_game_speed.tag] = service
 		
+		__game_over = PBField.new("game_over", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 17, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
+		service = PBServiceField.new()
+		service.field = __game_over
+		service.func_ref = Callable(self, "new_game_over")
+		data[__game_over.tag] = service
+		
 	var data = {}
 	
 	enum PayloadCase {
@@ -4030,6 +4191,7 @@ class ServerMessage:
 		WORLD_FRAME = 14,
 		LEVEL_DEBUG_DATA = 15,
 		CUR_GAME_SPEED = 16,
+		GAME_OVER = 17,
 	}
 	var _payload_case: int = 0
 
@@ -4080,6 +4242,8 @@ class ServerMessage:
 		data[15].state = PB_SERVICE_STATE.UNFILLED
 		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[16].state = PB_SERVICE_STATE.UNFILLED
+		__game_over.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[17].state = PB_SERVICE_STATE.UNFILLED
 		__login_accepted.value = LoginAccepted.new()
 		return __login_accepted.value
 	
@@ -4104,6 +4268,8 @@ class ServerMessage:
 		data[15].state = PB_SERVICE_STATE.UNFILLED
 		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[16].state = PB_SERVICE_STATE.UNFILLED
+		__game_over.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[17].state = PB_SERVICE_STATE.UNFILLED
 		__world_snapshot.value = WorldSnapshot.new()
 		return __world_snapshot.value
 	
@@ -4128,6 +4294,8 @@ class ServerMessage:
 		data[15].state = PB_SERVICE_STATE.UNFILLED
 		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[16].state = PB_SERVICE_STATE.UNFILLED
+		__game_over.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[17].state = PB_SERVICE_STATE.UNFILLED
 		__command_rejected.value = CommandRejected.new()
 		return __command_rejected.value
 	
@@ -4152,6 +4320,8 @@ class ServerMessage:
 		data[15].state = PB_SERVICE_STATE.UNFILLED
 		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[16].state = PB_SERVICE_STATE.UNFILLED
+		__game_over.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[17].state = PB_SERVICE_STATE.UNFILLED
 		__world_frame.value = WorldFrame.new()
 		return __world_frame.value
 	
@@ -4176,6 +4346,8 @@ class ServerMessage:
 		_payload_case = 15
 		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[16].state = PB_SERVICE_STATE.UNFILLED
+		__game_over.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[17].state = PB_SERVICE_STATE.UNFILLED
 		__level_debug_data.value = LevelDebugData.new()
 		return __level_debug_data.value
 	
@@ -4200,8 +4372,36 @@ class ServerMessage:
 		data[15].state = PB_SERVICE_STATE.UNFILLED
 		data[16].state = PB_SERVICE_STATE.FILLED
 		_payload_case = 16
+		__game_over.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[17].state = PB_SERVICE_STATE.UNFILLED
 		__cur_game_speed.value = CurGameSpeed.new()
 		return __cur_game_speed.value
+	
+	var __game_over: PBField
+	func has_game_over() -> bool:
+		return data[17].state == PB_SERVICE_STATE.FILLED
+	func get_game_over() -> GameOver:
+		return __game_over.value
+	func clear_game_over() -> void:
+		data[17].state = PB_SERVICE_STATE.UNFILLED
+		__game_over.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+	func new_game_over() -> GameOver:
+		__login_accepted.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[3].state = PB_SERVICE_STATE.UNFILLED
+		__world_snapshot.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[4].state = PB_SERVICE_STATE.UNFILLED
+		__command_rejected.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[9].state = PB_SERVICE_STATE.UNFILLED
+		__world_frame.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[14].state = PB_SERVICE_STATE.UNFILLED
+		__level_debug_data.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[15].state = PB_SERVICE_STATE.UNFILLED
+		__cur_game_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
+		data[16].state = PB_SERVICE_STATE.UNFILLED
+		data[17].state = PB_SERVICE_STATE.FILLED
+		_payload_case = 17
+		__game_over.value = GameOver.new()
+		return __game_over.value
 	
 	func get_payload_case() -> int:
 		return _payload_case

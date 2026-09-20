@@ -131,6 +131,10 @@ class GameProtoProjector:
             ),
         )
 
+    @staticmethod
+    def game_over_event(event: events.GameOverEvent) -> game_pb2.GameOver:
+        return game_pb2.GameOver()
+
     # region debug
     @staticmethod
     def enemy_budget(event: events.EnemyBudgetData) -> game_pb2.EnemyBudgetData:

@@ -1,0 +1,115 @@
+[gd_scene format=3 uid="uid://bkh73nv6y65oa"]
+
+[ext_resource type="Script" uid="uid://w1pgwq6c6ebd" path="res://Scirpt/ui/Level/GameOverUI.gd" id="1_sl2jw"]
+[ext_resource type="Texture2D" uid="uid://d2gyka5r23k0u" path="res://Prefab/CommonRes/UI/MenuButton_Crimson.png" id="2_u1ofm"]
+[ext_resource type="Texture2D" uid="uid://d3ldu6b48aw5r" path="res://Prefab/CommonRes/UI/MenuPanel_CrimsonJade.png" id="3_wlngo"]
+[ext_resource type="Texture2D" uid="uid://ts8w0vdfwi5s" path="res://Prefab/CommonRes/UI/MenuButton_Jade.png" id="4_g1e68"]
+
+[sub_resource type="StyleBoxFlat" id="Style_focus"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.9, 0.59, 1)
+corner_radius_top_left = 128
+corner_radius_top_right = 128
+corner_radius_bottom_right = 128
+corner_radius_bottom_left = 128
+
+[sub_resource type="StyleBoxTexture" id="Style_crimson_hover"]
+texture = ExtResource("2_u1ofm")
+modulate_color = Color(1.15, 1.12, 1.06, 1)
+
+[sub_resource type="StyleBoxTexture" id="Style_crimson"]
+texture = ExtResource("2_u1ofm")
+
+[sub_resource type="StyleBoxTexture" id="Style_crimson_pressed"]
+texture = ExtResource("2_u1ofm")
+modulate_color = Color(0.8, 0.75, 0.68, 1)
+
+[sub_resource type="Theme" id="Theme_menu"]
+default_font_size = 16
+Button/colors/font_color = Color(1, 0.96, 0.85, 1)
+Button/colors/font_focus_color = Color(1, 1, 0.95, 1)
+Button/colors/font_hover_color = Color(1, 1, 0.95, 1)
+Button/colors/font_outline_color = Color(0.2, 0.15, 0.12, 1)
+Button/colors/font_pressed_color = Color(1, 0.91, 0.7, 1)
+Button/constants/outline_size = 3
+Button/styles/focus = SubResource("Style_focus")
+Button/styles/hover = SubResource("Style_crimson_hover")
+Button/styles/normal = SubResource("Style_crimson")
+Button/styles/pressed = SubResource("Style_crimson_pressed")
+
+[sub_resource type="AtlasTexture" id="Texture_panel"]
+atlas = ExtResource("3_wlngo")
+region = Rect2(28, 65, 1886, 661)
+filter_clip = true
+
+[sub_resource type="StyleBoxTexture" id="Style_panel"]
+texture = SubResource("Texture_panel")
+
+[node name="MenuUI" type="Node2D" unique_id=1797207568]
+texture_filter = 1
+script = ExtResource("1_sl2jw")
+
+[node name="Panel" type="Panel" parent="." unique_id=2068402050]
+top_level = true
+texture_filter = 1
+anchors_preset = -1
+anchor_left = 0.22
+anchor_top = 0.305
+anchor_right = 0.78
+anchor_bottom = 0.695
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_menu")
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="Label" type="Label" parent="Panel" unique_id=2141442894]
+layout_mode = 0
+offset_left = 65.56
+offset_top = -3.6399994
+offset_right = 577.56
+offset_bottom = 173.36
+theme_override_font_sizes/font_size = 128
+text = "游戏结束"
+
+[node name="Restart" type="TextureButton" parent="Panel" unique_id=1310984985]
+layout_mode = 0
+offset_left = 127.56
+offset_top = 159.35999
+offset_right = 1381.56
+offset_bottom = 1413.36
+scale = Vector2(0.05, 0.05)
+texture_normal = ExtResource("2_u1ofm")
+
+[node name="RestartLabel" type="Label" parent="Panel" unique_id=1104562827]
+layout_mode = 0
+offset_left = 144.56
+offset_top = 176.36
+offset_right = 178.56
+offset_bottom = 202.36
+theme_override_font_sizes/font_size = 16
+text = "重开"
+
+[node name="Back" type="TextureButton" parent="Panel" unique_id=639755659]
+layout_mode = 0
+offset_left = 445.56
+offset_top = 164.36
+offset_right = 1699.56
+offset_bottom = 1418.36
+scale = Vector2(0.05, 0.05)
+texture_normal = ExtResource("4_g1e68")
+
+[node name="BackLabel" type="Label" parent="Panel" unique_id=1099735524]
+layout_mode = 0
+offset_left = 437.56
+offset_top = 172.36
+offset_right = 517.56
+offset_bottom = 221.36
+theme_override_constants/line_spacing = -2
+theme_override_font_sizes/font_size = 16
+text = "返回
+主界面"
+horizontal_alignment = 1

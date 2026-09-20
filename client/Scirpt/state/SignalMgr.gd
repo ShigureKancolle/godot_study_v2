@@ -34,6 +34,7 @@ signal snl_entity_dead(entity_id: String)
 signal snl_game_pause(pause: bool)
 signal snl_entities_prog_changed(change_states: Array[EntityState])
 signal snl_entity_upgrade(entity_id: String, pre_level: int, cur_level: int)
+signal snl_game_over()
 
 # debug
 signal snl_level_debug(data: TestLevelDebugUI.LevelDebugData)

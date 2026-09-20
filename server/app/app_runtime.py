@@ -1,7 +1,7 @@
 # coding=utf-8
 """应用运行时：将客户端命令分流到会话处理或权威世界。"""
 
-from game.commands import LoginCommand, SessionCommand, WorldCommand, LeaveCommand
+from game.commands import LoginCommand, RestartPlayerData, SessionCommand, WorldCommand, LeaveCommand, RestartGameRequestCommand
 from proto.generated import game_pb2
 from protocol.contract import ProtocolValidationError
 from protocol.router import ClientMessageRouter
@@ -89,6 +89,17 @@ class AppRuntime:
                 "进入或控制游戏世界前必须先登录",
             )
             return
+
+        if isinstance(command, RestartGameRequestCommand):
+            # 这个命令要组装一下房间的成员
+            command.players = [
+                RestartPlayerData(
+                    connection_id=player.connection_id,
+                    account=player.account_id,
+                    player_name=player.player_name,
+                )
+                for player in self._connections.get_room_connections(context.room_id)
+            ]
 
         self._world.enqueue_command(command)
 

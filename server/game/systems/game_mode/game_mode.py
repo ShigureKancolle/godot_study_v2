@@ -39,13 +39,7 @@ class GameMode:
     mode_type: GameModeType = GameModeType.SURVIVAL
 
     def __init__(self):
-        self._gameplay_paused = False
-        self._game_started = False
-        self._start_time = 0.0
-        self._start_tick = 0
-        self._cur_tick = 0
-        self._run_id = 0
-        self._world: "gw.GameWorld" = None  # type: "gw.GameWorld" | None
+        self.clearup()
 
     def start(self, world: "gw.GameWorld"):
         """开始游戏模式。"""
@@ -108,7 +102,18 @@ class GameMode:
         """是否游戏结束。"""
         return False
 
-    def clearup(self, world: "gw.GameWorld"):
+    def clearup(self):
         """清理游戏模式。"""
-        pass
+        self._gameplay_paused = False
+        self._game_started = False
+        self._start_time = 0.0
+        self._start_tick = 0
+        self._cur_tick = 0
+        self._run_id = 0
+        self._world: "gw.GameWorld" = None  # type: "gw.GameWorld" | None
+
+    def restart(self, world: "gw.GameWorld"):
+        """重启游戏模式。"""
+        self.clearup()
+        self.start(world)
 
